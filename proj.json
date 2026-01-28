@@ -1,0 +1,12 @@
+{
+    "title": "Backend CMS",
+    "description": "A robust backend implementation.",
+    "year": "2026",
+    "tags": [
+        "Node.js",
+        "Express",
+        "SQLite"
+    ],
+    "image": "https://placeholder.com/150",
+    "link": "https://github.com/stitch-cms"
+}
