@@ -8,6 +8,7 @@ export interface Project {
     tags: string[];
     image: string;
     link?: string;
+    sections?: any[];
     createdAt?: string;
 }
 
@@ -36,6 +37,20 @@ export const api = {
         });
         if (!response.ok) throw new Error('Failed to create project');
         return response.json();
+    },
+
+    uploadFile: async (file: File): Promise<string> => {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const response = await fetch(`${API_URL}/upload`, {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) throw new Error('Failed to upload file');
+        const data = await response.json();
+        return data.url;
     },
 
     // Messages

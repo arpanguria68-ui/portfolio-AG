@@ -30,6 +30,7 @@ model Project {
   tags        String   // JSON string or comma-separated
   image       String
   link        String?
+  sections    String   @default("[]") // JSON string of case study sections
   createdAt   DateTime @default(now())
 }
 

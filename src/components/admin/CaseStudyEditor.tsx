@@ -46,6 +46,18 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
         setShowAddMenu(false);
     };
 
+    const handleFileUpload = async (sectionId: number, files: FileList | null) => {
+        if (!files || files.length === 0) return;
+        const file = files[0];
+        try {
+            const url = await api.uploadFile(file);
+            setSections(sections.map(s => s.id === sectionId ? { ...s, content: url } : s));
+        } catch (error) {
+            console.error("Upload failed", error);
+            alert("Upload failed");
+        }
+    };
+
     const handleSave = async () => {
         setIsSaving(true);
         try {
@@ -55,7 +67,8 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
                 year: '2024',
                 tags: ['Case Study', template],
                 image: 'https://placehold.co/600x400', // Placeholder
-                link: `/projects/${slug}`
+                link: `/projects/${slug}`,
+                sections: sections
             };
 
             await api.createProject(projectData);
@@ -218,11 +231,22 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
 
                                             {/* Gallery / Document Placeholders */}
                                             {['gallery', 'document'].includes(section.type) && (
-                                                <div className="border border-dashed border-white/10 rounded-lg p-8 flex flex-col items-center justify-center text-center hover:bg-white/5 transition-colors cursor-pointer">
-                                                    <span className="material-symbols-outlined text-3xl text-white/20 mb-2">{section.type === 'gallery' ? 'add_photo_alternate' : 'upload_file'}</span>
-                                                    <p className="text-sm font-bold text-white">Upload {section.type === 'gallery' ? 'Images' : 'Files'}</p>
-                                                    <p className="text-xs text-white/40 mt-1">Drag & drop or click to browse</p>
-                                                </div>
+                                                <label className="border border-dashed border-white/10 rounded-lg p-8 flex flex-col items-center justify-center text-center hover:bg-white/5 transition-colors cursor-pointer">
+                                                    <input type="file" className="hidden" onChange={(e) => handleFileUpload(section.id, e.target.files)} />
+                                                    {section.content ? (
+                                                        <>
+                                                            <span className="material-symbols-outlined text-3xl text-primary mb-2">check_circle</span>
+                                                            <p className="text-sm font-bold text-white">File Uploaded</p>
+                                                            <p className="text-xs text-white/40 mt-1 truncate max-w-[200px]">{section.content}</p>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <span className="material-symbols-outlined text-3xl text-white/20 mb-2">{section.type === 'gallery' ? 'add_photo_alternate' : 'upload_file'}</span>
+                                                            <p className="text-sm font-bold text-white">Upload {section.type === 'gallery' ? 'Images' : 'Files'}</p>
+                                                            <p className="text-xs text-white/40 mt-1">Drag & drop or click to browse</p>
+                                                        </>
+                                                    )}
+                                                </label>
                                             )}
                                         </div>
                                     )}

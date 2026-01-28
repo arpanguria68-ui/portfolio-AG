@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import { PrismaClient } from '@prisma/client';
+import multer from 'multer';
+import path from 'path';
 
 const app = express();
 const prisma = new PrismaClient();
@@ -8,9 +10,43 @@ const PORT = process.env.PORT || 3001;
 
 app.use(cors());
 app.use(express.json());
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+
+// Configure Multer
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'uploads/');
+    },
+    filename: (req, file, cb) => {
+        cb(null, Date.now() + '-' + file.originalname);
+    }
+});
+const upload = multer({
+    storage,
+    fileFilter: (req, file, cb) => {
+        const allowedTypes = /jpeg|jpg|png|gif|webp|svg/;
+        const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+        const mimetype = allowedTypes.test(file.mimetype);
+
+        if (extname && mimetype) {
+            return cb(null, true);
+        } else {
+            cb(new Error('Only images are allowed'));
+        }
+    }
+});
 
 app.get('/', (req, res) => {
     res.send('Stitch API Server is running');
+});
+
+// --- Upload API ---
+app.post('/api/upload', upload.single('file'), (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ error: 'No file uploaded' });
+    }
+    const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    res.json({ url: fileUrl });
 });
 
 // --- Messages API ---
@@ -73,17 +109,16 @@ app.delete('/api/messages/:id', async (req, res) => {
 app.get('/api/projects', async (req, res) => {
     try {
         const projects = await prisma.project.findMany({
-            orderBy: { createdAt: 'desc' } // Note: Schema uses 'createdAt', but UI might sort by 'year'.
+            orderBy: { createdAt: 'desc' }
         });
-        // Frontend expects tags as array, DB has string.
-        // We can parse here or on frontend. Let's parse JSON on frontend or store simple string.
-        // For simplicity, let's treat tags as JSON string in DB.
         const parsedProjects = projects.map(p => ({
             ...p,
-            tags: JSON.parse(p.tags) // Assuming we store valid JSON
+            tags: JSON.parse(p.tags),
+            sections: JSON.parse(p.sections)
         }));
         res.json(parsedProjects);
     } catch (error) {
+        console.error(error);
         res.status(500).json({ error: 'Failed to fetch projects' });
     }
 });
@@ -91,19 +126,25 @@ app.get('/api/projects', async (req, res) => {
 // Create project
 app.post('/api/projects', async (req, res) => {
     try {
-        const { title, description, year, tags, image, link } = req.body;
+        const { title, description, year, tags, image, link, sections } = req.body;
         const newProject = await prisma.project.create({
             data: {
                 title,
                 description,
                 year,
-                tags: JSON.stringify(tags), // Store array as JSON string
+                tags: JSON.stringify(tags),
                 image,
-                link
+                link,
+                sections: JSON.stringify(sections || [])
             }
         });
-        res.status(201).json({ ...newProject, tags: JSON.parse(newProject.tags) });
+        res.status(201).json({
+            ...newProject,
+            tags: JSON.parse(newProject.tags),
+            sections: JSON.parse(newProject.sections)
+        });
     } catch (error) {
+        console.error(error);
         res.status(500).json({ error: 'Failed to create project' });
     }
 });
