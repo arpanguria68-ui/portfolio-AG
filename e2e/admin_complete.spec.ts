@@ -6,8 +6,12 @@ test.describe('Admin Panel & Backend Connectivity', () => {
         page.on('console', msg => console.log(`BROWSER LOG: ${msg.text()}`));
         page.on('pageerror', exception => console.log(`BROWSER ERROR: ${exception}`));
 
-        // Go to Admin Page
-        await page.goto('http://localhost:5173/admin');
+        // Login first
+        await page.goto('http://localhost:5173/login');
+        await page.fill('input[type="email"]', 'admin@stitch.com');
+        await page.fill('input[type="password"]', 'password');
+        await page.click('button[type="submit"]');
+        await expect(page).toHaveURL(/.*\/admin/);
     });
 
     test('Verification 1: Dashboard Connectivity', async ({ page }) => {
@@ -21,15 +25,17 @@ test.describe('Admin Panel & Backend Connectivity', () => {
         await page.click('button:has-text("Messages")');
 
         // Connectivity Check: "Inbox" header confirms component loaded
-        await expect(page.locator('text=Inbox')).toBeVisible();
+        await expect(page.locator('h2', { hasText: 'Inbox' })).toBeVisible();
 
         // Connectivity Check: Verify async data fetch (either loaded messages or empty state)
         // We look for either a message item OR the "No messages yet" text, either confirms API response
-        const messagesLoaded = await page.locator('.material-symbols-outlined:has-text("inbox")').isVisible().catch(() => false);
-        if (messagesLoaded) {
-            await expect(page.locator('text=No messages yet')).toBeVisible();
+        // Wait for potential network delay
+        await page.waitForTimeout(2000);
+        const hasMessages = await page.locator('.text-sm.text-white\\/50.truncate').count() > 0;
+        if (hasMessages) {
+             await expect(page.locator('.text-sm.text-white\\/50.truncate').first()).toBeVisible();
         } else {
-            await expect(page.locator('text=Inbox')).toBeVisible();
+             await expect(page.locator('text=No messages yet')).toBeVisible();
         }
     });
 
