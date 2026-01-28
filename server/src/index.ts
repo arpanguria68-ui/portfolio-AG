@@ -1,9 +1,8 @@
 import express from 'express';
 import cors from 'cors';
-import { PrismaClient } from '@prisma/client';
+import prisma from './db';
 
 const app = express();
-const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3001;
 
 app.use(cors());
@@ -119,6 +118,10 @@ app.get('/api/socials', async (req, res) => {
 });
 
 
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-});
+if (process.env.NODE_ENV !== 'test') {
+    app.listen(PORT, () => {
+        console.log(`Server running on http://localhost:${PORT}`);
+    });
+}
+
+export default app;

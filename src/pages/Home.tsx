@@ -5,7 +5,17 @@ import { GlowBorderCard } from '../components/ui/glow-border-card';
 import { FlipFadeText } from '../components/ui/flip-fade-text';
 import { api } from '../lib/api';
 
-const PROJECTS = [
+interface Project {
+    id: number;
+    title: string;
+    description: string;
+    year: string;
+    tags: string[];
+    image: string;
+    link: string;
+}
+
+const PROJECTS: Project[] = [
     {
         id: 1,
         title: "NeoBank Finance",
@@ -48,13 +58,13 @@ const Home = () => {
     const [projectFilter, setProjectFilter] = useState('All');
     const [projectSort, setProjectSort] = useState('Newest');
 
-    const [projects, setProjects] = useState<any[]>(PROJECTS);
+    const [projects, setProjects] = useState<Project[]>(PROJECTS);
 
     useEffect(() => {
         // Fetch projects from API
         api.getProjects()
             .then(data => {
-                if (data.length > 0) setProjects(data);
+                if (data.length > 0) setProjects(data as Project[]);
             })
             .catch(err => console.error("Failed to load projects", err));
     }, []);
@@ -286,7 +296,7 @@ const Home = () => {
 
                         {/* Filters */}
                         <div className="mb-10 flex flex-wrap gap-2">
-                            {uniqueTags.map(tag => (
+                            {uniqueTags.map((tag) => (
                                 <button
                                     key={tag}
                                     onClick={() => setProjectFilter(tag)}
@@ -315,7 +325,7 @@ const Home = () => {
                                                 <p className="text-white/50 text-sm leading-relaxed mb-6">{project.description}</p>
                                             </div>
                                             <div className="flex flex-wrap gap-2">
-                                                {project.tags.map(tag => (
+                                                {project.tags.map((tag) => (
                                                     <span key={tag} className="px-3 py-1.5 bg-primary/10 border border-primary/20 text-primary rounded-full text-[10px] font-bold uppercase tracking-wider">{tag}</span>
                                                 ))}
                                             </div>
