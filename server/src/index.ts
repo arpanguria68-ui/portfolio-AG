@@ -199,6 +199,51 @@ app.post('/api/projects', async (req, res) => {
     }
 });
 
+app.put('/api/projects/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = ProjectSchema.safeParse(req.body);
+
+        if (!result.success) {
+            return res.status(400).json({ error: result.error.issues });
+        }
+
+        const { title, description, year, tags, image, link, sections } = result.data;
+
+        const updatedProject = await prisma.project.update({
+            where: { id: Number(id) },
+            data: {
+                title,
+                description,
+                year,
+                tags: JSON.stringify(tags),
+                image,
+                link: link || null,
+                sections: JSON.stringify(sections || [])
+            }
+        });
+        res.json({
+            ...updatedProject,
+            tags: JSON.parse(updatedProject.tags),
+            sections: JSON.parse(updatedProject.sections)
+        });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to update project' });
+    }
+});
+
+app.delete('/api/projects/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        await prisma.project.delete({
+            where: { id: Number(id) }
+        });
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to delete project' });
+    }
+});
+
 // --- Socials API ---
 app.get('/api/socials', async (req, res) => {
     try {
