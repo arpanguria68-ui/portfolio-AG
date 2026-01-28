@@ -52,3 +52,9 @@ model Profile {
   email         String?
   resumeUrl     String?
 }
+
+model User {
+  id       Int    @id @default(autoincrement())
+  email    String @unique
+  password String
+}
