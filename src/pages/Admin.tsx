@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { api } from '../lib/api';
+import React, { useState } from 'react';
+import { useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
 import { Link } from 'react-router-dom';
 import CaseStudyEditor from '../components/admin/CaseStudyEditor';
 import MessageCenter from '../components/admin/MessageCenter';
@@ -67,11 +68,7 @@ const Admin = () => {
     const [viewMode, setViewMode] = useState<'grid' | 'editor'>('grid');
     const [editingProject, setEditingProject] = useState<any>(null);
 
-    const [projects, setProjects] = useState<any[]>([]);
-
-    useEffect(() => {
-        api.getProjects().then(setProjects).catch(console.error);
-    }, []);
+    const projects = useQuery(api.projects.get) || [];
 
     const toggleSocialVisibility = (id: number) => {
         setSocials(socials.map(s => s.id === id ? { ...s, visible: !s.visible } : s));

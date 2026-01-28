@@ -3,68 +3,28 @@ import { Link } from 'react-router-dom';
 
 import { GlowBorderCard } from '../components/ui/glow-border-card';
 import { FlipFadeText } from '../components/ui/flip-fade-text';
-import { api } from '../lib/api';
 
-const PROJECTS = [
-    {
-        id: 1,
-        title: "NeoBank Finance",
-        description: "Reimagining the mobile banking experience for Gen Z with AI-driven savings insights.",
-        year: "2024",
-        tags: ["Fintech", "Mobile App"],
-        image: "https://lh3.googleusercontent.com/aida-public/AB6AXuC60U7Xmg9DYXVNGKeFboA7uIhth4FdnoZFU48ciZyrKd56ebljcFEhJXJFz6wuc8M_lcRD-yqYnh1AvRbDWASzywpEd9nEAjGpIlpzMOJoZtjBu0q01a9DAXvfn1qeP4Wxlv_ZlMWrbg-pIPwvCmPm8ZFf_4CgUm3xdhu_8kmeAxswFu9J8Gv8jUKnSwWQ6wVneq5-aAsP8e-diDQ7-rNq4lT0CVP7zT27S2Cy1Jw2MydWVPVsJQQUetNIXm6jv138pLrix6jQ4MLS",
-        link: "/gallery"
-    },
-    {
-        id: 2,
-        title: "DataViz Pro",
-        description: "Enterprise analytics dashboard enabling real-time decision making for sales teams.",
-        year: "2023",
-        tags: ["SaaS", "Strategy"],
-        image: "https://lh3.googleusercontent.com/aida-public/AB6AXuApIiN6GKo3BRo5bLrUOnA41JodEj1ORLhA-dXGI6zS13geEwKDcyvUQiOp9UXRpBhyUHA6MQNEAsQz7DSE2GqHkpXscJnoi6ujsZm5_I6M2uPmZ8ZSEW1gUWXwmeNORGR3fDYOdnMJd69S6LRbkBx7gvRJ9y-S6vyBJoA5teX4T9XQvhSlQuIzHqYk1E892m6CGCLBFKreBiCyY5Z1hvfSKVn63r2nw1q1dADLGMfs7XjavKn3sI7naqs8hTDcZQ5YbYplbM6CBIH9",
-        link: "#"
-    },
-    {
-        id: 3,
-        title: "Vitality Health",
-        description: "Patient monitoring interface connecting doctors with real-time health metrics.",
-        year: "2022",
-        tags: ["Health", "UX Research"],
-        image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBROlpKiNAqcPZejAh_NQ5ypzoOUdoIthvEF7mU5yEG1c4e8XKRu2q0BjJi9miOJ9iJ75FFXB-6u6lPToM35Cj_Lg8pxwkGhLApucrjrWT6PK5OKevCXiSsDN1Bd3ZfruNwSI8kNmptchDD88sooosPqs6Ihzk3h96_taeIGmhcNniUnT1y1_05XYnn-P2I8CTNH3Vtn1mJ-o8JQOfx8fQZCUVzqcxOcmrGP7YgnjLfVMn1Ducpn-WXM7MqTcPa2GG5LcPF1_C4mtBI",
-        link: "#"
-    }
-];
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
 
 const Home = () => {
+    // Convex: Real-time projects
+    const projects = useQuery(api.projects.get) || [];
+    const createMessage = useMutation(api.messages.create);
 
     // Scroll to top on mount
     useEffect(() => {
         window.scrollTo(0, 0);
     }, []);
 
-
-
-
     const [projectFilter, setProjectFilter] = useState('All');
     const [projectSort, setProjectSort] = useState('Newest');
 
-    const [projects, setProjects] = useState<any[]>(PROJECTS);
-
-    useEffect(() => {
-        // Fetch projects from API
-        api.getProjects()
-            .then(data => {
-                if (data.length > 0) setProjects(data);
-            })
-            .catch(err => console.error("Failed to load projects", err));
-    }, []);
-
-    const filteredProjects = projects.filter(p => {
+    const filteredProjects = projects.filter((p: any) => {
         if (projectFilter === 'All') return true;
         return p.tags.includes(projectFilter);
-    }).sort((a, b) => {
+    }).sort((a: any, b: any) => {
         if (projectSort === 'Newest') {
-            // Handle simple year string specific to initial data, or full dates if API returns them
             return parseInt(b.year) - parseInt(a.year);
         }
         if (projectSort === 'Oldest') return parseInt(a.year) - parseInt(b.year);
@@ -72,7 +32,7 @@ const Home = () => {
         return 0;
     });
 
-    const uniqueTags = ['All', ...Array.from(new Set(projects.flatMap(p => p.tags)))];
+    const uniqueTags = ['All', ...Array.from(new Set(projects.flatMap((p: any) => p.tags)))];
 
     const [formData, setFormData] = useState({ name: '', email: '', message: '' });
     const [status, setStatus] = useState<'idle' | 'sending' | 'success'>('idle');
@@ -82,7 +42,7 @@ const Home = () => {
         setStatus('sending');
 
         try {
-            await api.createMessage(formData);
+            await createMessage(formData);
             setStatus('success');
             setFormData({ name: '', email: '', message: '' });
             setTimeout(() => setStatus('idle'), 3000);

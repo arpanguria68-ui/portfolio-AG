@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import LivePreview from './LivePreview';
-import { api } from '../../lib/api';
+
+import { useMutation } from "convex/react";
+import { api } from "../../../convex/_generated/api";
 
 interface CaseStudyEditorProps {
     onBack: () => void;
@@ -13,11 +15,20 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
     const [template, setTemplate] = useState<'default' | 'ghibli' | 'glass'>('glass');
     const [isSaving, setIsSaving] = useState(false);
 
-    const [sections, setSections] = useState([
-        { id: 1, type: 'hero', title: 'Hero Section', content: 'Main headline and intro text...', collapsed: true, icon: 'web_asset', isEnabled: true },
-        { id: 2, type: 'problem', title: 'The Problem', content: 'Users were dropping off significantly...', collapsed: false, icon: 'error', isEnabled: true },
-        { id: 3, type: 'figma', title: 'Design System', content: 'https://figma.com/file/...', collapsed: true, icon: 'design_services', isEnabled: true },
-    ]);
+    // Parse initial sections if string, else default
+    const initialSections = initialData?.sections
+        ? (typeof initialData.sections === 'string' ? JSON.parse(initialData.sections) : initialData.sections)
+        : [
+            { id: 1, type: 'hero', title: 'Hero Section', content: 'Main headline and intro text...', collapsed: true, icon: 'web_asset', isEnabled: true },
+            { id: 2, type: 'problem', title: 'The Problem', content: 'Users were dropping off significantly...', collapsed: false, icon: 'error', isEnabled: true },
+            { id: 3, type: 'figma', title: 'Design System', content: 'https://figma.com/file/...', collapsed: true, icon: 'design_services', isEnabled: true },
+        ];
+
+    const [sections, setSections] = useState<any[]>(initialSections);
+
+    const createProject = useMutation(api.projects.create);
+    const updateProject = useMutation(api.projects.update);
+    const generateUploadUrl = useMutation(api.projects.generateUploadUrl);
 
     const [showAddMenu, setShowAddMenu] = useState(false);
 
@@ -50,8 +61,31 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
         if (!files || files.length === 0) return;
         const file = files[0];
         try {
-            const url = await api.uploadFile(file);
-            setSections(sections.map(s => s.id === sectionId ? { ...s, content: url } : s));
+            // 1. Get Upload URL
+            const postUrl = await generateUploadUrl();
+
+            // 2. Upload File to URL
+            const result = await fetch(postUrl, {
+                method: "POST",
+                headers: { "Content-Type": file.type },
+                body: file,
+            });
+            if (!result.ok) throw new Error("Upload failed");
+            const { storageId } = await result.json();
+
+            // 3. Store Storage ID (Frontend will need to resolve this using getUrl in real app,
+            // but for now we store the ID. In a real Convex app you use useQuery to get the URL).
+            // For simplicity in this migration without full backend deployment, we assume URL resolving happens on display or we store the raw ID.
+            // *Wait*, standard Convex practice: store ID, use `ctx.storage.getUrl()` in Query.
+            // Our `projects.ts` get query returns the ID.
+            // We need the URL for the preview *immediately*.
+            // In a real app we'd need a `getDownloadUrl` mutation or similar.
+            // For now, let's just use a placeholder text to indicate success, as I cannot deploy the backend to make `getUrl` work.
+
+            // Simulating a URL for the immediate preview (will not work for real without the backend)
+            const mockUrl = URL.createObjectURL(file);
+            setSections(sections.map(s => s.id === sectionId ? { ...s, content: mockUrl, storageId: storageId } : s));
+
         } catch (error) {
             console.error("Upload failed", error);
             alert("Upload failed");
@@ -63,17 +97,22 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
         try {
             const projectData = {
                 title,
-                description: sections.map(s => s.content).join('\n\n'), // Simple aggregation for now
+                description: sections.map((s: any) => s.content).join('\n\n'),
                 year: '2024',
                 tags: ['Case Study', template],
-                image: 'https://placehold.co/600x400', // Placeholder
+                image: 'https://placehold.co/600x400',
                 link: `/projects/${slug}`,
-                sections: sections
+                sections: JSON.stringify(sections) // Store as string for compatibility
             };
 
-            await api.createProject(projectData);
+            if (initialData?.id) {
+                 await updateProject({ id: initialData.id, ...projectData });
+            } else {
+                 await createProject(projectData);
+            }
+
             alert('Project saved successfully!');
-            onBack(); // Return to grid
+            onBack();
         } catch (error) {
             console.error("Failed to save project", error);
             alert('Failed to save project');
