@@ -315,7 +315,7 @@ const Home = () => {
                                                 <p className="text-white/50 text-sm leading-relaxed mb-6">{project.description}</p>
                                             </div>
                                             <div className="flex flex-wrap gap-2">
-                                                {project.tags.map(tag => (
+                                                {project.tags.map((tag: string) => (
                                                     <span key={tag} className="px-3 py-1.5 bg-primary/10 border border-primary/20 text-primary rounded-full text-[10px] font-bold uppercase tracking-wider">{tag}</span>
                                                 ))}
                                             </div>

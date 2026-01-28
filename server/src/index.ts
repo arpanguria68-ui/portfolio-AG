@@ -3,16 +3,41 @@ import cors from 'cors';
 import { PrismaClient } from '@prisma/client';
 import multer from 'multer';
 import path from 'path';
+import helmet from 'helmet';
+import compression from 'compression';
+import rateLimit from 'express-rate-limit';
+import { z } from 'zod';
 
 const app = express();
 const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3001;
 
-app.use(cors());
+// --- Middlewares ---
+app.use(helmet());
+app.use(compression());
 app.use(express.json());
+
+// CORS configuration
+const corsOptions = {
+    origin: process.env.NODE_ENV === 'production'
+        ? process.env.FRONTEND_URL || false // Fail if not set in production
+        : '*',
+    optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));
+
+// Rate Limiting
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per windowMs
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+app.use('/api/', limiter);
+
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
-// Configure Multer
+// --- Multer Configuration ---
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, 'uploads/');
@@ -36,6 +61,24 @@ const upload = multer({
     }
 });
 
+// --- Zod Schemas ---
+const MessageSchema = z.object({
+    name: z.string().min(1),
+    email: z.string().email(),
+    message: z.string().min(1)
+});
+
+const ProjectSchema = z.object({
+    title: z.string().min(1),
+    description: z.string(),
+    year: z.string(),
+    tags: z.array(z.string()),
+    image: z.string().url(),
+    link: z.string().optional(),
+    sections: z.array(z.any()).optional()
+});
+
+
 app.get('/', (req, res) => {
     res.send('Stitch API Server is running');
 });
@@ -51,7 +94,6 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
 
 // --- Messages API ---
 
-// Get all messages
 app.get('/api/messages', async (req, res) => {
     try {
         const messages = await prisma.message.findMany({
@@ -63,10 +105,14 @@ app.get('/api/messages', async (req, res) => {
     }
 });
 
-// Create a message
 app.post('/api/messages', async (req, res) => {
     try {
-        const { name, email, message } = req.body;
+        const result = MessageSchema.safeParse(req.body);
+        if (!result.success) {
+            return res.status(400).json({ error: result.error.issues });
+        }
+
+        const { name, email, message } = result.data;
         const newMessage = await prisma.message.create({
             data: { name, email, message }
         });
@@ -76,7 +122,6 @@ app.post('/api/messages', async (req, res) => {
     }
 });
 
-// Mark as read
 app.patch('/api/messages/:id/read', async (req, res) => {
     try {
         const { id } = req.params;
@@ -90,7 +135,6 @@ app.patch('/api/messages/:id/read', async (req, res) => {
     }
 });
 
-// Delete message
 app.delete('/api/messages/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -105,7 +149,6 @@ app.delete('/api/messages/:id', async (req, res) => {
 
 // --- Projects API ---
 
-// Get all projects
 app.get('/api/projects', async (req, res) => {
     try {
         const projects = await prisma.project.findMany({
@@ -123,10 +166,17 @@ app.get('/api/projects', async (req, res) => {
     }
 });
 
-// Create project
 app.post('/api/projects', async (req, res) => {
     try {
-        const { title, description, year, tags, image, link, sections } = req.body;
+        // Handle tags as array -> string transformation for DB manually or via schema refinement?
+        // Zod validates the input (array), Prisma needs string.
+        const result = ProjectSchema.safeParse(req.body);
+        if (!result.success) {
+            return res.status(400).json({ error: result.error.issues });
+        }
+
+        const { title, description, year, tags, image, link, sections } = result.data;
+
         const newProject = await prisma.project.create({
             data: {
                 title,
@@ -134,7 +184,7 @@ app.post('/api/projects', async (req, res) => {
                 year,
                 tags: JSON.stringify(tags),
                 image,
-                link,
+                link: link || null,
                 sections: JSON.stringify(sections || [])
             }
         });
