@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { api } from '../lib/api';
+import { useState } from 'react';
+import { useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
 import { Link } from 'react-router-dom';
 import CaseStudyEditor from '../components/admin/CaseStudyEditor';
 import MessageCenter from '../components/admin/MessageCenter';
@@ -67,11 +68,7 @@ const Admin = () => {
     const [viewMode, setViewMode] = useState<'grid' | 'editor'>('grid');
     const [editingProject, setEditingProject] = useState<any>(null);
 
-    const [projects, setProjects] = useState<any[]>([]);
-
-    useEffect(() => {
-        api.getProjects().then(setProjects).catch(console.error);
-    }, []);
+    const projects = useQuery(api.projects.get) || [];
 
     const toggleSocialVisibility = (id: number) => {
         setSocials(socials.map(s => s.id === id ? { ...s, visible: !s.visible } : s));
@@ -639,7 +636,7 @@ const Admin = () => {
 
                                     {/* Projects Grid */}
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-20">
-                                        {projects
+                                        {(projects as any[])
                                             .filter(p => projectFilter === 'All' || p.category === projectFilter)
                                             .map((project) => (
                                                 <article key={project.id} className="group flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-card-dark/50 hover:border-primary/50 transition-all duration-300">

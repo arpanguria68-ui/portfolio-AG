@@ -1,65 +1,40 @@
-import React, { useEffect, useState } from 'react';
-import { api } from '../../lib/api';
-
-// Use shared interface usually, but redefining for simplicity in this view as API client types might differ slightly or can import from there.
-// Actually, let's just use the Message type from api if possible, or keep local if it matches.
-interface Message {
-    id: number;
-    name: string;
-    email: string;
-    message: string;
-    date: string;
-    read: boolean;
-}
+import React, { useState } from 'react';
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../../convex/_generated/api";
 
 const MessageCenter = () => {
-    const [messages, setMessages] = useState<Message[]>([]);
-    const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
+    // Convex hooks
+    const messages = useQuery(api.messages.get) || [];
+    const markRead = useMutation(api.messages.markRead);
+    const deleteMessage = useMutation(api.messages.remove);
 
-    useEffect(() => {
-        const loadMessages = async () => {
-            try {
-                const data = await api.getMessages();
-                // Ensure data matches Message[]
-                setMessages(data as any);
-            } catch (error) {
-                console.error("Failed to load messages", error);
-            }
-        };
+    const [selectedMessage, setSelectedMessage] = useState<any>(null);
 
-        loadMessages();
-        // Poll for new messages every 5 seconds
-        const interval = setInterval(loadMessages, 5000);
-        return () => clearInterval(interval);
-    }, []);
-
-    const handleDelete = async (id: number, e: React.MouseEvent) => {
+    const handleDelete = async (id: any, e: React.MouseEvent) => {
         e.stopPropagation();
         if (confirm('Delete this message?')) {
             try {
-                await api.deleteMessage(id);
-                setMessages(messages.filter(m => m.id !== id));
-                if (selectedMessage?.id === id) setSelectedMessage(null);
-            } catch (err) {
-                console.error("Failed to delete", err);
+                await deleteMessage({ id });
+                if (selectedMessage?._id === id) setSelectedMessage(null);
+            } catch (error) {
+                alert('Failed to delete');
             }
         }
     };
 
-    const handleSelect = async (msg: Message) => {
+    const handleSelect = async (msg: any) => {
+        setSelectedMessage(msg);
         if (!msg.read) {
             try {
-                await api.markMessageRead(msg.id);
-                setMessages(messages.map(m => m.id === msg.id ? { ...m, read: true } : m));
-            } catch (err) {
-                console.error("Failed to mark read", err);
+                await markRead({ id: msg._id });
+            } catch (error) {
+                console.error("Failed to mark read");
             }
         }
-        setSelectedMessage({ ...msg, read: true });
     };
 
-    const formatDate = (isoParams: string) => {
-        const date = new Date(isoParams);
+    const formatDate = (timestamp: number) => {
+        const date = new Date(timestamp);
         return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(date);
     };
 
@@ -70,7 +45,7 @@ const MessageCenter = () => {
                 <div className="p-4 border-b border-white/10 flex justify-between items-center bg-white/5">
                     <h2 className="font-bold text-white">Inbox</h2>
                     <span className="text-xs font-bold px-2 py-1 rounded bg-primary text-black">
-                        {messages.filter(m => !m.read).length} New
+                        {(messages as any[]).filter(m => !m.read).length} New
                     </span>
                 </div>
                 <div className="flex-1 overflow-y-auto p-2 space-y-2 custom-scrollbar">
@@ -80,11 +55,11 @@ const MessageCenter = () => {
                             <p>No messages yet</p>
                         </div>
                     ) : (
-                        messages.map(msg => (
+                        (messages as any[]).map((msg: any) => (
                             <div
-                                key={msg.id}
+                                key={msg._id}
                                 onClick={() => handleSelect(msg)}
-                                className={`p-4 rounded-xl cursor-pointer transition-all border ${selectedMessage?.id === msg.id ? 'bg-primary/20 border-primary/50' : 'bg-black/20 border-transparent hover:bg-white/5'} relative group`}
+                                className={`p-4 rounded-xl cursor-pointer transition-all border ${selectedMessage?._id === msg._id ? 'bg-primary/20 border-primary/50' : 'bg-black/20 border-transparent hover:bg-white/5'} relative group`}
                             >
                                 <div className="flex justify-between items-start mb-1">
                                     <h4 className={`font-bold ${!msg.read ? 'text-white' : 'text-white/60'}`}>{msg.name}</h4>
@@ -94,7 +69,7 @@ const MessageCenter = () => {
                                 {!msg.read && <div className="absolute top-4 right-2 w-2 h-2 rounded-full bg-primary shadow-[0_0_10px_rgba(212,255,63,0.8)]"></div>}
 
                                 <button
-                                    onClick={(e) => handleDelete(msg.id, e)}
+                                    onClick={(e) => handleDelete(msg._id, e)}
                                     className="absolute bottom-2 right-2 p-1.5 rounded-lg text-white/20 hover:text-red-400 hover:bg-red-400/10 opacity-0 group-hover:opacity-100 transition-all"
                                 >
                                     <span className="material-symbols-outlined text-sm">delete</span>
@@ -110,7 +85,7 @@ const MessageCenter = () => {
                 {selectedMessage ? (
                     <>
                         <div className="absolute top-4 right-4 flex gap-2">
-                            <button onClick={() => handleDelete(selectedMessage.id, {} as any)} className="p-2 text-white/40 hover:text-red-400 transition-colors" title="Delete">
+                            <button onClick={(e) => handleDelete(selectedMessage._id, e)} className="p-2 text-white/40 hover:text-red-400 transition-colors" title="Delete">
                                 <span className="material-symbols-outlined">delete</span>
                             </button>
                             <button onClick={() => setSelectedMessage(null)} className="md:hidden p-2 text-white/40 hover:text-white transition-colors">
