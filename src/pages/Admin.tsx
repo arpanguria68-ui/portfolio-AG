@@ -24,7 +24,8 @@ const Admin = () => {
 
     // ===== CONVEX MUTATIONS =====
     const updateSkill = useMutation(api.skills.update);
-    // createSkill and removeSkill available via api.skills when UI needs them
+    const createSkill = useMutation(api.skills.create);
+    const removeSkillMutation = useMutation(api.skills.remove);
 
     const updateSocial = useMutation(api.socials.update);
     const createSocial = useMutation(api.socials.create);
@@ -43,6 +44,11 @@ const Admin = () => {
     const [profileSaved, setProfileSaved] = useState(false);
     const [profileImage, setProfileImage] = useState("");
     const [isUploading, setIsUploading] = useState(false);
+
+    // Skill modal state
+    const [showAddSkillModal, setShowAddSkillModal] = useState(false);
+    const [newSkillName, setNewSkillName] = useState("");
+    const [newSkillValue, setNewSkillValue] = useState(75);
 
     // Sync profile from Convex
     useEffect(() => {
@@ -66,6 +72,24 @@ const Admin = () => {
 
     const toggleSkillVisibility = async (id: Id<"skills">, currentVisible: boolean) => {
         await updateSkill({ id, visible: !currentVisible });
+    };
+
+    const addSkill = async () => {
+        if (!newSkillName.trim()) return;
+        await createSkill({
+            name: newSkillName.trim(),
+            value: newSkillValue,
+            visible: true,
+        });
+        setNewSkillName("");
+        setNewSkillValue(75);
+        setShowAddSkillModal(false);
+    };
+
+    const removeSkill = async (id: Id<"skills">) => {
+        if (confirm("Are you sure you want to delete this skill?")) {
+            await removeSkillMutation({ id });
+        }
     };
 
     // ===== SOCIAL HANDLERS =====
@@ -323,11 +347,21 @@ const Admin = () => {
                             </div>
 
                             <div className="bg-card-dark/50 border border-white/10 rounded-3xl p-8 mb-8">
-                                <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-primary">psychology</span>
-                                    Professional Skills
-                                </h3>
-                                <div className="space-y-6">
+                                <div className="flex items-center justify-between mb-6">
+                                    <h3 className="text-xl font-bold flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-primary">psychology</span>
+                                        Professional Skills
+                                        <span className="text-sm font-normal text-white/40">({skills.length} skills)</span>
+                                    </h3>
+                                    <button
+                                        onClick={() => setShowAddSkillModal(true)}
+                                        className="px-4 py-2 bg-primary/10 text-primary font-bold rounded-full hover:bg-primary hover:text-black transition-all flex items-center gap-2 text-sm"
+                                    >
+                                        <span className="material-symbols-outlined text-lg">add</span>
+                                        Add Skill
+                                    </button>
+                                </div>
+                                <div className="space-y-4">
                                     {skills.map((skill) => (
                                         <div key={skill._id} className={`bg-black/20 rounded-2xl p-4 border transition-all ${skill.visible ? 'border-white/10' : 'border-white/5 opacity-60'}`}>
                                             <div className="flex items-center justify-between mb-4">
@@ -335,10 +369,13 @@ const Admin = () => {
                                                     <span className="material-symbols-outlined text-white/20 cursor-grab hover:text-white transition-colors">drag_indicator</span>
                                                     <span className="font-bold">{skill.name}</span>
                                                 </div>
-                                                <div className="flex items-center gap-4">
+                                                <div className="flex items-center gap-3">
                                                     <span className="text-primary font-bold">{skill.value}%</span>
-                                                    <button onClick={() => toggleSkillVisibility(skill._id, skill.visible)} className={`text-white/40 hover:text-white transition-colors`}>
+                                                    <button onClick={() => toggleSkillVisibility(skill._id, skill.visible)} className="text-white/40 hover:text-white transition-colors">
                                                         <span className="material-symbols-outlined">{skill.visible ? 'visibility' : 'visibility_off'}</span>
+                                                    </button>
+                                                    <button onClick={() => removeSkill(skill._id)} className="text-white/40 hover:text-red-400 transition-colors">
+                                                        <span className="material-symbols-outlined">delete</span>
                                                     </button>
                                                 </div>
                                             </div>
@@ -358,6 +395,12 @@ const Admin = () => {
                                             </div>
                                         </div>
                                     ))}
+                                    {skills.length === 0 && (
+                                        <div className="text-center py-8 text-white/40">
+                                            <span className="material-symbols-outlined text-4xl mb-2 block">psychology_alt</span>
+                                            No skills added yet. Click "Add Skill" to get started.
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -865,6 +908,71 @@ const Admin = () => {
                     </button>
                 ))}
             </nav>
+
+            {/* Add Skill Modal */}
+            {showAddSkillModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm">
+                    <div className="bg-card-dark border border-white/10 rounded-3xl p-8 w-full max-w-md mx-4 animate-in fade-in zoom-in-95 duration-300">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-xl font-bold flex items-center gap-2">
+                                <span className="material-symbols-outlined text-primary">psychology</span>
+                                Add New Skill
+                            </h3>
+                            <button
+                                onClick={() => setShowAddSkillModal(false)}
+                                className="text-white/40 hover:text-white transition-colors"
+                            >
+                                <span className="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+
+                        <div className="space-y-6">
+                            <div>
+                                <label className="text-xs uppercase tracking-wider font-bold text-white/40 mb-2 block">
+                                    Skill Name
+                                </label>
+                                <input
+                                    type="text"
+                                    value={newSkillName}
+                                    onChange={(e) => setNewSkillName(e.target.value)}
+                                    placeholder="e.g. UI/UX Design"
+                                    className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-primary/50"
+                                    autoFocus
+                                />
+                            </div>
+
+                            <div>
+                                <label className="text-xs uppercase tracking-wider font-bold text-white/40 mb-2 block">
+                                    Proficiency Level: <span className="text-primary">{newSkillValue}%</span>
+                                </label>
+                                <div className="relative h-3 bg-white/5 rounded-full overflow-hidden">
+                                    <div
+                                        className="absolute top-0 left-0 h-full bg-primary rounded-full transition-all duration-200"
+                                        style={{ width: `${newSkillValue}%` }}
+                                    ></div>
+                                    <input
+                                        type="range"
+                                        min="0"
+                                        max="100"
+                                        value={newSkillValue}
+                                        onChange={(e) => setNewSkillValue(parseInt(e.target.value))}
+                                        className="absolute inset-0 w-full opacity-0 cursor-pointer"
+                                    />
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={addSkill}
+                                disabled={!newSkillName.trim()}
+                                className="w-full py-3 bg-primary text-black font-bold rounded-xl hover:shadow-[0_0_20px_rgba(212,255,63,0.4)] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            >
+                                <span className="material-symbols-outlined">add</span>
+                                Add Skill
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

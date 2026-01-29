@@ -49,11 +49,20 @@ const Home = () => {
     // Convex queries and mutations
     const convexProjects = useQuery(api.projects.list);
     const convexProfile = useQuery(api.profile.get);
+    const convexSkills = useQuery(api.skills.list);
 
     // Profile data with fallbacks
     const profileImage = convexProfile?.profileImage || "https://lh3.googleusercontent.com/aida-public/AB6AXuBmUw9mOGIBUUKTMjLGS3PuCvlZ6tOEkE7Pk4fTqTPRNbyAi8VcOwUJT_Tg7nKQJEJPQUfHhYixf-vDAK5kti7OjS5PBRpTcXy4CYgV5yqLq_8BD9a7D6poQMOIRzQwjPwPy0xUcU4theBgi44FCwTIHWKslp6S1l-DXQD8bGxXSPF7jUS7Jpf1Tx1yTiWGknjjykiWzFMhOmjljznoIL3K1-gKiPmbYu6R0ghqGG3mgw4aBRoYAihl0sZ7Rayj8fsM5dyG5Rpjaupp";
     const headline = convexProfile?.headline || "Bridging the gap between user needs and business goals.";
     const bio = convexProfile?.bio || "I'm Alexander, a Product Manager with a background in UI/UX Design. I specialize in translating complex data into intuitive, engaging products. My approach combines analytical rigor with creative problem-solving.";
+
+    // Skills: filter visible, order by order field, limit to 6
+    const SKILLS_LIMIT = 6;
+    const skills = (convexSkills ?? [])
+        .filter(s => s.visible)
+        .sort((a, b) => a.order - b.order)
+        .slice(0, SKILLS_LIMIT);
+
     const createMessage = useMutation(api.messages.create);
 
     // Use Convex projects if available, else fallback
@@ -211,33 +220,53 @@ const Home = () => {
                                 <p className="text-white/50 text-base">Technologies & Methodologies I use daily.</p>
                             </div>
                             <div className="flex flex-col gap-8 mb-12">
-                                <div className="space-y-3">
-                                    <div className="flex justify-between text-sm font-medium tracking-wider uppercase">
-                                        <span>Product Strategy</span>
-                                        <span className="text-primary">95%</span>
-                                    </div>
-                                    <div className="h-3 bg-white/5 rounded-full overflow-hidden">
-                                        <div className="h-full bg-primary w-[95%] rounded-full shadow-[0_0_10px_rgba(212,255,63,0.5)]"></div>
-                                    </div>
-                                </div>
-                                <div className="space-y-3">
-                                    <div className="flex justify-between text-sm font-medium tracking-wider uppercase">
-                                        <span>UI/UX Design</span>
-                                        <span className="text-primary">88%</span>
-                                    </div>
-                                    <div className="h-3 bg-white/5 rounded-full overflow-hidden">
-                                        <div className="h-full bg-primary w-[88%] rounded-full"></div>
-                                    </div>
-                                </div>
-                                <div className="space-y-3">
-                                    <div className="flex justify-between text-sm font-medium tracking-wider uppercase">
-                                        <span>Data Analysis</span>
-                                        <span className="text-primary">75%</span>
-                                    </div>
-                                    <div className="h-3 bg-white/5 rounded-full overflow-hidden">
-                                        <div className="h-full bg-primary w-[75%] rounded-full"></div>
-                                    </div>
-                                </div>
+                                {skills.length > 0 ? (
+                                    skills.map((skill) => (
+                                        <div key={skill._id} className="space-y-3">
+                                            <div className="flex justify-between text-sm font-medium tracking-wider uppercase">
+                                                <span>{skill.name}</span>
+                                                <span className="text-primary">{skill.value}%</span>
+                                            </div>
+                                            <div className="h-3 bg-white/5 rounded-full overflow-hidden">
+                                                <div
+                                                    className="h-full bg-primary rounded-full shadow-[0_0_10px_rgba(212,255,63,0.5)] transition-all duration-500"
+                                                    style={{ width: `${skill.value}%` }}
+                                                ></div>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    /* Fallback hardcoded skills if none in database */
+                                    <>
+                                        <div className="space-y-3">
+                                            <div className="flex justify-between text-sm font-medium tracking-wider uppercase">
+                                                <span>Product Strategy</span>
+                                                <span className="text-primary">95%</span>
+                                            </div>
+                                            <div className="h-3 bg-white/5 rounded-full overflow-hidden">
+                                                <div className="h-full bg-primary w-[95%] rounded-full shadow-[0_0_10px_rgba(212,255,63,0.5)]"></div>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-3">
+                                            <div className="flex justify-between text-sm font-medium tracking-wider uppercase">
+                                                <span>UI/UX Design</span>
+                                                <span className="text-primary">88%</span>
+                                            </div>
+                                            <div className="h-3 bg-white/5 rounded-full overflow-hidden">
+                                                <div className="h-full bg-primary w-[88%] rounded-full"></div>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-3">
+                                            <div className="flex justify-between text-sm font-medium tracking-wider uppercase">
+                                                <span>Data Analysis</span>
+                                                <span className="text-primary">75%</span>
+                                            </div>
+                                            <div className="h-3 bg-white/5 rounded-full overflow-hidden">
+                                                <div className="h-full bg-primary w-[75%] rounded-full"></div>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         </div>
                         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 gap-4">
