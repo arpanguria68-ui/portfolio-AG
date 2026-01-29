@@ -36,6 +36,8 @@ const Admin = () => {
     // ===== LOCAL STATE FOR EDITING =====
     const [headline, setHeadline] = useState("");
     const [bio, setBio] = useState("");
+    const [isSaving, setIsSaving] = useState(false);
+    const [profileSaved, setProfileSaved] = useState(false);
 
     // Sync profile from Convex
     useEffect(() => {
@@ -87,7 +89,18 @@ const Admin = () => {
 
     // ===== PROFILE HANDLERS =====
     const saveProfile = async () => {
-        await upsertProfile({ headline, bio });
+        try {
+            setIsSaving(true);
+            setProfileSaved(false);
+            await upsertProfile({ headline, bio });
+            setProfileSaved(true);
+            setTimeout(() => setProfileSaved(false), 3000);
+        } catch (error) {
+            console.error('Failed to save profile:', error);
+            alert('Failed to save profile. Please try again.');
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     // ===== FILTER HANDLERS =====
@@ -364,9 +377,20 @@ const Admin = () => {
                                         <span className="material-symbols-outlined">visibility</span>
                                         <span className="hidden md:inline">Preview</span>
                                     </button>
-                                    <button onClick={saveProfile} className="px-6 py-2 bg-primary text-black font-bold rounded-full hover:shadow-[0_0_20px_rgba(212,255,63,0.4)] transition-all flex items-center gap-2">
-                                        <span className="material-symbols-outlined">check</span>
-                                        <span className="hidden md:inline">Save</span>
+                                    <button
+                                        onClick={saveProfile}
+                                        disabled={isSaving}
+                                        className={`px-6 py-2 font-bold rounded-full transition-all flex items-center gap-2 ${profileSaved
+                                                ? 'bg-green-500 text-white'
+                                                : 'bg-primary text-black hover:shadow-[0_0_20px_rgba(212,255,63,0.4)]'
+                                            } ${isSaving ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                    >
+                                        <span className="material-symbols-outlined">
+                                            {isSaving ? 'sync' : profileSaved ? 'check_circle' : 'check'}
+                                        </span>
+                                        <span className="hidden md:inline">
+                                            {isSaving ? 'Saving...' : profileSaved ? 'Saved!' : 'Save'}
+                                        </span>
                                     </button>
                                 </div>
                             </div>
