@@ -8,8 +8,11 @@
  * @module
  */
 
+import type * as media from "../media.js";
 import type * as messages from "../messages.js";
+import type * as profile from "../profile.js";
 import type * as projects from "../projects.js";
+import type * as skills from "../skills.js";
 import type * as socials from "../socials.js";
 
 import type {
@@ -19,8 +22,11 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  media: typeof media;
   messages: typeof messages;
+  profile: typeof profile;
   projects: typeof projects;
+  skills: typeof skills;
   socials: typeof socials;
 }>;
 

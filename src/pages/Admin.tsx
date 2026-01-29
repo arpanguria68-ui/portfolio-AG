@@ -1,33 +1,96 @@
-import { useState } from 'react';
-import { useQuery } from 'convex/react';
+import { useState, useEffect } from 'react';
+import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
+import type { Id } from '../../convex/_generated/dataModel';
 import { Link } from 'react-router-dom';
 import CaseStudyEditor from '../components/admin/CaseStudyEditor';
 import MessageCenter from '../components/admin/MessageCenter';
 
 const Admin = () => {
     const [activeTab, setActiveTab] = useState('dashboard');
-    const [skills, setSkills] = useState([
-        { id: 1, name: 'Product Strategy', value: 95, visible: true },
-        { id: 2, name: 'UI/UX Design', value: 88, visible: true },
-        { id: 3, name: 'Data Analysis', value: 75, visible: true },
-        { id: 4, name: 'User Research', value: 60, visible: false },
-        { id: 5, name: 'Agile Leadership', value: 85, visible: true },
-    ]);
 
     // Project Filter Modal State
     const [showFilterModal, setShowFilterModal] = useState(false);
     const [selectedExpertise, setSelectedExpertise] = useState(['UX Design']);
     const [selectedIndustry, setSelectedIndustry] = useState(['Healthtech']);
 
-    const handleSkillChange = (id: number, newValue: number) => {
-        setSkills(skills.map(skill => skill.id === id ? { ...skill, value: newValue } : skill));
+    // ===== CONVEX QUERIES =====
+    const convexProjects = useQuery(api.projects.list);
+    const convexSkills = useQuery(api.skills.list);
+    const convexSocials = useQuery(api.socials.list);
+    const convexMedia = useQuery(api.media.list);
+    const convexProfile = useQuery(api.profile.get);
+
+    // ===== CONVEX MUTATIONS =====
+    const updateSkill = useMutation(api.skills.update);
+    // createSkill and removeSkill available via api.skills when UI needs them
+
+    const updateSocial = useMutation(api.socials.update);
+    const createSocial = useMutation(api.socials.create);
+    const removeSocialMutation = useMutation(api.socials.remove);
+
+    const upsertProfile = useMutation(api.profile.upsert);
+
+    // createMedia and removeMedia available via api.media when UI needs them
+
+    // ===== LOCAL STATE FOR EDITING =====
+    const [headline, setHeadline] = useState("");
+    const [bio, setBio] = useState("");
+
+    // Sync profile from Convex
+    useEffect(() => {
+        if (convexProfile) {
+            setHeadline(convexProfile.headline || "");
+            setBio(convexProfile.bio || "");
+        }
+    }, [convexProfile]);
+
+    // Derived data with fallbacks
+    const projects = convexProjects ?? [];
+    const skills = convexSkills ?? [];
+    const socials = convexSocials ?? [];
+    const mediaItems = convexMedia ?? [];
+
+    // ===== SKILL HANDLERS =====
+    const handleSkillChange = async (id: Id<"skills">, newValue: number) => {
+        await updateSkill({ id, value: newValue });
     };
 
-    const toggleSkillVisibility = (id: number) => {
-        setSkills(skills.map(skill => skill.id === id ? { ...skill, visible: !skill.visible } : skill));
+    const toggleSkillVisibility = async (id: Id<"skills">, currentVisible: boolean) => {
+        await updateSkill({ id, visible: !currentVisible });
     };
 
+    // ===== SOCIAL HANDLERS =====
+    const toggleSocialVisibility = async (id: Id<"socialLinks">, currentVisible: boolean) => {
+        await updateSocial({ id, visible: !currentVisible });
+    };
+
+    const updateSocialHandle = async (id: Id<"socialLinks">, val: string) => {
+        await updateSocial({ id, handle: val, url: val });
+    };
+
+    const removeSocial = async (id: Id<"socialLinks">) => {
+        await removeSocialMutation({ id });
+    };
+
+    const addSocial = async () => {
+        await createSocial({
+            platform: 'Custom Link',
+            handle: 'https://',
+            url: 'https://',
+            icon: 'link',
+            visible: true,
+            color: 'text-white',
+            bgColor: 'bg-white/10'
+        });
+    };
+
+    // ===== PROFILE HANDLERS =====
+    const saveProfile = async () => {
+        await upsertProfile({ headline, bio });
+    };
+
+    // ===== FILTER HANDLERS =====
     const toggleExpertise = (expert: string) => {
         if (selectedExpertise.includes(expert)) {
             setSelectedExpertise(selectedExpertise.filter(e => e !== expert));
@@ -44,45 +107,10 @@ const Admin = () => {
         }
     };
 
-    // Mock Image Data
-    const mediaItems = [
-        { id: 1, name: 'hero-banner_v2.jpg', size: '2.4 MB', status: 'used', url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB-uuybjdzT7X7JSQGKP_nX9iR3MjEQizIVej1f8SrvB6zP7UDAVCdAGqweyKZXhulJkWfIWF3WtwrQM6F5tDlJrsePWJdl1wnrfZI0ArL5AVlMJbJbu2xevQtQuTCz1Su4WxwxpO0_EHrYw_uPzTx-DwaXTwP-CvfhSgAGXut8BG6cP2xuZ4TAEOiqNl_3IRxXR_9YMtD78DRoQ8uCCnuD4TGVP82saCQswG6WNrMqGkxZdjUnC0ttkPABd4-dnYjeMYEAu3g-6X2a' },
-        { id: 2, name: 'mountains-bg.png', size: '1.8 MB', status: 'unused', url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDMaFZcvWxSITw0IVYfzQp6cv0DckQl0uKRV3MF-i1Cg7qFq_44YYYpgjbCgkhwQKVbKzqjiSi8bkB6ItgqNNJdbLeVBkcBPs91X75EQSsFIqFYGbxUMwszNaR_RF6PkqlX_Q8eyJRuWhh-XlzS56nRD_ncsUGMdzw-NZt5PiO6tpN3clHl4IL1BmouY4g3jmPFLCj98X5jxWcApELdgnCYa81mIwZV5PYrzu--Vv-zdzQTup4sW6t1K0fNV2VimBGXqfcN8ve0AU4a' },
-        { id: 3, name: 'retro-tech-v1.jpg', size: '4.1 MB', status: 'used', url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBTKiwY05c5klIgyVOtXya0YH8NxnYupt4JfO5isfGI47Pe-bgUnwadwj7jRm4H43cUpAP5tKcpcrTVBwhIGTs4VtSbVZNuQqCkGGbbWpdp3NxVDxErY_gBWzfXOPPbzviWMhW1ESHqhsUO-1QWdISeJzh9zLfsZNVGTU99bRbmqzOQoRJxMnjZXJgQjnkG3agIW-g6AeLwNDp9T4C4p7bV9ECTjVkEdJ0qZGMMtaqNBB5k67mMik_YJkP5k7VzWU7E8qRxp5Ox5Gv5' },
-        { id: 4, name: 'arch-shadows.png', size: '900 KB', status: 'unused', url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB2RQ2V03gzV_ebvMM89hYHV_q1JTbN-QGM-_B2gBIK3f690VZqBORhH8Fk2XcmuZtXI_cpRefCRCqTl0VnwwiarEzexD9-ED5FXFXvUw31V5j7HAH0-y_I_G1W84cPoAZ74IokBbplnGHmZoXEJ5zOfQM8Ld_QcJRJWh3PxRUmHdrHQGiwWUdjhbJtpfZkR6T2-O-JBfsYacejTTYbpE3fsjfyksKPhq_faq9Q5U29503PFQb8QC7AS0S2nmNRVu0EfDJr7YMhKPcc' },
-        { id: 5, name: 'portrait-alpha.jpg', size: '3.2 MB', status: 'used', url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC8BhxOXycDkoih3t6clQyIw5p6zfE3eSQDQkS6Ip-ZGISEx86fGz8GFR_noggh0296-lKq-6Ge4vSvTLsAjsjxX9PcOYOjzmkOgftoaub0EAQPtLFuzbzcLaS9kFuKsMgJzXQI4I63RxUEKWsH922-v-b2w66IzqQtWu_UnMg0EQEUDTQVrilqJivT86V6NLZ7iL6YLrviw6aR9SHLwzwt1qFTMmI15V_Ct2L_bsCa78_N24-kAUPPenhYT4QVBWLomtlUmstoa2EU' },
-        { id: 6, name: 'office-space-draft.jpg', size: '5.5 MB', status: 'unused', url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDlyvgxZbDBQ8gXD9AkV0Xw_icOMcRyXwjc0vYBic3NkqQPqrRD0m81X-QNGcfPA7hrUj5uNiFKivQA__kMGZLdWLLqbtBU07WZpvF-YG646LhAzjjmjnlqvlMPEN4RzTu_VZF1VFmgRArs4zizKvYUyxsD7jee0YC5XK9-iuY2ySVBEwY0hE-iMuwF9uVz3PK7NtMVNeP2A373tMF6g1d974VWWyNtrvuQxiDuE9BprvcQr_EyOEv_roByl_0keXw96wLW4Y7VsAWs' },
-    ];
-
-    // Story Editor State
-    const [headline, setHeadline] = useState("Bridging the gap between user needs and business goals.");
-    const [bio, setBio] = useState("I'm Alexander, a Product Manager with a background in UI/UX Design. I specialize in translating complex data into intuitive, engaging products. My approach combines analytical rigor with creative problem-solving.");
-    const [socials, setSocials] = useState([
-        { id: 1, platform: 'LinkedIn', handle: 'https://linkedin.com/in/alexportz', icon: 'business_center', visible: true, color: 'text-[#0077b5]', bgColor: 'bg-[#0077b5]/10' },
-        { id: 2, platform: 'GitHub', handle: 'https://github.com/alexportz', icon: 'terminal', visible: true, color: 'text-white', bgColor: 'bg-white/10' },
-        { id: 3, platform: 'Twitter / X', handle: 'https://x.com/alexportz', icon: 'campaign', visible: false, color: 'text-white', bgColor: 'bg-white/5' }
-    ]);
-
     // Project Editor State
     const [projectFilter, setProjectFilter] = useState('All');
     const [viewMode, setViewMode] = useState<'grid' | 'editor'>('grid');
     const [editingProject, setEditingProject] = useState<any>(null);
-
-    // Projects from Convex
-    const convexProjects = useQuery(api.projects.list);
-    const projects = convexProjects ?? [];
-
-    const toggleSocialVisibility = (id: number) => {
-        setSocials(socials.map(s => s.id === id ? { ...s, visible: !s.visible } : s));
-    };
-
-    const updateSocialHandle = (id: number, val: string) => {
-        setSocials(socials.map(s => s.id === id ? { ...s, handle: val } : s));
-    };
-
-    const removeSocial = (id: number) => {
-        setSocials(socials.filter(s => s.id !== id));
-    };
 
     return (
         <div className="bg-background-dark text-white font-sans antialiased min-h-screen flex flex-col md:flex-row relative overflow-hidden">
@@ -216,7 +244,7 @@ const Admin = () => {
                                 </h3>
                                 <div className="space-y-6">
                                     {skills.map((skill) => (
-                                        <div key={skill.id} className={`bg-black/20 rounded-2xl p-4 border transition-all ${skill.visible ? 'border-white/10' : 'border-white/5 opacity-60'}`}>
+                                        <div key={skill._id} className={`bg-black/20 rounded-2xl p-4 border transition-all ${skill.visible ? 'border-white/10' : 'border-white/5 opacity-60'}`}>
                                             <div className="flex items-center justify-between mb-4">
                                                 <div className="flex items-center gap-3">
                                                     <span className="material-symbols-outlined text-white/20 cursor-grab hover:text-white transition-colors">drag_indicator</span>
@@ -224,7 +252,7 @@ const Admin = () => {
                                                 </div>
                                                 <div className="flex items-center gap-4">
                                                     <span className="text-primary font-bold">{skill.value}%</span>
-                                                    <button onClick={() => toggleSkillVisibility(skill.id)} className={`text-white/40 hover:text-white transition-colors`}>
+                                                    <button onClick={() => toggleSkillVisibility(skill._id, skill.visible)} className={`text-white/40 hover:text-white transition-colors`}>
                                                         <span className="material-symbols-outlined">{skill.visible ? 'visibility' : 'visibility_off'}</span>
                                                     </button>
                                                 </div>
@@ -239,7 +267,7 @@ const Admin = () => {
                                                     min="0"
                                                     max="100"
                                                     value={skill.value}
-                                                    onChange={(e) => handleSkillChange(skill.id, parseInt(e.target.value))}
+                                                    onChange={(e) => handleSkillChange(skill._id, parseInt(e.target.value))}
                                                     className="absolute inset-0 w-full opacity-0 cursor-pointer"
                                                 />
                                             </div>
@@ -305,7 +333,7 @@ const Admin = () => {
 
                             <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                                 {mediaItems.map((item) => (
-                                    <div key={item.id} className="group relative bg-card-dark/50 rounded-2xl p-2 border border-white/10 hover:border-primary/50 transition-all flex flex-col gap-3">
+                                    <div key={item._id} className="group relative bg-card-dark/50 rounded-2xl p-2 border border-white/10 hover:border-primary/50 transition-all flex flex-col gap-3">
                                         <div className="relative aspect-square rounded-xl overflow-hidden bg-black/50">
                                             <img src={item.url} alt={item.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                                             <div className={`absolute top-2 right-2 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border backdrop-blur-md ${item.status === 'used' ? 'bg-black/60 text-primary border-primary/20' : 'bg-black/60 text-white/40 border-white/10'}`}>
@@ -336,7 +364,7 @@ const Admin = () => {
                                         <span className="material-symbols-outlined">visibility</span>
                                         <span className="hidden md:inline">Preview</span>
                                     </button>
-                                    <button className="px-6 py-2 bg-primary text-black font-bold rounded-full hover:shadow-[0_0_20px_rgba(212,255,63,0.4)] transition-all flex items-center gap-2">
+                                    <button onClick={saveProfile} className="px-6 py-2 bg-primary text-black font-bold rounded-full hover:shadow-[0_0_20px_rgba(212,255,63,0.4)] transition-all flex items-center gap-2">
                                         <span className="material-symbols-outlined">check</span>
                                         <span className="hidden md:inline">Save</span>
                                     </button>
@@ -403,7 +431,7 @@ const Admin = () => {
                                 <label className="text-xs uppercase tracking-wider font-bold text-white/40 mb-4 block">Social Links</label>
                                 <div className="flex flex-col gap-4">
                                     {socials.map((social) => (
-                                        <div key={social.id} className={`rounded-2xl overflow-hidden transition-all duration-300 border ${social.visible ? 'bg-card-dark border-white/10 shadow-lg' : 'bg-black/10 border-white/5 opacity-70'}`}>
+                                        <div key={social._id} className={`rounded-2xl overflow-hidden transition-all duration-300 border ${social.visible ? 'bg-card-dark border-white/10 shadow-lg' : 'bg-black/10 border-white/5 opacity-70'}`}>
                                             <div className="p-4 flex items-center justify-between">
                                                 <div className="flex items-center gap-3">
                                                     <div className={`flex items-center justify-center w-10 h-10 rounded-full shadow-inner ${social.bgColor} ${social.color}`}>
@@ -415,10 +443,9 @@ const Admin = () => {
                                                     </div>
                                                 </div>
 
-                                                {/* Toggle Switch */}
                                                 <div
                                                     className={`relative w-12 h-7 rounded-full cursor-pointer transition-colors duration-300 ${social.visible ? 'bg-primary' : 'bg-white/10'}`}
-                                                    onClick={() => toggleSocialVisibility(social.id)}
+                                                    onClick={() => toggleSocialVisibility(social._id, social.visible)}
                                                 >
                                                     <div className={`absolute top-1 left-1 bg-black w-5 h-5 rounded-full shadow-sm transition-transform duration-300 ${social.visible ? 'translate-x-5' : 'translate-x-0'}`}></div>
                                                 </div>
@@ -430,10 +457,10 @@ const Admin = () => {
                                                 <input
                                                     className="bg-transparent border-0 p-0 text-sm text-white w-full focus:outline-none placeholder:text-white/20 font-mono"
                                                     value={social.handle}
-                                                    onChange={(e) => updateSocialHandle(social.id, e.target.value)}
+                                                    onChange={(e) => updateSocialHandle(social._id, e.target.value)}
                                                     placeholder="https://..."
                                                 />
-                                                <button onClick={() => removeSocial(social.id)} className="text-white/20 hover:text-red-400 transition-colors" title="Remove Link">
+                                                <button onClick={() => removeSocial(social._id)} className="text-white/20 hover:text-red-400 transition-colors" title="Remove Link">
                                                     <span className="material-symbols-outlined text-lg">delete</span>
                                                 </button>
                                             </div>
@@ -444,15 +471,7 @@ const Admin = () => {
                                     <button
                                         className="mt-2 w-full py-4 border border-dashed border-white/20 rounded-2xl flex items-center justify-center gap-2 text-white/40 hover:text-primary hover:border-primary/50 hover:bg-primary/5 transition-all group"
                                         type="button"
-                                        onClick={() => setSocials([...socials, {
-                                            id: Date.now(),
-                                            platform: 'Custom Link',
-                                            handle: 'https://',
-                                            icon: 'link',
-                                            visible: true,
-                                            color: 'text-white',
-                                            bgColor: 'bg-white/10'
-                                        }])}
+                                        onClick={() => addSocial()}
                                     >
                                         <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-primary group-hover:text-black transition-colors">
                                             <span className="material-symbols-outlined text-lg">add</span>

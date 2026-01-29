@@ -26,13 +26,27 @@ export default defineSchema({
         visible: v.boolean(),
         color: v.optional(v.string()),
         bgColor: v.optional(v.string()),
+        order: v.optional(v.number()),
     }),
 
     profile: defineTable({
-        bio: v.optional(v.string()),
+        key: v.string(), // singleton key = "main"
         headline: v.optional(v.string()),
-        subHeadline: v.optional(v.string()),
-        email: v.optional(v.string()),
-        resumeUrl: v.optional(v.string()),
+        bio: v.optional(v.string()),
+        profileImage: v.optional(v.string()),
+    }),
+
+    skills: defineTable({
+        name: v.string(),
+        value: v.number(),
+        visible: v.boolean(),
+        order: v.number(),
+    }),
+
+    media: defineTable({
+        name: v.string(),
+        url: v.string(),
+        size: v.string(),
+        status: v.string(), // 'used' | 'unused'
     }),
 });
