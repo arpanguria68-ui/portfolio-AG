@@ -16,14 +16,22 @@ export const create = mutation({
     args: {
         name: v.string(),
         url: v.string(),
+        publicId: v.string(),
         size: v.string(),
+        format: v.string(),
+        width: v.number(),
+        height: v.number(),
         status: v.string(),
     },
     handler: async (ctx, args) => {
         const id = await ctx.db.insert("media", {
             name: args.name,
             url: args.url,
+            publicId: args.publicId,
             size: args.size,
+            format: args.format,
+            width: args.width,
+            height: args.height,
             status: args.status,
         });
         return id;

@@ -46,7 +46,11 @@ export default defineSchema({
     media: defineTable({
         name: v.string(),
         url: v.string(),
+        publicId: v.string(), // Cloudinary public_id for delete operations
         size: v.string(),
+        format: v.string(),
+        width: v.number(),
+        height: v.number(),
         status: v.string(), // 'used' | 'unused'
     }),
 });

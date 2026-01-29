@@ -5,6 +5,7 @@ import type { Id } from '../../convex/_generated/dataModel';
 import { Link } from 'react-router-dom';
 import CaseStudyEditor from '../components/admin/CaseStudyEditor';
 import MessageCenter from '../components/admin/MessageCenter';
+import { uploadImage, uploadMultipleImages, formatFileSize } from '../lib/cloudinary';
 
 const Admin = () => {
     const [activeTab, setActiveTab] = useState('dashboard');
@@ -31,19 +32,24 @@ const Admin = () => {
 
     const upsertProfile = useMutation(api.profile.upsert);
 
-    // createMedia and removeMedia available via api.media when UI needs them
+    // Media mutations
+    const createMedia = useMutation(api.media.create);
+    const removeMedia = useMutation(api.media.remove);
 
     // ===== LOCAL STATE FOR EDITING =====
     const [headline, setHeadline] = useState("");
     const [bio, setBio] = useState("");
     const [isSaving, setIsSaving] = useState(false);
     const [profileSaved, setProfileSaved] = useState(false);
+    const [profileImage, setProfileImage] = useState("");
+    const [isUploading, setIsUploading] = useState(false);
 
     // Sync profile from Convex
     useEffect(() => {
         if (convexProfile) {
             setHeadline(convexProfile.headline || "");
             setBio(convexProfile.bio || "");
+            setProfileImage(convexProfile.profileImage || "");
         }
     }, [convexProfile]);
 
@@ -92,7 +98,7 @@ const Admin = () => {
         try {
             setIsSaving(true);
             setProfileSaved(false);
-            await upsertProfile({ headline, bio });
+            await upsertProfile({ headline, bio, profileImage: profileImage || undefined });
             setProfileSaved(true);
             setTimeout(() => setProfileSaved(false), 3000);
         } catch (error) {
@@ -100,6 +106,72 @@ const Admin = () => {
             alert('Failed to save profile. Please try again.');
         } finally {
             setIsSaving(false);
+        }
+    };
+
+    // ===== UPLOAD HANDLERS =====
+    const handleUploadProfileImage = async () => {
+        try {
+            setIsUploading(true);
+            const result = await uploadImage({
+                folder: 'portfolio/profile',
+                cropping: true,
+                aspectRatio: 4 / 5,
+            });
+            setProfileImage(result.url);
+            // Auto-save profile with new image
+            await upsertProfile({ headline, bio, profileImage: result.url });
+            setProfileSaved(true);
+            setTimeout(() => setProfileSaved(false), 3000);
+        } catch (error) {
+            if ((error as Error).message !== 'Upload cancelled') {
+                console.error('Failed to upload profile image:', error);
+                alert('Failed to upload image. Please try again.');
+            }
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+    const handleUploadMedia = async () => {
+        try {
+            setIsUploading(true);
+            const results = await uploadMultipleImages({
+                folder: 'portfolio/media',
+                maxFiles: 10,
+            });
+
+            // Save each uploaded image to Convex
+            for (const img of results) {
+                await createMedia({
+                    name: img.name,
+                    url: img.url,
+                    publicId: img.publicId,
+                    size: formatFileSize(img.size),
+                    format: img.format,
+                    width: img.width,
+                    height: img.height,
+                    status: 'unused',
+                });
+            }
+        } catch (error) {
+            if ((error as Error).message !== 'Upload cancelled') {
+                console.error('Failed to upload media:', error);
+                alert('Failed to upload images. Please try again.');
+            }
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+    const handleDeleteMedia = async (id: Id<"media">) => {
+        if (confirm('Are you sure you want to delete this image?')) {
+            try {
+                await removeMedia({ id });
+            } catch (error) {
+                console.error('Failed to delete media:', error);
+                alert('Failed to delete image. Please try again.');
+            }
         }
     };
 
@@ -329,18 +401,25 @@ const Admin = () => {
                                     <h2 className="text-3xl font-display font-bold mb-2">Media <span className="text-primary">Library</span></h2>
                                     <p className="text-white/40">Manager your project images and highlights.</p>
                                 </div>
-                                <button className="h-12 w-12 rounded-full bg-primary text-black flex items-center justify-center shadow-lg hover:scale-105 transition-transform">
+                                <button onClick={handleUploadMedia} className="h-12 w-12 rounded-full bg-primary text-black flex items-center justify-center shadow-lg hover:scale-105 transition-transform">
                                     <span className="material-symbols-outlined text-2xl">add</span>
                                 </button>
                             </div>
 
-                            <div className="mb-8 p-8 border-2 border-dashed border-white/10 rounded-3xl bg-white/5 hover:bg-white/10 hover:border-primary/50 transition-all cursor-pointer flex flex-col items-center justify-center gap-4 group">
+                            <div
+                                onClick={handleUploadMedia}
+                                className="mb-8 p-8 border-2 border-dashed border-white/10 rounded-3xl bg-white/5 hover:bg-white/10 hover:border-primary/50 transition-all cursor-pointer flex flex-col items-center justify-center gap-4 group"
+                            >
                                 <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                                    <span className="material-symbols-outlined text-3xl">cloud_upload</span>
+                                    {isUploading ? (
+                                        <span className="material-symbols-outlined text-3xl animate-spin">sync</span>
+                                    ) : (
+                                        <span className="material-symbols-outlined text-3xl">cloud_upload</span>
+                                    )}
                                 </div>
                                 <div className="text-center">
-                                    <p className="text-lg font-bold text-white">Upload New Image</p>
-                                    <p className="text-sm text-white/40">Tap or drop files here. JPG, PNG up to 5MB.</p>
+                                    <p className="text-lg font-bold text-white">{isUploading ? 'Uploading...' : 'Upload New Images'}</p>
+                                    <p className="text-sm text-white/40">Click to select images. JPG, PNG, WebP up to 10MB.</p>
                                 </div>
                             </div>
 
@@ -352,6 +431,13 @@ const Admin = () => {
                                             <div className={`absolute top-2 right-2 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border backdrop-blur-md ${item.status === 'used' ? 'bg-black/60 text-primary border-primary/20' : 'bg-black/60 text-white/40 border-white/10'}`}>
                                                 {item.status}
                                             </div>
+                                            <button
+                                                onClick={() => handleDeleteMedia(item._id)}
+                                                className="absolute top-2 left-2 w-8 h-8 rounded-full bg-red-500/80 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500"
+                                                title="Delete image"
+                                            >
+                                                <span className="material-symbols-outlined text-sm">delete</span>
+                                            </button>
                                         </div>
                                         <div className="px-2 pb-2">
                                             <p className="text-sm font-bold truncate mb-1" title={item.name}>{item.name}</p>
@@ -401,14 +487,22 @@ const Admin = () => {
                             <section className="mb-12">
                                 <div className="flex items-center justify-between mb-4">
                                     <label className="text-xs uppercase tracking-wider font-bold text-white/40">Profile Image</label>
-                                    <span className="text-[10px] text-primary bg-primary/10 px-2 py-1 rounded border border-primary/20">Saved</span>
+                                    <span className="text-[10px] text-primary bg-primary/10 px-2 py-1 rounded border border-primary/20">{profileSaved ? 'Saved' : ''}</span>
                                 </div>
                                 <div className="glass p-8 rounded-3xl border border-white/10 flex flex-col items-center justify-center bg-card-dark/30">
-                                    <div className="relative group cursor-pointer w-[180px]">
+                                    <div className="relative group cursor-pointer w-[180px]" onClick={handleUploadProfileImage}>
                                         <div className="aspect-[4/5] rounded-2xl overflow-hidden relative border-2 border-white/10 group-hover:border-primary/50 transition-colors shadow-2xl">
-                                            <img alt="Profile Preview" className="w-full h-full object-cover filter brightness-90 group-hover:brightness-50 transition-all duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBmUw9mOGIBUUKTMjLGS3PuCvlZ6tOEkE7Pk4fTqTPRNbyAi8VcOwUJT_Tg7nKQJEJPQUfHhYixf-vDAK5kti7OjS5PBRpTcXy4CYgV5yqLq_8BD9a7D6poQMOIRzQwjPwPy0xUcU4theBgi44FCwTIHWKslp6S1l-DXQD8bGxXSPF7jUS7Jpf1Tx1yTiWGknjjykiWzFMhOmjljznoIL3K1-gKiPmbYu6R0ghqGG3mgw4aBRoYAihl0sZ7Rayj8fsM5dyG5Rpjaupp" />
+                                            <img
+                                                alt="Profile Preview"
+                                                className="w-full h-full object-cover filter brightness-90 group-hover:brightness-50 transition-all duration-300"
+                                                src={profileImage || convexProfile?.profileImage || "https://lh3.googleusercontent.com/aida-public/AB6AXuBmUw9mOGIBUUKTMjLGS3PuCvlZ6tOEkE7Pk4fTqTPRNbyAi8VcOwUJT_Tg7nKQJEJPQUfHhYixf-vDAK5kti7OjS5PBRpTcXy4CYgV5yqLq_8BD9a7D6poQMOIRzQwjPwPy0xUcU4theBgi44FCwTIHWKslp6S1l-DXQD8bGxXSPF7jUS7Jpf1Tx1yTiWGknjjykiWzFMhOmjljznoIL3K1-gKiPmbYu6R0ghqGG3mgw4aBRoYAihl0sZ7Rayj8fsM5dyG5Rpjaupp"}
+                                            />
                                             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                                <span className="material-symbols-outlined text-3xl text-primary">crop</span>
+                                                {isUploading ? (
+                                                    <span className="material-symbols-outlined text-3xl text-primary animate-spin">sync</span>
+                                                ) : (
+                                                    <span className="material-symbols-outlined text-3xl text-primary">cloud_upload</span>
+                                                )}
                                             </div>
                                         </div>
                                         <div className="absolute -bottom-3 -right-3">
@@ -417,7 +511,7 @@ const Admin = () => {
                                             </button>
                                         </div>
                                     </div>
-                                    <p className="text-[10px] text-white/30 mt-6 text-center">Tap image to adjust crop. <br />Recommended: 800x1000px JPG/PNG.</p>
+                                    <p className="text-[10px] text-white/30 mt-6 text-center">Click to upload a new image. <br />Recommended: 800x1000px JPG/PNG.</p>
                                 </div>
                             </section>
 
