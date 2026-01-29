@@ -373,7 +373,10 @@ const Admin = () => {
                                     <p className="text-white/40">Edit your profile, bio, and social links.</p>
                                 </div>
                                 <div className="flex gap-2">
-                                    <button className="px-6 py-2 border border-white/10 hover:bg-white/5 rounded-full font-bold text-sm transition-all flex items-center gap-2">
+                                    <button
+                                        onClick={() => window.open('/', '_blank')}
+                                        className="px-6 py-2 border border-white/10 hover:bg-white/5 rounded-full font-bold text-sm transition-all flex items-center gap-2"
+                                    >
                                         <span className="material-symbols-outlined">visibility</span>
                                         <span className="hidden md:inline">Preview</span>
                                     </button>
@@ -381,8 +384,8 @@ const Admin = () => {
                                         onClick={saveProfile}
                                         disabled={isSaving}
                                         className={`px-6 py-2 font-bold rounded-full transition-all flex items-center gap-2 ${profileSaved
-                                                ? 'bg-green-500 text-white'
-                                                : 'bg-primary text-black hover:shadow-[0_0_20px_rgba(212,255,63,0.4)]'
+                                            ? 'bg-green-500 text-white'
+                                            : 'bg-primary text-black hover:shadow-[0_0_20px_rgba(212,255,63,0.4)]'
                                             } ${isSaving ? 'opacity-70 cursor-not-allowed' : ''}`}
                                     >
                                         <span className="material-symbols-outlined">
