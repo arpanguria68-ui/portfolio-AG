@@ -4,7 +4,7 @@ import { v } from "convex/values";
 // Get all projects
 export const get = query({
   args: {},
-  handler: async (ctx) => {
+  handler: async (ctx: any) => {
     return await ctx.db.query("projects").order("desc").collect();
   },
 });
@@ -20,7 +20,7 @@ export const create = mutation({
     link: v.optional(v.string()),
     sections: v.string(),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx: any, args: any) => {
     const projectId = await ctx.db.insert("projects", {
       ...args,
       createdAt: Date.now(),
@@ -41,7 +41,7 @@ export const update = mutation({
     link: v.optional(v.string()),
     sections: v.string(),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx: any, args: any) => {
     const { id, ...data } = args;
     await ctx.db.patch(id, data);
   },
@@ -50,12 +50,12 @@ export const update = mutation({
 // Delete project
 export const remove = mutation({
   args: { id: v.id("projects") },
-  handler: async (ctx, args) => {
+  handler: async (ctx: any, args: any) => {
     await ctx.db.delete(args.id);
   },
 });
 
 // Generate upload URL for images
-export const generateUploadUrl = mutation(async (ctx) => {
+export const generateUploadUrl = mutation(async (ctx: any) => {
   return await ctx.storage.generateUploadUrl();
 });

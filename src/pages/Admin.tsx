@@ -636,7 +636,7 @@ const Admin = () => {
 
                                     {/* Projects Grid */}
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-20">
-                                        {projects
+                                        {(projects as any[])
                                             .filter(p => projectFilter === 'All' || p.category === projectFilter)
                                             .map((project) => (
                                                 <article key={project.id} className="group flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-card-dark/50 hover:border-primary/50 transition-all duration-300">

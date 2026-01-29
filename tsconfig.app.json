@@ -27,6 +27,6 @@
     /* Testing */
     "types": ["vitest/globals"]
   },
-  "include": ["src"],
+  "include": ["src", "convex"],
   "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx", "src/test/**"]
 }

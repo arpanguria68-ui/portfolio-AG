@@ -4,7 +4,7 @@ import { v } from "convex/values";
 // Get all messages
 export const get = query({
   args: {},
-  handler: async (ctx) => {
+  handler: async (ctx: any) => {
     return await ctx.db.query("messages").order("desc").collect();
   },
 });
@@ -16,7 +16,7 @@ export const create = mutation({
     email: v.string(),
     message: v.string(),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx: any, args: any) => {
     await ctx.db.insert("messages", {
       ...args,
       date: Date.now(),
@@ -28,7 +28,7 @@ export const create = mutation({
 // Mark as read
 export const markRead = mutation({
   args: { id: v.id("messages") },
-  handler: async (ctx, args) => {
+  handler: async (ctx: any, args: any) => {
     await ctx.db.patch(args.id, { read: true });
   },
 });
@@ -36,7 +36,7 @@ export const markRead = mutation({
 // Delete message
 export const remove = mutation({
   args: { id: v.id("messages") },
-  handler: async (ctx, args) => {
+  handler: async (ctx: any, args: any) => {
     await ctx.db.delete(args.id);
   },
 });

@@ -20,7 +20,7 @@ const Home = () => {
     const [projectFilter, setProjectFilter] = useState('All');
     const [projectSort, setProjectSort] = useState('Newest');
 
-    const filteredProjects = projects.filter((p: any) => {
+    const filteredProjects = (projects as any[]).filter((p: any) => {
         if (projectFilter === 'All') return true;
         return p.tags.includes(projectFilter);
     }).sort((a: any, b: any) => {
@@ -32,7 +32,7 @@ const Home = () => {
         return 0;
     });
 
-    const uniqueTags = ['All', ...Array.from(new Set(projects.flatMap((p: any) => p.tags)))];
+    const uniqueTags = ['All', ...Array.from(new Set((projects as any[]).flatMap((p: any) => p.tags)))];
 
     const [formData, setFormData] = useState({ name: '', email: '', message: '' });
     const [status, setStatus] = useState<'idle' | 'sending' | 'success'>('idle');
