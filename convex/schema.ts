@@ -53,4 +53,18 @@ export default defineSchema({
         height: v.number(),
         status: v.string(), // 'used' | 'unused'
     }),
+
+    // AI Chat tables
+    chatSessions: defineTable({
+        sessionId: v.string(), // Browser fingerprint or UUID
+        createdAt: v.number(),
+        lastMessageAt: v.number(),
+    }).index("by_session", ["sessionId"]),
+
+    chatMessages: defineTable({
+        sessionId: v.string(),
+        role: v.string(), // 'user' | 'assistant'
+        content: v.string(),
+        timestamp: v.number(),
+    }).index("by_session", ["sessionId"]),
 });

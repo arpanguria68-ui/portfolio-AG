@@ -1,15 +1,29 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import Home from './pages/Home';
 import Gallery from './pages/Gallery';
 import Admin from './pages/Admin';
 import Login from './pages/Login';
 import CaseStudy from './pages/CaseStudy';
 import ErrorBoundary from './components/ErrorBoundary';
+import AIChatWidget from './components/AIChatWidget';
+
+// Wrapper component to conditionally render chat widget
+const ChatWidgetWrapper = () => {
+  const location = useLocation();
+  // Hide chat widget on admin and login pages
+  const hiddenPaths = ['/admin', '/login'];
+  const shouldShow = !hiddenPaths.some(path => location.pathname.startsWith(path));
+
+  return shouldShow ? <AIChatWidget /> : null;
+};
 
 function App() {
   return (
     <ErrorBoundary>
       <BrowserRouter>
+        {/* AI Chat Widget - hidden on admin/login pages */}
+        <ChatWidgetWrapper />
+
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/gallery" element={<Gallery />} />
