@@ -1,13 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useQuery, useMutation } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 
 import { GlowBorderCard } from '../components/ui/glow-border-card';
 import { FlipFadeText } from '../components/ui/flip-fade-text';
-import { api } from '../lib/api';
 
-const PROJECTS = [
+const FALLBACK_PROJECTS = [
     {
-        id: 1,
+        _id: '1' as any,
         title: "NeoBank Finance",
         description: "Reimagining the mobile banking experience for Gen Z with AI-driven savings insights.",
         year: "2024",
@@ -16,7 +17,7 @@ const PROJECTS = [
         link: "/gallery"
     },
     {
-        id: 2,
+        _id: '2' as any,
         title: "DataViz Pro",
         description: "Enterprise analytics dashboard enabling real-time decision making for sales teams.",
         year: "2023",
@@ -25,7 +26,7 @@ const PROJECTS = [
         link: "#"
     },
     {
-        id: 3,
+        _id: '3' as any,
         title: "Vitality Health",
         description: "Patient monitoring interface connecting doctors with real-time health metrics.",
         year: "2022",
@@ -42,29 +43,21 @@ const Home = () => {
         window.scrollTo(0, 0);
     }, []);
 
-
-
-
     const [projectFilter, setProjectFilter] = useState('All');
     const [projectSort, setProjectSort] = useState('Newest');
 
-    const [projects, setProjects] = useState<any[]>(PROJECTS);
+    // Convex queries and mutations
+    const convexProjects = useQuery(api.projects.list);
+    const createMessage = useMutation(api.messages.create);
 
-    useEffect(() => {
-        // Fetch projects from API
-        api.getProjects()
-            .then(data => {
-                if (data.length > 0) setProjects(data);
-            })
-            .catch(err => console.error("Failed to load projects", err));
-    }, []);
+    // Use Convex projects if available, else fallback
+    const projects = (convexProjects && convexProjects.length > 0) ? convexProjects : FALLBACK_PROJECTS;
 
     const filteredProjects = projects.filter(p => {
         if (projectFilter === 'All') return true;
         return p.tags.includes(projectFilter);
     }).sort((a, b) => {
         if (projectSort === 'Newest') {
-            // Handle simple year string specific to initial data, or full dates if API returns them
             return parseInt(b.year) - parseInt(a.year);
         }
         if (projectSort === 'Oldest') return parseInt(a.year) - parseInt(b.year);
@@ -82,13 +75,13 @@ const Home = () => {
         setStatus('sending');
 
         try {
-            await api.createMessage(formData);
+            await createMessage(formData);
             setStatus('success');
             setFormData({ name: '', email: '', message: '' });
             setTimeout(() => setStatus('idle'), 3000);
         } catch (error) {
             console.error(error);
-            setStatus('idle'); // Or error state
+            setStatus('idle');
         }
     };
 
@@ -299,9 +292,9 @@ const Home = () => {
 
                         {/* Grid for desktop, Scroll for mobile */}
                         <div className="flex md:grid md:grid-cols-2 lg:grid-cols-3 overflow-x-auto md:overflow-visible gap-6 pb-8 md:pb-0 snap-x snap-mandatory no-scrollbar items-stretch">
-                            {filteredProjects.map((project) => (
-                                <div key={project.id} className="min-w-[85vw] md:min-w-0 snap-center flex flex-col">
-                                    <Link to={project.link} className="bg-card-dark rounded-[32px] overflow-hidden border border-white/10 flex flex-col h-full group relative transition-transform hover:-translate-y-2 duration-500">
+                            {filteredProjects.map((project, index) => (
+                                <div key={project._id} className="min-w-[85vw] md:min-w-0 snap-center flex flex-col">
+                                    <Link to={`/project/${project._id || index + 1}`} className="bg-card-dark rounded-[32px] overflow-hidden border border-white/10 flex flex-col h-full group relative transition-transform hover:-translate-y-2 duration-500">
                                         <div className="relative h-[280px] w-full overflow-hidden bg-[#1A1A1A]">
                                             <img alt={project.title} className="w-full h-full object-cover opacity-80 group-hover:scale-105 group-hover:opacity-100 transition-all duration-700" src={project.image} />
                                             <div className="absolute inset-0 bg-gradient-to-t from-card-dark via-transparent to-transparent"></div>
@@ -377,7 +370,7 @@ const Home = () => {
                                 </div>
                             </div>
 
-                            {/* Past Role 1 (Flip for Desktop variety?) - Keeping uniform for now for simplicity, but making responsive */}
+                            {/* Past Role 1 */}
                             <div className="flex flex-col md:flex-row gap-0 md:gap-12 group mb-12 relative items-start md:items-center justify-between">
                                 <div className="w-[85px] md:w-1/2 pr-6 md:pr-0 md:text-right flex flex-col md:block items-end pt-1 flex-shrink-0">
                                     <span className="text-white font-bold text-sm md:text-lg tracking-wide">2023</span>
@@ -576,12 +569,12 @@ const Home = () => {
             <div className="py-4 bg-primary text-black font-bold text-[10px] uppercase tracking-widest flex whitespace-nowrap overflow-hidden border-t border-black">
                 <div className="flex gap-12 animate-marquee">
                     {[1, 2, 3, 4].map((_, i) => (
-                        <React.Fragment key={i}>
+                        <Fragment key={i}>
                             <div className="flex items-center gap-2"><span className="material-symbols-outlined text-sm">star</span> PRODUCT STRATEGY</div>
                             <div className="flex items-center gap-2"><span className="material-symbols-outlined text-sm">star</span> UX DESIGN</div>
                             <div className="flex items-center gap-2"><span className="material-symbols-outlined text-sm">star</span> AGILE LEADERSHIP</div>
                             <div className="flex items-center gap-2"><span className="material-symbols-outlined text-sm">star</span> DATA ANALYTICS</div>
-                        </React.Fragment>
+                        </Fragment>
                     ))}
                 </div>
             </div>

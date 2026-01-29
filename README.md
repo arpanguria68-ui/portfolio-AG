@@ -1,73 +1,80 @@
-# React + TypeScript + Vite
+# Portfolio AG - Convex + Vercel
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A production-ready portfolio application using **React + Vite** with **Convex** as the real-time backend, deployable to **Vercel**.
 
-Currently, two official plugins are available:
+## 🚀 Quick Start
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### 1. Install Dependencies
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### 2. Setup Convex Backend
+```bash
+npx convex dev
 ```
+This will:
+- Prompt you to log in to Convex
+- Create a new project (or connect to existing)
+- Generate `convex/_generated` files
+- Create `.env.local` with your `VITE_CONVEX_URL`
+
+### 3. Run Development Server
+```bash
+npm run dev
+```
+
+## 📦 Deployment to Vercel
+
+### 1. Push to GitHub
+```bash
+git add .
+git commit -m "Convex integration complete"
+git push origin main
+```
+
+### 2. Deploy Convex to Production
+```bash
+npx convex deploy
+```
+This will give you a production Convex URL.
+
+### 3. Configure Vercel
+1. Import your GitHub repo on [vercel.com](https://vercel.com)
+2. Add Environment Variable:
+   - `VITE_CONVEX_URL` = Your production Convex URL
+3. Deploy!
+
+## 🏗 Project Structure
+
+```
+├── convex/              # Convex backend
+│   ├── schema.ts        # Database schema
+│   ├── messages.ts      # Message CRUD functions
+│   ├── projects.ts      # Project CRUD functions
+│   └── socials.ts       # Social links query
+├── src/
+│   ├── components/      # React components
+│   ├── lib/             # Utilities & providers
+│   ├── pages/           # Route pages
+│   └── main.tsx         # App entry point
+├── vercel.json          # Vercel config
+└── .env.local.example   # Env template
+```
+
+## ⚡ Features
+
+- **Real-time Updates**: Messages and projects sync automatically via Convex subscriptions
+- **Error Handling**: Global ErrorBoundary for production resilience
+- **TypeScript**: Full type safety with generated Convex types
+- **Responsive**: Mobile-first design
+
+## 🔧 Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `VITE_CONVEX_URL` | Convex deployment URL (from `npx convex dev`) |
+
+---
+
+Built with Convex + Vite + React + TailwindCSS

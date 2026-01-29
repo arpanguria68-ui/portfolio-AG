@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { useMutation } from 'convex/react';
+import { api } from '../../../convex/_generated/api';
 import LivePreview from './LivePreview';
-import { api } from '../../lib/api';
 
 interface CaseStudyEditorProps {
     onBack: () => void;
@@ -46,21 +47,23 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
         setShowAddMenu(false);
     };
 
+    const createProject = useMutation(api.projects.create);
+
     const handleSave = async () => {
         setIsSaving(true);
         try {
             const projectData = {
                 title,
-                description: sections.map(s => s.content).join('\n\n'), // Simple aggregation for now
-                year: '2024',
+                description: sections.map(s => s.content).join('\n\n'),
+                year: new Date().getFullYear().toString(),
                 tags: ['Case Study', template],
-                image: 'https://placehold.co/600x400', // Placeholder
-                link: `/projects/${slug}`
+                image: 'https://placehold.co/600x400',
+                link: `/project/${slug}`
             };
 
-            await api.createProject(projectData);
+            await createProject(projectData);
             alert('Project saved successfully!');
-            onBack(); // Return to grid
+            onBack();
         } catch (error) {
             console.error("Failed to save project", error);
             alert('Failed to save project');

@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { api } from '../lib/api';
+import { useState } from 'react';
+import { useQuery } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 import { Link } from 'react-router-dom';
 import CaseStudyEditor from '../components/admin/CaseStudyEditor';
 import MessageCenter from '../components/admin/MessageCenter';
@@ -67,11 +68,9 @@ const Admin = () => {
     const [viewMode, setViewMode] = useState<'grid' | 'editor'>('grid');
     const [editingProject, setEditingProject] = useState<any>(null);
 
-    const [projects, setProjects] = useState<any[]>([]);
-
-    useEffect(() => {
-        api.getProjects().then(setProjects).catch(console.error);
-    }, []);
+    // Projects from Convex
+    const convexProjects = useQuery(api.projects.list);
+    const projects = convexProjects ?? [];
 
     const toggleSocialVisibility = (id: number) => {
         setSocials(socials.map(s => s.id === id ? { ...s, visible: !s.visible } : s));
@@ -640,9 +639,9 @@ const Admin = () => {
                                     {/* Projects Grid */}
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-20">
                                         {projects
-                                            .filter(p => projectFilter === 'All' || p.category === projectFilter)
+                                            .filter(p => projectFilter === 'All' || (p.tags && p.tags.includes(projectFilter)))
                                             .map((project) => (
-                                                <article key={project.id} className="group flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-card-dark/50 hover:border-primary/50 transition-all duration-300">
+                                                <article key={project._id} className="group flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-card-dark/50 hover:border-primary/50 transition-all duration-300">
                                                     <div className="relative aspect-[4/3] w-full overflow-hidden bg-black/50">
                                                         <div
                                                             className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
@@ -650,7 +649,7 @@ const Admin = () => {
                                                         ></div>
                                                         <div className="absolute top-3 left-3">
                                                             <span className="inline-flex items-center rounded-lg bg-black/60 backdrop-blur-md px-2 py-1 text-[10px] uppercase tracking-wider font-bold text-primary border border-white/10">
-                                                                {project.category}
+                                                                {project.tags?.[0] || 'Project'}
                                                             </span>
                                                         </div>
 
@@ -674,7 +673,7 @@ const Admin = () => {
                                                     <div className="flex flex-col gap-1.5 p-4">
                                                         <h3 className="text-base font-bold leading-snug text-white line-clamp-1">{project.title}</h3>
                                                         <div className="flex items-center gap-2 text-xs text-white/40 font-medium">
-                                                            <span>{project.role}</span>
+                                                            <span>{project.tags?.[0] || 'Project'}</span>
                                                             <span className="h-1 w-1 rounded-full bg-white/20"></span>
                                                             <span>{project.year}</span>
                                                         </div>

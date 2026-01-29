@@ -1,12 +1,12 @@
 
-import React from 'react';
+import type { HTMLAttributes, ReactNode } from 'react';
 
-interface GlowBorderCardProps extends React.HTMLAttributes<HTMLDivElement> {
+interface GlowBorderCardProps extends HTMLAttributes<HTMLDivElement> {
     width?: string;
     aspectRatio?: string;
     colorPreset?: string;
     animationDuration?: number;
-    children?: React.ReactNode;
+    children?: ReactNode;
 }
 
 export const GlowBorderCard = ({
