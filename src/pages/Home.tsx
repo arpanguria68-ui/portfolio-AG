@@ -48,6 +48,12 @@ const Home = () => {
 
     // Convex queries and mutations
     const convexProjects = useQuery(api.projects.list);
+    const convexProfile = useQuery(api.profile.get);
+
+    // Profile data with fallbacks
+    const profileImage = convexProfile?.profileImage || "https://lh3.googleusercontent.com/aida-public/AB6AXuBmUw9mOGIBUUKTMjLGS3PuCvlZ6tOEkE7Pk4fTqTPRNbyAi8VcOwUJT_Tg7nKQJEJPQUfHhYixf-vDAK5kti7OjS5PBRpTcXy4CYgV5yqLq_8BD9a7D6poQMOIRzQwjPwPy0xUcU4theBgi44FCwTIHWKslp6S1l-DXQD8bGxXSPF7jUS7Jpf1Tx1yTiWGknjjykiWzFMhOmjljznoIL3K1-gKiPmbYu6R0ghqGG3mgw4aBRoYAihl0sZ7Rayj8fsM5dyG5Rpjaupp";
+    const headline = convexProfile?.headline || "Bridging the gap between user needs and business goals.";
+    const bio = convexProfile?.bio || "I'm Alexander, a Product Manager with a background in UI/UX Design. I specialize in translating complex data into intuitive, engaging products. My approach combines analytical rigor with creative problem-solving.";
     const createMessage = useMutation(api.messages.create);
 
     // Use Convex projects if available, else fallback
@@ -157,7 +163,7 @@ const Home = () => {
                                 <img
                                     alt="Alexander Portz Portrait"
                                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuBmUw9mOGIBUUKTMjLGS3PuCvlZ6tOEkE7Pk4fTqTPRNbyAi8VcOwUJT_Tg7nKQJEJPQUfHhYixf-vDAK5kti7OjS5PBRpTcXy4CYgV5yqLq_8BD9a7D6poQMOIRzQwjPwPy0xUcU4theBgi44FCwTIHWKslp6S1l-DXQD8bGxXSPF7jUS7Jpf1Tx1yTiWGknjjykiWzFMhOmjljznoIL3K1-gKiPmbYu6R0ghqGG3mgw4aBRoYAihl0sZ7Rayj8fsM5dyG5Rpjaupp"
+                                    src={profileImage}
                                 />
                             </GlowBorderCard>
                             <div className="absolute -bottom-6 -right-2 md:-right-6 md:bottom-6">
@@ -174,10 +180,14 @@ const Home = () => {
                         <div>
                             <span className="text-primary font-display text-lg mb-2 block">My Story</span>
                             <h2 className="text-4xl md:text-5xl lg:text-6xl font-display font-medium leading-tight mb-8">
-                                Bridging the gap between <span className="text-white/40">user needs</span> and <span className="text-primary">business goals.</span>
+                                {headline.split(' ').map((word, i) => (
+                                    <Fragment key={i}>
+                                        {word}{' '}
+                                    </Fragment>
+                                ))}
                             </h2>
                             <p className="text-white/60 leading-relaxed mb-8 text-base md:text-lg">
-                                I'm Alexander, a Product Manager with a background in UI/UX Design. I specialize in translating complex data into intuitive, engaging products. My approach combines analytical rigor with creative problem-solving.
+                                {bio}
                             </p>
                             <div className="flex gap-4">
                                 <a className="w-12 h-12 flex items-center justify-center rounded-full glass hover:bg-white hover:text-black transition-all" href="#">
