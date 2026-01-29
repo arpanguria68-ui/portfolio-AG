@@ -43,6 +43,13 @@ export default defineSchema({
         order: v.number(),
     }),
 
+    tools: defineTable({
+        name: v.string(),
+        icon: v.string(), // Material Symbols icon name
+        bgColor: v.string(), // Tailwind bg class
+        order: v.number(),
+    }),
+
     media: defineTable({
         name: v.string(),
         url: v.string(),

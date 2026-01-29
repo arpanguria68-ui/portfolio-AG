@@ -15,6 +15,7 @@ import type * as profile from "../profile.js";
 import type * as projects from "../projects.js";
 import type * as skills from "../skills.js";
 import type * as socials from "../socials.js";
+import type * as tools from "../tools.js";
 
 import type {
   ApiFromModules,
@@ -30,6 +31,7 @@ declare const fullApi: ApiFromModules<{
   projects: typeof projects;
   skills: typeof skills;
   socials: typeof socials;
+  tools: typeof tools;
 }>;
 
 /**

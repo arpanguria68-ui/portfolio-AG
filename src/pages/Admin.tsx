@@ -21,6 +21,7 @@ const Admin = () => {
     const convexSocials = useQuery(api.socials.list);
     const convexMedia = useQuery(api.media.list);
     const convexProfile = useQuery(api.profile.get);
+    const convexTools = useQuery(api.tools.list);
 
     // ===== CONVEX MUTATIONS =====
     const updateSkill = useMutation(api.skills.update);
@@ -37,6 +38,10 @@ const Admin = () => {
     const createMedia = useMutation(api.media.create);
     const removeMedia = useMutation(api.media.remove);
 
+    // Tools mutations
+    const createTool = useMutation(api.tools.create);
+    const removeToolMutation = useMutation(api.tools.remove);
+
     // ===== LOCAL STATE FOR EDITING =====
     const [headline, setHeadline] = useState("");
     const [bio, setBio] = useState("");
@@ -49,6 +54,12 @@ const Admin = () => {
     const [showAddSkillModal, setShowAddSkillModal] = useState(false);
     const [newSkillName, setNewSkillName] = useState("");
     const [newSkillValue, setNewSkillValue] = useState(75);
+
+    // Tool modal state
+    const [showAddToolModal, setShowAddToolModal] = useState(false);
+    const [newToolName, setNewToolName] = useState("");
+    const [newToolIcon, setNewToolIcon] = useState("code");
+    const [newToolColor, setNewToolColor] = useState("bg-blue-500");
 
     // Sync profile from Convex
     useEffect(() => {
@@ -64,6 +75,7 @@ const Admin = () => {
     const skills = convexSkills ?? [];
     const socials = convexSocials ?? [];
     const mediaItems = convexMedia ?? [];
+    const tools = convexTools ?? [];
 
     // ===== SKILL HANDLERS =====
     const handleSkillChange = async (id: Id<"skills">, newValue: number) => {
@@ -89,6 +101,26 @@ const Admin = () => {
     const removeSkill = async (id: Id<"skills">) => {
         if (confirm("Are you sure you want to delete this skill?")) {
             await removeSkillMutation({ id });
+        }
+    };
+
+    // ===== TOOL HANDLERS =====
+    const addTool = async () => {
+        if (!newToolName.trim()) return;
+        await createTool({
+            name: newToolName.trim(),
+            icon: newToolIcon,
+            bgColor: newToolColor,
+        });
+        setNewToolName("");
+        setNewToolIcon("code");
+        setNewToolColor("bg-blue-500");
+        setShowAddToolModal(false);
+    };
+
+    const removeTool = async (id: Id<"tools">) => {
+        if (confirm("Are you sure you want to remove this tool?")) {
+            await removeToolMutation({ id });
         }
     };
 
@@ -405,31 +437,42 @@ const Admin = () => {
                             </div>
 
                             <div className="bg-card-dark/50 border border-white/10 rounded-3xl p-8">
-                                <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-primary">terminal</span>
-                                    Software Stack
-                                </h3>
+                                <div className="flex items-center justify-between mb-6">
+                                    <h3 className="text-xl font-bold flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-primary">terminal</span>
+                                        Software Stack
+                                        <span className="text-sm font-normal text-white/40">({tools.length} tools)</span>
+                                    </h3>
+                                    <button
+                                        onClick={() => setShowAddToolModal(true)}
+                                        className="px-4 py-2 bg-primary/10 text-primary font-bold rounded-full hover:bg-primary hover:text-black transition-all flex items-center gap-2 text-sm"
+                                    >
+                                        <span className="material-symbols-outlined text-lg">add</span>
+                                        Add Tool
+                                    </button>
+                                </div>
                                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                                    {[
-                                        { icon: "design_services", label: "Figma", bg: "bg-black" },
-                                        { icon: "view_kanban", label: "Jira", bg: "bg-blue-600" },
-                                        { icon: "description", label: "Notion", bg: "bg-gray-800" },
-                                        { icon: "analytics", label: "Amplitude", bg: "bg-purple-600" },
-                                        { icon: "code", label: "VS Code", bg: "bg-blue-500" },
-                                        { icon: "cloud", label: "AWS", bg: "bg-orange-500" },
-                                    ].map((tool, i) => (
-                                        <div key={i} className="aspect-square bg-black/20 border border-white/10 rounded-2xl flex flex-col items-center justify-center gap-3 hover:bg-white/5 hover:border-primary/50 cursor-pointer group transition-all relative">
-                                            <div className={`w-10 h-10 rounded-lg ${tool.bg} flex items-center justify-center text-white shadow-lg`}>
+                                    {tools.map((tool) => (
+                                        <div key={tool._id} className="aspect-square bg-black/20 border border-white/10 rounded-2xl flex flex-col items-center justify-center gap-3 hover:bg-white/5 hover:border-primary/50 cursor-pointer group transition-all relative">
+                                            <button
+                                                onClick={() => removeTool(tool._id)}
+                                                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-white/40 hover:text-red-400 transition-all"
+                                            >
+                                                <span className="material-symbols-outlined text-lg">close</span>
+                                            </button>
+                                            <div className={`w-10 h-10 rounded-lg ${tool.bgColor} flex items-center justify-center text-white shadow-lg`}>
                                                 <span className="material-symbols-outlined text-xl">{tool.icon}</span>
                                             </div>
-                                            <span className="text-xs font-bold text-white/60 group-hover:text-white">{tool.label}</span>
+                                            <span className="text-xs font-bold text-white/60 group-hover:text-white">{tool.name}</span>
                                         </div>
                                     ))}
 
-                                    <button className="aspect-square bg-transparent border-2 border-dashed border-white/10 rounded-2xl flex flex-col items-center justify-center gap-2 hover:border-primary hover:bg-primary/5 transition-all group">
-                                        <span className="material-symbols-outlined text-3xl text-white/20 group-hover:text-primary transition-colors">add_circle</span>
-                                        <span className="text-xs font-bold text-white/20 group-hover:text-primary transition-colors uppercase tracking-wider">Add New</span>
-                                    </button>
+                                    {tools.length === 0 && (
+                                        <div className="col-span-full text-center py-8 text-white/40">
+                                            <span className="material-symbols-outlined text-4xl mb-2 block">terminal</span>
+                                            No tools added yet. Click "Add Tool" to add your software stack.
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -968,6 +1011,93 @@ const Admin = () => {
                             >
                                 <span className="material-symbols-outlined">add</span>
                                 Add Skill
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Add Tool Modal */}
+            {showAddToolModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm">
+                    <div className="bg-card-dark border border-white/10 rounded-3xl p-8 w-full max-w-md mx-4 animate-in fade-in zoom-in-95 duration-300">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-xl font-bold flex items-center gap-2">
+                                <span className="material-symbols-outlined text-primary">terminal</span>
+                                Add New Tool
+                            </h3>
+                            <button
+                                onClick={() => setShowAddToolModal(false)}
+                                className="text-white/40 hover:text-white transition-colors"
+                            >
+                                <span className="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+
+                        <div className="space-y-6">
+                            <div>
+                                <label className="text-xs uppercase tracking-wider font-bold text-white/40 mb-2 block">
+                                    Tool Name
+                                </label>
+                                <input
+                                    type="text"
+                                    value={newToolName}
+                                    onChange={(e) => setNewToolName(e.target.value)}
+                                    placeholder="e.g. Figma"
+                                    className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-primary/50"
+                                    autoFocus
+                                />
+                            </div>
+
+                            <div>
+                                <label className="text-xs uppercase tracking-wider font-bold text-white/40 mb-2 block">
+                                    Icon (Material Symbol)
+                                </label>
+                                <div className="grid grid-cols-6 gap-2">
+                                    {["code", "design_services", "view_kanban", "analytics", "cloud", "terminal", "description", "storage", "api", "psychology", "integration_instructions", "developer_mode"].map((icon) => (
+                                        <button
+                                            key={icon}
+                                            onClick={() => setNewToolIcon(icon)}
+                                            className={`aspect-square rounded-lg flex items-center justify-center transition-all ${newToolIcon === icon ? 'bg-primary text-black' : 'bg-white/5 text-white/60 hover:bg-white/10'}`}
+                                        >
+                                            <span className="material-symbols-outlined text-lg">{icon}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="text-xs uppercase tracking-wider font-bold text-white/40 mb-2 block">
+                                    Background Color
+                                </label>
+                                <div className="grid grid-cols-6 gap-2">
+                                    {["bg-blue-500", "bg-purple-600", "bg-pink-500", "bg-orange-500", "bg-green-500", "bg-red-500", "bg-gray-800", "bg-black", "bg-indigo-600", "bg-cyan-500", "bg-amber-500", "bg-emerald-600"].map((color) => (
+                                        <button
+                                            key={color}
+                                            onClick={() => setNewToolColor(color)}
+                                            className={`aspect-square rounded-lg ${color} transition-all ${newToolColor === color ? 'ring-2 ring-primary ring-offset-2 ring-offset-card-dark' : 'hover:opacity-80'}`}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="p-4 bg-black/20 rounded-xl flex items-center gap-4">
+                                <div className={`w-12 h-12 rounded-lg ${newToolColor} flex items-center justify-center text-white shadow-lg`}>
+                                    <span className="material-symbols-outlined text-2xl">{newToolIcon}</span>
+                                </div>
+                                <div>
+                                    <div className="text-xs text-white/40 uppercase tracking-wider">Preview</div>
+                                    <div className="font-bold">{newToolName || "Tool Name"}</div>
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={addTool}
+                                disabled={!newToolName.trim()}
+                                className="w-full py-3 bg-primary text-black font-bold rounded-xl hover:shadow-[0_0_20px_rgba(212,255,63,0.4)] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            >
+                                <span className="material-symbols-outlined">add</span>
+                                Add Tool
                             </button>
                         </div>
                     </div>
