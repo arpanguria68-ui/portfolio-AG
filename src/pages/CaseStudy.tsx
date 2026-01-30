@@ -206,11 +206,23 @@ const CaseStudy = () => {
                                 })()}
                             </div>
                         ) : (
-                            <div className="prose prose-lg prose-invert max-w-none">
-                                <p className="text-xl leading-relaxed text-white/80 whitespace-pre-wrap">
-                                    {section.content}
-                                </p>
-                            </div>
+                            section.type === 'text' && (section.content.trim().match(/^(https?:\/\/(?:www\.)?(?:figma\.com|youtube\.com|youtu\.be|miro\.com)\/.*)$/i)) ? (
+                                <div className="w-full aspect-video rounded-xl overflow-hidden border border-white/10 bg-black/50 my-8">
+                                    <iframe
+                                        src={getEmbedUrl(section.content.trim(), section.content.includes('figma') ? 'figma' : section.content.includes('miro') ? 'miro' : 'video')}
+                                        className="w-full h-full"
+                                        frameBorder="0"
+                                        allowFullScreen
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    />
+                                </div>
+                            ) : (
+                                <div className="prose prose-lg prose-invert max-w-none">
+                                    <p className="text-xl leading-relaxed text-white/80 whitespace-pre-wrap">
+                                        {section.content}
+                                    </p>
+                                </div>
+                            )
                         )}
 
                         {/* Visual Placeholder - Matches LivePreview */}

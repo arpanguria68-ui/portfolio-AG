@@ -111,11 +111,26 @@ const LivePreview: React.FC<LivePreviewProps> = ({ data, template }) => {
                                 })()}
                             </div>
                         ) : (
-                            <div className="prose dark:prose-invert max-w-none">
-                                <p className="text-lg leading-relaxed opacity-90 whitespace-pre-wrap">
-                                    {section.content}
-                                </p>
-                            </div>
+                            section.type === 'text' && (section.content.trim().match(/^(https?:\/\/(?:www\.)?(?:figma\.com|youtube\.com|youtu\.be|miro\.com)\/.*)$/i)) ? (
+                                <div className="w-full aspect-video rounded-xl overflow-hidden border border-white/10 bg-black/50">
+                                    <iframe
+                                        src={getEmbedUrl(section.content.trim(), section.content.includes('figma') ? 'figma' : section.content.includes('miro') ? 'miro' : 'video')}
+                                        className="w-full h-full"
+                                        frameBorder="0"
+                                        allowFullScreen
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    />
+                                    <div className="absolute top-2 right-2 bg-black/80 text-white/50 text-[10px] px-2 py-1 rounded-full backdrop-blur pointer-events-none">
+                                        Auto-Embed
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="prose dark:prose-invert max-w-none">
+                                    <p className="text-lg leading-relaxed opacity-90 whitespace-pre-wrap">
+                                        {section.content}
+                                    </p>
+                                </div>
+                            )
                         )}
 
                         {/* Mock Media Render - Only for text-based problem/solution/results */}

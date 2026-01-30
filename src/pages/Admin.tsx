@@ -42,6 +42,7 @@ const Admin = () => {
     // Tools mutations
     const createTool = useMutation(api.tools.create);
     const removeToolMutation = useMutation(api.tools.remove);
+    const deleteProject = useMutation(api.projects.remove);
 
     // ===== LOCAL STATE FOR EDITING =====
     const [headline, setHeadline] = useState("");
@@ -106,6 +107,18 @@ const Admin = () => {
         setNewSkillName("");
         setNewSkillValue(75);
         setShowAddSkillModal(false);
+    };
+
+    const handleDeleteProject = async (id: Id<"projects">, e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (confirm("Are you sure you want to delete this project? This action cannot be undone.")) {
+            try {
+                await deleteProject({ id });
+            } catch (error) {
+                console.error("Failed to delete project:", error);
+                alert("Failed to delete project. Please try again.");
+            }
+        }
     };
 
     const removeSkill = async (id: Id<"skills">) => {
@@ -752,6 +765,7 @@ const Admin = () => {
                             {/* Conditional Rendering: Grid vs Editor */}
                             {viewMode === 'editor' ? (
                                 <CaseStudyEditor
+                                    key={editingProject?._id || 'new-project'}
                                     onBack={() => {
                                         setViewMode('grid');
                                         setEditingProject(null);
@@ -946,7 +960,11 @@ const Admin = () => {
                                                             >
                                                                 <span className="material-symbols-outlined">edit</span>
                                                             </button>
-                                                            <button className="w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors" title="Delete">
+                                                            <button
+                                                                onClick={(e) => handleDeleteProject(project._id, e)}
+                                                                className="w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors"
+                                                                title="Delete"
+                                                            >
                                                                 <span className="material-symbols-outlined">delete</span>
                                                             </button>
                                                         </div>

@@ -22,7 +22,7 @@ interface CaseStudyEditorProps {
 const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }) => {
     const [title, setTitle] = useState(initialData?.title || "");
     const [slug, setSlug] = useState(initialData?.slug || "");
-    const [description, setDescription] = useState(initialData?.description || "");
+    // const [description, setDescription] = useState(initialData?.description || "");
     const [year, setYear] = useState(initialData?.year || new Date().getFullYear().toString());
     const [tags, setTags] = useState<string[]>(initialData?.tags || []);
     const [image, setImage] = useState(initialData?.image || "");
@@ -157,7 +157,7 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
         try {
             const projectData = {
                 title,
-                description: description || sections.filter(s => s.isEnabled).map(s => s.content).join('\n\n'),
+                description: sections.filter(s => s.isEnabled).map(s => s.content).join('\n\n'),
                 year,
                 tags: tags.length > 0 ? tags : ['Case Study', template],
                 image,
@@ -481,8 +481,10 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
                                                                         newSections[idx].content = JSON.stringify([...currentUrls, ...newUrls]);
                                                                         setSections(newSections);
                                                                     } catch (error) {
-                                                                        console.error("Gallery upload failed", error);
-                                                                        alert("Upload failed: " + (error as Error).message);
+                                                                        if ((error as Error).message !== 'Upload cancelled') {
+                                                                            console.error("Gallery upload failed", error);
+                                                                            alert("Upload failed: " + (error as Error).message);
+                                                                        }
                                                                     }
                                                                 }}
                                                                 className="aspect-square rounded-lg border border-dashed border-white/20 flex items-center justify-center hover:bg-white/5 transition-colors"
@@ -505,8 +507,10 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
                                                                     newSections[idx].content = JSON.stringify(urls);
                                                                     setSections(newSections);
                                                                 } catch (error) {
-                                                                    console.error("Gallery upload failed", error);
-                                                                    alert("Upload failed: " + (error as Error).message);
+                                                                    if ((error as Error).message !== 'Upload cancelled') {
+                                                                        console.error("Gallery upload failed", error);
+                                                                        alert("Upload failed: " + (error as Error).message);
+                                                                    }
                                                                 }
                                                             }}
                                                             className="w-full border border-dashed border-white/10 rounded-lg p-8 flex flex-col items-center justify-center text-center hover:bg-white/5 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/50"
@@ -582,7 +586,7 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
                         Live Preview
                     </div>
                 </div>
-                <LivePreview data={{ title, slug, sections, image, year, tags, description }} template={template} />
+                <LivePreview data={{ title, slug, sections, image, year, tags, description: sections.filter(s => s.isEnabled).map(s => s.content).join('\n\n') }} template={template} />
             </div>
         </div>
     );
