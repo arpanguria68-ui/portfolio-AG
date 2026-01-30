@@ -21,6 +21,7 @@ export default defineSchema({
             type: v.string(),
             title: v.string(),
             content: v.string(),
+            image: v.optional(v.string()),
             collapsed: v.boolean(),
             icon: v.string(),
             isEnabled: v.boolean(),

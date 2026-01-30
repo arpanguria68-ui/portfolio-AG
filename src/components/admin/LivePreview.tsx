@@ -199,12 +199,10 @@ const LivePreview: React.FC<LivePreviewProps> = ({ data, template }) => {
                             </a>
                         )}
 
-                        {/* Mock Media Render - Only for text-based problem/solution/results */}
-                        {['problem', 'solution', 'results'].includes(section.type) && (
+                        {/* Optional Visual Render */}
+                        {['problem', 'solution', 'results'].includes(section.type) && section.image && (
                             <div className={`mt-8 rounded-xl overflow-hidden aspect-video relative group ${template === 'ghibli' ? 'border-4 border-white shadow-[8px_8px_0_rgba(0,0,0,0.1)]' : 'bg-white/5 border border-white/10'}`}>
-                                <div className="absolute inset-0 flex items-center justify-center text-current opacity-20 bg-pattern-grid">
-                                    <span className="material-symbols-outlined text-4xl">image</span>
-                                </div>
+                                <img src={section.image} alt={section.title} className="w-full h-full object-cover" />
                                 <div className="absolute bottom-4 left-4 bg-black/60 backdrop-blur-sm px-3 py-1 rounded-lg text-xs text-white font-mono">
                                     {section.title} Visual
                                 </div>

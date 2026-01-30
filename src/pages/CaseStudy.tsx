@@ -286,16 +286,14 @@ const CaseStudy = () => {
                             </a>
                         )}
 
-                        {/* Visual Placeholder - Matches LivePreview */}
-                        {['problem', 'solution', 'results'].includes(section.type) && (
+                        {/* Optional Visual Render */}
+                        {['problem', 'solution', 'results'].includes(section.type) && section.image && (
                             <div className="mt-12 rounded-2xl overflow-hidden aspect-video relative group bg-gradient-to-br from-white/5 to-white/0 border border-white/10">
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                    <div className="text-center">
-                                        <span className="material-symbols-outlined text-6xl text-white/10 mb-4">image</span>
-                                        <p className="text-sm text-white/30 font-medium">{section.title} Visual</p>
-                                    </div>
+                                <img src={section.image} alt={section.title} className="w-full h-full object-cover" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60"></div>
+                                <div className="absolute bottom-6 left-6">
+                                    <p className="text-sm text-white/50 font-medium font-mono uppercase tracking-wider">{section.title} Visual</p>
                                 </div>
-                                <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
                             </div>
                         )}
                     </div>

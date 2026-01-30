@@ -9,6 +9,7 @@ interface Section {
     type: string;
     title: string;
     content: string;
+    image?: string;
     collapsed: boolean;
     icon: string;
     isEnabled: boolean;
@@ -413,6 +414,52 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
                                                             setSections(newSections);
                                                         }}
                                                     />
+
+                                                    {/* Optional Visual Image Upload */}
+                                                    <div className="mt-3">
+                                                        <div className="flex items-center gap-4">
+                                                            {section.image ? (
+                                                                <div className="relative group rounded-lg overflow-hidden border border-white/10 w-24 h-24 flex-shrink-0">
+                                                                    <img src={section.image} alt="Visual" className="w-full h-full object-cover" />
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            const newSections = [...sections];
+                                                                            const idx = newSections.findIndex(s => s.id === section.id);
+                                                                            newSections[idx].image = undefined;
+                                                                            setSections(newSections);
+                                                                        }}
+                                                                        className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white"
+                                                                    >
+                                                                        <span className="material-symbols-outlined text-sm">close</span>
+                                                                    </button>
+                                                                </div>
+                                                            ) : (
+                                                                <button
+                                                                    onClick={async (e) => {
+                                                                        e.preventDefault();
+                                                                        try {
+                                                                            const result = await uploadImage({ folder: 'portfolio/projects/visuals' });
+                                                                            const newSections = [...sections];
+                                                                            const idx = newSections.findIndex(s => s.id === section.id);
+                                                                            newSections[idx].image = result.url;
+                                                                            setSections(newSections);
+                                                                        } catch (error) {
+                                                                            console.error(error);
+                                                                        }
+                                                                    }}
+                                                                    className="w-24 h-24 rounded-lg bg-white/5 border border-dashed border-white/10 hover:border-white/30 hover:bg-white/10 flex flex-col items-center justify-center gap-1 transition-all text-white/40 hover:text-white"
+                                                                    title="Upload section visual"
+                                                                >
+                                                                    <span className="material-symbols-outlined text-xl">add_photo_alternate</span>
+                                                                    <span className="text-[10px]">Add Visual</span>
+                                                                </button>
+                                                            )}
+                                                            <div className="text-xs text-white/40">
+                                                                <p className="font-bold text-white/60 mb-1">Optional Visual</p>
+                                                                <p>Upload an image to appear alongside this text block.</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </>
                                             )}
 
