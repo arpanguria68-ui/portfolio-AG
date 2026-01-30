@@ -59,6 +59,9 @@ export default defineSchema({
         width: v.number(),
         height: v.number(),
         status: v.string(), // 'used' | 'unused'
+        title: v.optional(v.string()), // Display title for highlights
+        subtitle: v.optional(v.string()), // Location/date info
+        category: v.optional(v.string()), // 'Workshop' | 'Certification' | 'Keynote' etc
     }),
 
     // AI Chat tables

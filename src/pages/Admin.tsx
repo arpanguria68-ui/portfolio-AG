@@ -37,6 +37,7 @@ const Admin = () => {
     // Media mutations
     const createMedia = useMutation(api.media.create);
     const removeMedia = useMutation(api.media.remove);
+    const updateMedia = useMutation(api.media.update);
 
     // Tools mutations
     const createTool = useMutation(api.tools.create);
@@ -60,6 +61,15 @@ const Admin = () => {
     const [newToolName, setNewToolName] = useState("");
     const [newToolIcon, setNewToolIcon] = useState("code");
     const [newToolColor, setNewToolColor] = useState("bg-blue-500");
+
+    // Media edit modal state
+    const [editingMedia, setEditingMedia] = useState<{
+        id: Id<"media">;
+        name: string;
+        title: string;
+        subtitle: string;
+        category: string;
+    } | null>(null);
 
     // Sync profile from Convex
     useEffect(() => {
@@ -228,6 +238,32 @@ const Admin = () => {
                 console.error('Failed to delete media:', error);
                 alert('Failed to delete image. Please try again.');
             }
+        }
+    };
+
+    const openMediaEdit = (item: typeof mediaItems[0]) => {
+        setEditingMedia({
+            id: item._id,
+            name: item.name,
+            title: item.title || '',
+            subtitle: item.subtitle || '',
+            category: item.category || '',
+        });
+    };
+
+    const saveMediaEdit = async () => {
+        if (!editingMedia) return;
+        try {
+            await updateMedia({
+                id: editingMedia.id,
+                title: editingMedia.title || undefined,
+                subtitle: editingMedia.subtitle || undefined,
+                category: editingMedia.category || undefined,
+            });
+            setEditingMedia(null);
+        } catch (error) {
+            console.error('Failed to update media:', error);
+            alert('Failed to save changes. Please try again.');
         }
     };
 
@@ -524,10 +560,22 @@ const Admin = () => {
                                             >
                                                 <span className="material-symbols-outlined text-sm">delete</span>
                                             </button>
+                                            <button
+                                                onClick={() => openMediaEdit(item)}
+                                                className="absolute bottom-2 right-2 w-8 h-8 rounded-full bg-primary/80 text-black flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary"
+                                                title="Edit details"
+                                            >
+                                                <span className="material-symbols-outlined text-sm">edit</span>
+                                            </button>
                                         </div>
                                         <div className="px-2 pb-2">
-                                            <p className="text-sm font-bold truncate mb-1" title={item.name}>{item.name}</p>
-                                            <span className="text-xs text-white/30">{item.size}</span>
+                                            <p className="text-sm font-bold truncate mb-1" title={item.title || item.name}>{item.title || item.name}</p>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-xs text-white/30">{item.size}</span>
+                                                {item.category && (
+                                                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-bold uppercase">{item.category}</span>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 ))}
@@ -1098,6 +1146,79 @@ const Admin = () => {
                             >
                                 <span className="material-symbols-outlined">add</span>
                                 Add Tool
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Media Edit Modal */}
+            {editingMedia && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm">
+                    <div className="bg-card-dark border border-white/10 rounded-3xl p-8 w-full max-w-md mx-4 animate-in fade-in zoom-in-95 duration-300">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-xl font-bold flex items-center gap-2">
+                                <span className="material-symbols-outlined text-primary">image</span>
+                                Edit Highlight Details
+                            </h3>
+                            <button
+                                onClick={() => setEditingMedia(null)}
+                                className="text-white/40 hover:text-white transition-colors"
+                            >
+                                <span className="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div>
+                                <label className="text-xs uppercase tracking-wider font-bold text-white/40 mb-2 block">
+                                    Title (shown on Visual Highlights)
+                                </label>
+                                <input
+                                    type="text"
+                                    value={editingMedia.title}
+                                    onChange={(e) => setEditingMedia({ ...editingMedia, title: e.target.value })}
+                                    placeholder={editingMedia.name}
+                                    className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-primary/50"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="text-xs uppercase tracking-wider font-bold text-white/40 mb-2 block">
+                                    Subtitle (e.g. location, date)
+                                </label>
+                                <input
+                                    type="text"
+                                    value={editingMedia.subtitle}
+                                    onChange={(e) => setEditingMedia({ ...editingMedia, subtitle: e.target.value })}
+                                    placeholder="e.g. San Francisco, 2023"
+                                    className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-primary/50"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="text-xs uppercase tracking-wider font-bold text-white/40 mb-2 block">
+                                    Category
+                                </label>
+                                <div className="grid grid-cols-3 gap-2">
+                                    {["Workshop", "Certification", "Keynote", "Conference", "Award", "Other"].map((cat) => (
+                                        <button
+                                            key={cat}
+                                            onClick={() => setEditingMedia({ ...editingMedia, category: cat })}
+                                            className={`px-3 py-2 rounded-lg font-bold text-sm transition-all ${editingMedia.category === cat ? 'bg-primary text-black' : 'bg-white/5 text-white/60 hover:bg-white/10'}`}
+                                        >
+                                            {cat}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={saveMediaEdit}
+                                className="w-full py-3 bg-primary text-black font-bold rounded-xl hover:shadow-[0_0_20px_rgba(212,255,63,0.4)] transition-all flex items-center justify-center gap-2 mt-4"
+                            >
+                                <span className="material-symbols-outlined">save</span>
+                                Save Changes
                             </button>
                         </div>
                     </div>

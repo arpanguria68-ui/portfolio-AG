@@ -22,6 +22,9 @@ export const create = mutation({
         width: v.number(),
         height: v.number(),
         status: v.string(),
+        title: v.optional(v.string()),
+        subtitle: v.optional(v.string()),
+        category: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
         const id = await ctx.db.insert("media", {
@@ -33,6 +36,9 @@ export const create = mutation({
             width: args.width,
             height: args.height,
             status: args.status,
+            title: args.title,
+            subtitle: args.subtitle,
+            category: args.category,
         });
         return id;
     },
@@ -44,6 +50,9 @@ export const update = mutation({
         name: v.optional(v.string()),
         url: v.optional(v.string()),
         status: v.optional(v.string()),
+        title: v.optional(v.string()),
+        subtitle: v.optional(v.string()),
+        category: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
         const { id, ...updates } = args;

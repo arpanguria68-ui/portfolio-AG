@@ -50,11 +50,46 @@ const Home = () => {
     const convexProjects = useQuery(api.projects.list);
     const convexProfile = useQuery(api.profile.get);
     const convexSkills = useQuery(api.skills.list);
+    const convexMedia = useQuery(api.media.list);
 
     // Profile data with fallbacks
     const profileImage = convexProfile?.profileImage || "https://lh3.googleusercontent.com/aida-public/AB6AXuBmUw9mOGIBUUKTMjLGS3PuCvlZ6tOEkE7Pk4fTqTPRNbyAi8VcOwUJT_Tg7nKQJEJPQUfHhYixf-vDAK5kti7OjS5PBRpTcXy4CYgV5yqLq_8BD9a7D6poQMOIRzQwjPwPy0xUcU4theBgi44FCwTIHWKslp6S1l-DXQD8bGxXSPF7jUS7Jpf1Tx1yTiWGknjjykiWzFMhOmjljznoIL3K1-gKiPmbYu6R0ghqGG3mgw4aBRoYAihl0sZ7Rayj8fsM5dyG5Rpjaupp";
     const headline = convexProfile?.headline || "Bridging the gap between user needs and business goals.";
     const bio = convexProfile?.bio || "I'm Alexander, a Product Manager with a background in UI/UX Design. I specialize in translating complex data into intuitive, engaging products. My approach combines analytical rigor with creative problem-solving.";
+
+    // Highlights: use Convex media or fallback, limit to 6
+    const FALLBACK_HIGHLIGHTS = [
+        {
+            _id: 'h1' as any,
+            url: "https://lh3.googleusercontent.com/aida-public/AB6AXuC60U7Xmg9DYXVNGKeFboA7uIhth4FdnoZFU48ciZyrKd56ebljcFEhJXJFz6wuc8M_lcRD-yqYnh1AvRbDWASzywpEd9nEAjGpIlpzMOJoZtjBu0q01a9DAXvfn1qeP4Wxlv_ZlMWrbg-pIPwvCmPm8ZFf_4CgUm3xdhu_8kmeAxswFu9J8Gv8jUKnSwWQ6wVneq5-aAsP8e-diDQ7-rNq4lT0CVP7zT27S2Cy1Jw2MydWVPVsJQQUetNIXm6jv138pLrix6jQ4MLS",
+            title: "Agile Strategy Session",
+            subtitle: "San Francisco, 2023",
+            category: "Workshop"
+        },
+        {
+            _id: 'h2' as any,
+            url: "https://lh3.googleusercontent.com/aida-public/AB6AXuApIiN6GKo3BRo5bLrUOnA41JodEj1ORLhA-dXGI6zS13geEwKDcyvUQiOp9UXRpBhyUHA6MQNEAsQz7DSE2GqHkpXscJnoi6ujsZm5_I6M2uPmZ8ZSEW1gUWXwmeNORGR3fDYOdnMJd69S6LRbkBx7gvRJ9y-S6vyBJoA5teX4T9XQvhSlQuIzHqYk1E892m6CGCLBFKreBiCyY5Z1hvfSKVn63r2nw1q1dADLGMfs7XjavKn3sI7naqs8hTDcZQ5YbYplbM6CBIH9",
+            title: "Advanced CSPO",
+            subtitle: "Scrum Alliance",
+            category: "Certification"
+        },
+        {
+            _id: 'h3' as any,
+            url: "https://lh3.googleusercontent.com/aida-public/AB6AXuBROlpKiNAqcPZejAh_NQ5ypzoOUdoIthvEF7mU5yEG1c4e8XKRu2q0BjJi9miOJ9iJ75FFXB-6u6lPToM35Cj_Lg8pxwkGhLApucrjrWT6PK5OKevCXiSsDN1Bd3ZfruNwSI8kNmptchDD88sooosPqs6Ihzk3h96_taeIGmhcNniUnT1y1_05XYnn-P2I8CTNH3Vtn1mJ-o8JQOfx8fQZCUVzqcxOcmrGP7YgnjLfVMn1Ducpn-WXM7MqTcPa2GG5LcPF1_C4mtBI",
+            title: "Future of Fintech",
+            subtitle: "TechWeek NY",
+            category: "Keynote"
+        },
+    ];
+    const highlights = (convexMedia && convexMedia.length > 0)
+        ? convexMedia.slice(0, 6).map(m => ({
+            _id: m._id,
+            url: m.url,
+            title: m.title || m.name,
+            subtitle: m.subtitle || '',
+            category: m.category || 'Highlight'
+        }))
+        : FALLBACK_HIGHLIGHTS;
 
     // Skills: filter visible, order by order field, limit to 6
     const SKILLS_LIMIT = 6;
@@ -478,48 +513,29 @@ const Home = () => {
                         </div>
                         {/* Grid for desktop, Scroll for mobile */}
                         <div className="flex md:grid md:grid-cols-3 overflow-x-auto md:overflow-visible gap-6 pb-8 md:pb-0 snap-x snap-mandatory no-scrollbar items-stretch">
-                            {/* Highlight 1 */}
-                            <div className="min-w-[75vw] md:min-w-0 snap-center flex flex-col">
-                                <div className="relative aspect-[4/3] w-full rounded-2xl overflow-hidden group border border-white/10">
-                                    <img alt="Product Workshop" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-90" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC60U7Xmg9DYXVNGKeFboA7uIhth4FdnoZFU48ciZyrKd56ebljcFEhJXJFz6wuc8M_lcRD-yqYnh1AvRbDWASzywpEd9nEAjGpIlpzMOJoZtjBu0q01a9DAXvfn1qeP4Wxlv_ZlMWrbg-pIPwvCmPm8ZFf_4CgUm3xdhu_8kmeAxswFu9J8Gv8jUKnSwWQ6wVneq5-aAsP8e-diDQ7-rNq4lT0CVP7zT27S2Cy1Jw2MydWVPVsJQQUetNIXm6jv138pLrix6jQ4MLS" />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
-                                    <div className="absolute top-3 right-3 bg-black/40 backdrop-blur-md px-2 py-1 rounded text-[10px] font-bold text-white/80 uppercase tracking-wider border border-white/10">
-                                        Workshop
-                                    </div>
-                                    <div className="absolute bottom-5 left-5 right-5">
-                                        <h4 className="text-white font-display font-bold text-lg leading-tight mb-1">Agile Strategy Session</h4>
-                                        <p className="text-white/50 text-xs">San Francisco, 2023</p>
-                                    </div>
-                                </div>
-                            </div>
-                            {/* Highlight 2 */}
-                            <div className="min-w-[75vw] md:min-w-0 snap-center flex flex-col">
-                                <div className="relative aspect-[4/3] w-full rounded-2xl overflow-hidden group border border-white/10">
-                                    <img alt="Certification" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-90" src="https://lh3.googleusercontent.com/aida-public/AB6AXuApIiN6GKo3BRo5bLrUOnA41JodEj1ORLhA-dXGI6zS13geEwKDcyvUQiOp9UXRpBhyUHA6MQNEAsQz7DSE2GqHkpXscJnoi6ujsZm5_I6M2uPmZ8ZSEW1gUWXwmeNORGR3fDYOdnMJd69S6LRbkBx7gvRJ9y-S6vyBJoA5teX4T9XQvhSlQuIzHqYk1E892m6CGCLBFKreBiCyY5Z1hvfSKVn63r2nw1q1dADLGMfs7XjavKn3sI7naqs8hTDcZQ5YbYplbM6CBIH9" />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
-                                    <div className="absolute top-3 right-3 bg-black/40 backdrop-blur-md px-2 py-1 rounded text-[10px] font-bold text-white/80 uppercase tracking-wider border border-white/10">
-                                        Certification
-                                    </div>
-                                    <div className="absolute bottom-5 left-5 right-5">
-                                        <h4 className="text-white font-display font-bold text-lg leading-tight mb-1">Advanced CSPO</h4>
-                                        <p className="text-white/50 text-xs">Scrum Alliance</p>
+                            {highlights.map((highlight) => (
+                                <div key={highlight._id} className="min-w-[75vw] md:min-w-0 snap-center flex flex-col">
+                                    <div className="relative aspect-[4/3] w-full rounded-2xl overflow-hidden group border border-white/10">
+                                        <img
+                                            alt={highlight.title}
+                                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-90"
+                                            src={highlight.url}
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
+                                        {highlight.category && (
+                                            <div className="absolute top-3 right-3 bg-black/40 backdrop-blur-md px-2 py-1 rounded text-[10px] font-bold text-white/80 uppercase tracking-wider border border-white/10">
+                                                {highlight.category}
+                                            </div>
+                                        )}
+                                        <div className="absolute bottom-5 left-5 right-5">
+                                            <h4 className="text-white font-display font-bold text-lg leading-tight mb-1">{highlight.title}</h4>
+                                            {highlight.subtitle && (
+                                                <p className="text-white/50 text-xs">{highlight.subtitle}</p>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            {/* Highlight 3 */}
-                            <div className="min-w-[75vw] md:min-w-0 snap-center flex flex-col">
-                                <div className="relative aspect-[4/3] w-full rounded-2xl overflow-hidden group border border-white/10">
-                                    <img alt="Presentation" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-90" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBROlpKiNAqcPZejAh_NQ5ypzoOUdoIthvEF7mU5yEG1c4e8XKRu2q0BjJi9miOJ9iJ75FFXB-6u6lPToM35Cj_Lg8pxwkGhLApucrjrWT6PK5OKevCXiSsDN1Bd3ZfruNwSI8kNmptchDD88sooosPqs6Ihzk3h96_taeIGmhcNniUnT1y1_05XYnn-P2I8CTNH3Vtn1mJ-o8JQOfx8fQZCUVzqcxOcmrGP7YgnjLfVMn1Ducpn-WXM7MqTcPa2GG5LcPF1_C4mtBI" />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
-                                    <div className="absolute top-3 right-3 bg-black/40 backdrop-blur-md px-2 py-1 rounded text-[10px] font-bold text-white/80 uppercase tracking-wider border border-white/10">
-                                        Keynote
-                                    </div>
-                                    <div className="absolute bottom-5 left-5 right-5">
-                                        <h4 className="text-white font-display font-bold text-lg leading-tight mb-1">Future of Fintech</h4>
-                                        <p className="text-white/50 text-xs">TechWeek NY</p>
-                                    </div>
-                                </div>
-                            </div>
+                            ))}
                         </div>
                     </div>
                 </section>
