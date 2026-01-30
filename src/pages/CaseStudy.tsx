@@ -238,6 +238,35 @@ const CaseStudy = () => {
                             )
                         )}
 
+                        {/* Document Render */}
+                        {section.type === 'document' && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {(() => {
+                                    try {
+                                        const files = JSON.parse(section.content || '[]');
+                                        return files.map((file: any, i: number) => (
+                                            <a
+                                                key={i}
+                                                href={file.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center gap-4 p-5 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all group"
+                                            >
+                                                <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-all">
+                                                    <span className="material-symbols-outlined text-2xl">description</span>
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-base font-bold text-white truncate group-hover:text-primary transition-colors">{file.name}</p>
+                                                    <p className="text-xs text-white/40 uppercase tracking-wider mt-1">{file.format} • {(file.size / 1024).toFixed(1)} KB</p>
+                                                </div>
+                                                <span className="material-symbols-outlined text-white/20 group-hover:text-white transition-colors">download</span>
+                                            </a>
+                                        ));
+                                    } catch (e) { return null; }
+                                })()}
+                            </div>
+                        )}
+
                         {/* Visual Placeholder - Matches LivePreview */}
                         {['problem', 'solution', 'results'].includes(section.type) && (
                             <div className="mt-12 rounded-2xl overflow-hidden aspect-video relative group bg-gradient-to-br from-white/5 to-white/0 border border-white/10">

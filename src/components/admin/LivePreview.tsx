@@ -146,6 +146,40 @@ const LivePreview: React.FC<LivePreviewProps> = ({ data, template }) => {
                             )
                         )}
 
+                        {/* Document Render */}
+                        {section.type === 'document' && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                {(() => {
+                                    try {
+                                        const files = JSON.parse(section.content || '[]');
+                                        return files.map((file: any, i: number) => (
+                                            <a
+                                                key={i}
+                                                href={file.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all group"
+                                            >
+                                                <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center text-white/60 group-hover:text-primary group-hover:scale-110 transition-all">
+                                                    <span className="material-symbols-outlined">description</span>
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-sm font-bold text-white truncate">{file.name}</p>
+                                                    <p className="text-xs text-white/40 uppercase tracking-wider">{file.format} • {(file.size / 1024).toFixed(1)} KB</p>
+                                                </div>
+                                                <span className="material-symbols-outlined text-white/20 group-hover:text-white transition-colors">download</span>
+                                            </a>
+                                        ));
+                                    } catch (e) {
+                                        return <div className="col-span-full border border-dashed border-white/10 rounded-lg p-8 flex flex-col items-center justify-center text-center text-white/40">
+                                            <span className="material-symbols-outlined text-3xl mb-2">upload_file</span>
+                                            <p className="text-sm">No files uploaded</p>
+                                        </div>;
+                                    }
+                                })()}
+                            </div>
+                        )}
+
                         {/* Mock Media Render - Only for text-based problem/solution/results */}
                         {['problem', 'solution', 'results'].includes(section.type) && (
                             <div className={`mt-8 rounded-xl overflow-hidden aspect-video relative group ${template === 'ghibli' ? 'border-4 border-white shadow-[8px_8px_0_rgba(0,0,0,0.1)]' : 'bg-white/5 border border-white/10'}`}>

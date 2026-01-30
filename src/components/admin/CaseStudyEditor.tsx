@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { useMutation } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 import LivePreview from './LivePreview';
-import { uploadImage, uploadMultipleImages } from '../../lib/cloudinary';
+import { uploadImage, uploadMultipleImages, uploadMultipleFiles } from '../../lib/cloudinary';
 
 interface Section {
     id: number;
@@ -525,10 +525,99 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
 
                                             {/* Document Placeholder */}
                                             {section.type === 'document' && (
-                                                <div className="border border-dashed border-white/10 rounded-lg p-8 flex flex-col items-center justify-center text-center hover:bg-white/5 transition-colors cursor-pointer">
-                                                    <span className="material-symbols-outlined text-3xl text-white/20 mb-2">upload_file</span>
-                                                    <p className="text-sm font-bold text-white">Upload Files</p>
-                                                    <p className="text-xs text-white/40 mt-1">Drag & drop or click to browse</p>
+                                                <div className="flex flex-col gap-4">
+                                                    {section.content && section.content.startsWith('[') ? (
+                                                        <div className="flex flex-col gap-2">
+                                                            {(() => {
+                                                                try {
+                                                                    const files = JSON.parse(section.content);
+                                                                    return files.map((file: any, i: number) => (
+                                                                        <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-black/40 border border-white/10 group">
+                                                                            <div className="flex items-center gap-3 overflow-hidden">
+                                                                                <span className="material-symbols-outlined text-white/40">description</span>
+                                                                                <div className="flex flex-col min-w-0">
+                                                                                    <span className="text-sm text-white font-medium truncate">{file.name}</span>
+                                                                                    <span className="text-[10px] text-white/40 uppercase">{file.format} • {(file.size / 1024).toFixed(1)} KB</span>
+                                                                                </div>
+                                                                            </div>
+                                                                            <button
+                                                                                onClick={() => {
+                                                                                    const newFiles = files.filter((_: any, idx: number) => idx !== i);
+                                                                                    const newSections = [...sections];
+                                                                                    const idx = newSections.findIndex(s => s.id === section.id);
+                                                                                    newSections[idx].content = JSON.stringify(newFiles);
+                                                                                    setSections(newSections);
+                                                                                }}
+                                                                                className="p-1.5 hover:bg-red-500/20 text-white/40 hover:text-red-400 rounded transition-colors"
+                                                                            >
+                                                                                <span className="material-symbols-outlined text-lg">delete</span>
+                                                                            </button>
+                                                                        </div>
+                                                                    ));
+                                                                } catch (e) { return null; }
+                                                            })()}
+                                                            <button
+                                                                onClick={async (e) => {
+                                                                    e.preventDefault();
+                                                                    e.stopPropagation();
+                                                                    try {
+                                                                        const results = await uploadMultipleFiles({ folder: 'portfolio/projects/documents' });
+                                                                        const newFiles = results.map(r => ({
+                                                                            name: r.name,
+                                                                            url: r.url,
+                                                                            size: r.size,
+                                                                            format: r.format
+                                                                        }));
+                                                                        const currentFiles = JSON.parse(section.content || '[]');
+                                                                        const newSections = [...sections];
+                                                                        const idx = newSections.findIndex(s => s.id === section.id);
+                                                                        newSections[idx].content = JSON.stringify([...currentFiles, ...newFiles]);
+                                                                        setSections(newSections);
+                                                                    } catch (error) {
+                                                                        if ((error as Error).message !== 'Upload cancelled') {
+                                                                            console.error("File upload failed", error);
+                                                                            alert("Upload failed: " + (error as Error).message);
+                                                                        }
+                                                                    }
+                                                                }}
+                                                                className="w-full py-3 border border-dashed border-white/20 rounded-lg text-xs font-bold text-white/40 hover:text-primary hover:border-primary hover:bg-primary/5 transition-all flex items-center justify-center gap-2"
+                                                            >
+                                                                <span className="material-symbols-outlined text-base">add</span>
+                                                                Add More Files
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <button
+                                                            type="button"
+                                                            onClick={async (e) => {
+                                                                e.preventDefault();
+                                                                e.stopPropagation();
+                                                                try {
+                                                                    const results = await uploadMultipleFiles({ folder: 'portfolio/projects/documents' });
+                                                                    const files = results.map(r => ({
+                                                                        name: r.name,
+                                                                        url: r.url,
+                                                                        size: r.size,
+                                                                        format: r.format
+                                                                    }));
+                                                                    const newSections = [...sections];
+                                                                    const idx = newSections.findIndex(s => s.id === section.id);
+                                                                    newSections[idx].content = JSON.stringify(files);
+                                                                    setSections(newSections);
+                                                                } catch (error) {
+                                                                    if ((error as Error).message !== 'Upload cancelled') {
+                                                                        console.error("File upload failed", error);
+                                                                        alert("Upload failed: " + (error as Error).message);
+                                                                    }
+                                                                }
+                                                            }}
+                                                            className="w-full border border-dashed border-white/10 rounded-lg p-8 flex flex-col items-center justify-center text-center hover:bg-white/5 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                                        >
+                                                            <span className="material-symbols-outlined text-3xl text-white/20 mb-2">upload_file</span>
+                                                            <p className="text-sm font-bold text-white">Upload Documents</p>
+                                                            <p className="text-xs text-white/40 mt-1">PDF, DOCX, ZIP, etc.</p>
+                                                        </button>
+                                                    )}
                                                 </div>
                                             )}
                                         </div>

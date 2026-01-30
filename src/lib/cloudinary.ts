@@ -221,6 +221,72 @@ export function uploadMultipleImages(options?: {
 }
 
 /**
+ * Opens Cloudinary upload widget for generic files (PDFs, Docs, etc.)
+ */
+export function uploadMultipleFiles(options?: {
+    folder?: string;
+    maxFiles?: number;
+}): Promise<UploadedImage[]> {
+    return new Promise((resolve, reject) => {
+        if (!window.cloudinary) {
+            reject(new Error('Cloudinary widget not loaded'));
+            return;
+        }
+
+        const uploadedFiles: UploadedImage[] = [];
+
+        const widget = window.cloudinary.createUploadWidget(
+            {
+                cloudName: CLOUD_NAME,
+                uploadPreset: UPLOAD_PRESET,
+                sources: ['local', 'url'],
+                multiple: true,
+                maxFiles: options?.maxFiles || 10,
+                maxFileSize: 20000000, // 20MB
+                // Allow common document formats + archives
+                clientAllowedFormats: ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'csv', 'zip', 'rar', '7z'],
+                folder: options?.folder || 'portfolio/documents',
+                resourceType: 'auto', // Auto-detect type
+                styles: widgetStyles,
+            },
+            (error, result) => {
+                if (error) {
+                    reject(error);
+                    return;
+                }
+
+                if (result.event === 'success' && result.info) {
+                    uploadedFiles.push({
+                        url: result.info.secure_url,
+                        publicId: result.info.public_id,
+                        name: result.info.original_filename,
+                        format: result.info.format,
+                        width: 0, // Not applicable for docs
+                        height: 0, // Not applicable for docs
+                        size: result.info.bytes,
+                    });
+                }
+
+                if (result.event === 'queues-end') {
+                    resolve(uploadedFiles);
+                    widget.close();
+                }
+
+                if (result.event === 'close' && uploadedFiles.length > 0) {
+                    resolve(uploadedFiles);
+                }
+
+                if (result.event === 'abort') {
+                    reject(new Error('Upload cancelled'));
+                }
+            }
+        );
+
+        widget.open();
+    });
+}
+
+/**
  * Generate optimized Cloudinary URL with transformations
  */
 export function getOptimizedUrl(
