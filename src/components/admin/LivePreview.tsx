@@ -11,9 +11,22 @@ const LivePreview: React.FC<LivePreviewProps> = ({ data, template }) => {
     const getContainerClass = () => {
         switch (template) {
             case 'ghibli': return 'font-serif bg-[#F5F2EA] text-[#4A4A4A]';
-            case 'glass': return 'font-sans bg-slate-900 text-white bg-[url("https://lh3.googleusercontent.com/aida-public/AB6AXuB6yuHvqE5qXXMbwSMRN0x7cEdo7FCjz3CXF9tbh97E5rV0EDdJLP_y7Bv59AlGPnUej_WAo5OVrdCCEOCtfqBIJ_aVHbMOO-tFfvZ_FRvFQms2Azfd3ABT03MiRhgAeSHD8WQuOpEI2WN5UTkC2MGptQsZwR5cNm-Oa8_SNSxAhjXIqMeiqnkp5xVwO6-xiFOvHdK-x41_GEE8-hDmNnFzyuutcrHxrYf2DKggc-j4rraWpvEjZaBSUrqx9sjm_L115EOr8RZD4j6J")] bg-cover bg-fixed';
+            case 'glass': return `font-sans bg-slate-900 text-white bg-[url('${data.image || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop"}')] bg-cover bg-fixed`;
             default: return 'font-sans bg-white text-slate-900 dark:bg-[#111] dark:text-white';
         }
+    };
+
+    const getEmbedUrl = (url: string, type: string) => {
+        if (!url) return '';
+        if (type === 'video') {
+            if (url.includes('youtube.com/watch?v=')) {
+                return url.replace('watch?v=', 'embed/');
+            }
+            if (url.includes('youtu.be/')) {
+                return url.replace('youtu.be/', 'youtube.com/embed/');
+            }
+        }
+        return url;
     };
 
     return (
@@ -31,9 +44,17 @@ const LivePreview: React.FC<LivePreviewProps> = ({ data, template }) => {
                         {data.title || "Untitled Project"}
                     </h1>
                     <div className="flex items-center gap-4 text-sm opacity-80">
-                        <span>{new Date().getFullYear()}</span>
+                        <span>{data.year || new Date().getFullYear()}</span>
                         <span>•</span>
-                        <span>Product Design</span>
+                        <div className="flex gap-2">
+                            {data.tags && data.tags.length > 0 ? (
+                                data.tags.map((tag: string) => (
+                                    <span key={tag} className="uppercase tracking-wider">{tag}</span>
+                                ))
+                            ) : (
+                                <span>Product Design</span>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -52,13 +73,52 @@ const LivePreview: React.FC<LivePreviewProps> = ({ data, template }) => {
                         </div>
 
                         {/* Content Render */}
-                        <div className="prose dark:prose-invert max-w-none">
-                            <p className="text-lg leading-relaxed opacity-90 whitespace-pre-wrap">
-                                {section.content}
-                            </p>
-                        </div>
+                        {/* Content Render */}
+                        {['video', 'figma', 'miro'].includes(section.type) ? (
+                            <div className="w-full aspect-video rounded-xl overflow-hidden border border-white/10 bg-black/50">
+                                {section.content ? (
+                                    <iframe
+                                        src={getEmbedUrl(section.content, section.type)}
+                                        className="w-full h-full"
+                                        frameBorder="0"
+                                        allowFullScreen
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-white/20">
+                                        <div className="text-center">
+                                            <span className="material-symbols-outlined text-4xl mb-2">
+                                                {section.type === 'video' ? 'play_circle' : section.type === 'figma' ? 'design_services' : 'board'}
+                                            </span>
+                                            <p className="text-sm">Enter {section.type} URL</p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        ) : section.type === 'gallery' ? (
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                {(() => {
+                                    try {
+                                        const images = JSON.parse(section.content || '[]');
+                                        return images.map((img: string, i: number) => (
+                                            <div key={i} className="aspect-square rounded-xl overflow-hidden bg-white/5">
+                                                <img src={img} alt="" className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
+                                            </div>
+                                        ));
+                                    } catch (e) {
+                                        return <div className="col-span-full text-center text-white/40 py-8">No images in gallery</div>;
+                                    }
+                                })()}
+                            </div>
+                        ) : (
+                            <div className="prose dark:prose-invert max-w-none">
+                                <p className="text-lg leading-relaxed opacity-90 whitespace-pre-wrap">
+                                    {section.content}
+                                </p>
+                            </div>
+                        )}
 
-                        {/* Mock Media Render if applicable */}
+                        {/* Mock Media Render - Only for text-based problem/solution/results */}
                         {['problem', 'solution', 'results'].includes(section.type) && (
                             <div className={`mt-8 rounded-xl overflow-hidden aspect-video relative group ${template === 'ghibli' ? 'border-4 border-white shadow-[8px_8px_0_rgba(0,0,0,0.1)]' : 'bg-white/5 border border-white/10'}`}>
                                 <div className="absolute inset-0 flex items-center justify-center text-current opacity-20 bg-pattern-grid">

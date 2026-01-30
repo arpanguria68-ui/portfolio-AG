@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { useMutation } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 import LivePreview from './LivePreview';
-import { uploadImage } from '../../lib/cloudinary';
+import { uploadImage, uploadMultipleImages } from '../../lib/cloudinary';
 
 interface Section {
     id: number;
@@ -441,10 +441,89 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
                                             )}
 
                                             {/* Gallery / Document Placeholders */}
-                                            {['gallery', 'document'].includes(section.type) && (
+                                            {['gallery'].includes(section.type) && (
+                                                <div className="flex flex-col gap-4">
+                                                    {section.content && section.content.startsWith('[') ? (
+                                                        <div className="grid grid-cols-4 gap-2">
+                                                            {(() => {
+                                                                try {
+                                                                    const images = JSON.parse(section.content);
+                                                                    return images.map((img: string, i: number) => (
+                                                                        <div key={i} className="aspect-square rounded-lg bg-black/40 overflow-hidden relative group">
+                                                                            <img src={img} alt="" className="w-full h-full object-cover" />
+                                                                            <button
+                                                                                onClick={() => {
+                                                                                    const newImages = images.filter((_: string, idx: number) => idx !== i);
+                                                                                    const newSections = [...sections];
+                                                                                    const idx = newSections.findIndex(s => s.id === section.id);
+                                                                                    newSections[idx].content = JSON.stringify(newImages);
+                                                                                    setSections(newSections);
+                                                                                }}
+                                                                                className="absolute top-1 right-1 p-1 bg-red-500/80 rounded full opacity-0 group-hover:opacity-100 transition-opacity text-white"
+                                                                            >
+                                                                                <span className="material-symbols-outlined text-[10px]">close</span>
+                                                                            </button>
+                                                                        </div>
+                                                                    ));
+                                                                } catch (e) { return null; }
+                                                            })()}
+                                                            <button
+                                                                onClick={async (e) => {
+                                                                    e.preventDefault();
+                                                                    e.stopPropagation();
+                                                                    console.log("Add more images clicked");
+                                                                    try {
+                                                                        const results = await uploadMultipleImages({ folder: 'portfolio/projects/gallery' });
+                                                                        const newUrls = results.map(r => r.url);
+                                                                        const currentUrls = JSON.parse(section.content || '[]');
+                                                                        const newSections = [...sections];
+                                                                        const idx = newSections.findIndex(s => s.id === section.id);
+                                                                        newSections[idx].content = JSON.stringify([...currentUrls, ...newUrls]);
+                                                                        setSections(newSections);
+                                                                    } catch (error) {
+                                                                        console.error("Gallery upload failed", error);
+                                                                        alert("Upload failed: " + (error as Error).message);
+                                                                    }
+                                                                }}
+                                                                className="aspect-square rounded-lg border border-dashed border-white/20 flex items-center justify-center hover:bg-white/5 transition-colors"
+                                                            >
+                                                                <span className="material-symbols-outlined text-white/40">add</span>
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <button
+                                                            type="button"
+                                                            onClick={async (e) => {
+                                                                e.preventDefault();
+                                                                e.stopPropagation();
+                                                                console.log("Initial gallery upload clicked");
+                                                                try {
+                                                                    const results = await uploadMultipleImages({ folder: 'portfolio/projects/gallery' });
+                                                                    const urls = results.map(r => r.url);
+                                                                    const newSections = [...sections];
+                                                                    const idx = newSections.findIndex(s => s.id === section.id);
+                                                                    newSections[idx].content = JSON.stringify(urls);
+                                                                    setSections(newSections);
+                                                                } catch (error) {
+                                                                    console.error("Gallery upload failed", error);
+                                                                    alert("Upload failed: " + (error as Error).message);
+                                                                }
+                                                            }}
+                                                            className="w-full border border-dashed border-white/10 rounded-lg p-8 flex flex-col items-center justify-center text-center hover:bg-white/5 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                                        >
+                                                            <span className="material-symbols-outlined text-3xl text-white/20 mb-2">add_photo_alternate</span>
+                                                            <p className="text-sm font-bold text-white">Upload Images</p>
+                                                            <p className="text-xs text-white/40 mt-1">Multi-select supported</p>
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            )}
+
+                                            {/* Document Placeholder */}
+                                            {section.type === 'document' && (
                                                 <div className="border border-dashed border-white/10 rounded-lg p-8 flex flex-col items-center justify-center text-center hover:bg-white/5 transition-colors cursor-pointer">
-                                                    <span className="material-symbols-outlined text-3xl text-white/20 mb-2">{section.type === 'gallery' ? 'add_photo_alternate' : 'upload_file'}</span>
-                                                    <p className="text-sm font-bold text-white">Upload {section.type === 'gallery' ? 'Images' : 'Files'}</p>
+                                                    <span className="material-symbols-outlined text-3xl text-white/20 mb-2">upload_file</span>
+                                                    <p className="text-sm font-bold text-white">Upload Files</p>
                                                     <p className="text-xs text-white/40 mt-1">Drag & drop or click to browse</p>
                                                 </div>
                                             )}
@@ -503,7 +582,7 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
                         Live Preview
                     </div>
                 </div>
-                <LivePreview data={{ title, slug, sections }} template={template} />
+                <LivePreview data={{ title, slug, sections, image, year, tags, description }} template={template} />
             </div>
         </div>
     );

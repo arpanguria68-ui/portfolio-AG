@@ -4,6 +4,19 @@ import { useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 
 // Fallback projects for when Convex is not connected
+const getEmbedUrl = (url: string, type: string) => {
+    if (!url) return '';
+    if (type === 'video') {
+        if (url.includes('youtube.com/watch?v=')) {
+            return url.replace('watch?v=', 'embed/');
+        }
+        if (url.includes('youtu.be/')) {
+            return url.replace('youtu.be/', 'youtube.com/embed/');
+        }
+    }
+    return url;
+};
+
 const FALLBACK_PROJECTS = [
     {
         _id: '1',
@@ -155,11 +168,50 @@ const CaseStudy = () => {
                         </div>
 
                         {/* Content */}
-                        <div className="prose prose-lg prose-invert max-w-none">
-                            <p className="text-xl leading-relaxed text-white/80 whitespace-pre-wrap">
-                                {section.content}
-                            </p>
-                        </div>
+                        {/* Content Render */}
+                        {['video', 'figma', 'miro'].includes(section.type) ? (
+                            <div className="w-full aspect-video rounded-xl overflow-hidden border border-white/10 bg-black/50">
+                                {section.content ? (
+                                    <iframe
+                                        src={getEmbedUrl(section.content, section.type)}
+                                        className="w-full h-full"
+                                        frameBorder="0"
+                                        allowFullScreen
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-white/20">
+                                        <div className="text-center">
+                                            <span className="material-symbols-outlined text-4xl mb-2">
+                                                {section.type === 'video' ? 'play_circle' : section.type === 'figma' ? 'design_services' : 'board'}
+                                            </span>
+                                            <p className="text-sm">Enter {section.type} URL</p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        ) : section.type === 'gallery' ? (
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                {(() => {
+                                    try {
+                                        const images = JSON.parse(section.content || '[]');
+                                        return images.map((img: string, i: number) => (
+                                            <div key={i} className="aspect-square rounded-xl overflow-hidden bg-white/5">
+                                                <img src={img} alt="" className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
+                                            </div>
+                                        ));
+                                    } catch (e) {
+                                        return <div className="col-span-full text-center text-white/40 py-8">No images in gallery</div>;
+                                    }
+                                })()}
+                            </div>
+                        ) : (
+                            <div className="prose prose-lg prose-invert max-w-none">
+                                <p className="text-xl leading-relaxed text-white/80 whitespace-pre-wrap">
+                                    {section.content}
+                                </p>
+                            </div>
+                        )}
 
                         {/* Visual Placeholder - Matches LivePreview */}
                         {['problem', 'solution', 'results'].includes(section.type) && (
