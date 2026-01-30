@@ -18,6 +18,7 @@ const LivePreview: React.FC<LivePreviewProps> = ({ data, template }) => {
 
     const getEmbedUrl = (url: string, type: string) => {
         if (!url) return '';
+
         if (type === 'video') {
             if (url.includes('youtube.com/watch?v=')) {
                 return url.replace('watch?v=', 'embed/');
@@ -26,6 +27,18 @@ const LivePreview: React.FC<LivePreviewProps> = ({ data, template }) => {
                 return url.replace('youtu.be/', 'youtube.com/embed/');
             }
         }
+
+        if (type === 'figma') {
+            return `https://www.figma.com/embed?embed_host=share&url=${encodeURIComponent(url)}`;
+        }
+
+        if (type === 'miro') {
+            const boardIdMatch = url.match(/miro\.com\/app\/board\/([^\/]+)/);
+            if (boardIdMatch && boardIdMatch[1]) {
+                return `https://miro.com/app/live-embed/${boardIdMatch[1]}/?moveToViewport=-500,-500,1000,1000`;
+            }
+        }
+
         return url;
     };
 
