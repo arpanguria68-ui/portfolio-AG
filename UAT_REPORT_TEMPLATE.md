@@ -46,7 +46,13 @@
 - [x] **Cover Image Upload**: Used URL upload (Pikachu).
     - *Status*: PASSED. Thumbnail rendered correctly.
 
-## 4. Overall Integration Status
+## 4. Document Uploads (New Feature)
+- [ ] **Data Persistence**: Create a project, upload a PDF/DOCX, save, and reload.
+    - *Status*: Ready for Manual Verification.
+- [ ] **Frontend Rendering**: Verify files appear with download icons on the public page.
+    - *Status*: Ready for Manual Verification.
+
+## 5. Overall Integration Status
 Based on automated verification:
 **RESULT: SUCCESS**
 All critical CRUD paths for "My Projects" are operational in the deployed environment.

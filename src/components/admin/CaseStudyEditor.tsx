@@ -107,8 +107,8 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
     };
 
     const addSection = (type: string) => {
-        const icons: Record<string, string> = { video: 'play_circle', figma: 'design_services', miro: 'board', gallery: 'grid_view', document: 'description', text: 'article' };
-        const titles: Record<string, string> = { video: 'Video Demo', figma: 'Figma Prototype', miro: 'Miro Board', gallery: 'Image Gallery', document: 'Project Files', text: 'New Section' };
+        const icons: Record<string, string> = { video: 'play_circle', figma: 'design_services', miro: 'board', gallery: 'grid_view', document: 'description', external_link: 'link', text: 'article' };
+        const titles: Record<string, string> = { video: 'Video Demo', figma: 'Figma Prototype', miro: 'Miro Board', gallery: 'Image Gallery', document: 'Project Files', external_link: 'Resource Link', text: 'New Section' };
 
         setSections([...sections, {
             id: Date.now(),
@@ -416,15 +416,17 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
                                                 </>
                                             )}
 
-                                            {/* Embed Inputs (Figma, Miro, Video) */}
-                                            {['figma', 'miro', 'video'].includes(section.type) && (
+                                            {/* Embed Inputs (Figma, Miro, Video, External Link) */}
+                                            {['figma', 'miro', 'video', 'external_link'].includes(section.type) && (
                                                 <div className="flex flex-col gap-2">
-                                                    <label className="text-xs font-bold text-white/40 uppercase">Embed URL</label>
+                                                    <label className="text-xs font-bold text-white/40 uppercase">
+                                                        {section.type === 'external_link' ? 'Resource URL' : 'Embed URL'}
+                                                    </label>
                                                     <div className="relative">
                                                         <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-white/20">link</span>
                                                         <input
                                                             className="w-full rounded-lg bg-black/40 border border-white/10 py-2.5 pl-10 pr-4 text-sm text-white focus:border-primary focus:outline-none transition-all placeholder-white/20"
-                                                            placeholder={`Paste ${section.type} link here...`}
+                                                            placeholder={section.type === 'external_link' ? "Paste Google Drive, Mega, or external link..." : `Paste ${section.type} link here...`}
                                                             value={section.content}
                                                             onChange={(e) => {
                                                                 const newSections = [...sections];
@@ -434,9 +436,11 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
                                                             }}
                                                         />
                                                     </div>
-                                                    <div className="mt-2 rounded-lg bg-black/20 border border-white/5 aspect-video flex items-center justify-center text-white/20 text-xs">
-                                                        {section.content ? "Preview Loaded" : "Preview will appear here"}
-                                                    </div>
+                                                    {section.type !== 'external_link' && (
+                                                        <div className="mt-2 rounded-lg bg-black/20 border border-white/5 aspect-video flex items-center justify-center text-white/20 text-xs">
+                                                            {section.content ? "Preview Loaded" : "Preview will appear here"}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             )}
 
@@ -643,7 +647,8 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
                                         { id: 'figma', label: 'Figma Design', icon: 'design_services' },
                                         { id: 'miro', label: 'Miro Board', icon: 'board' },
                                         { id: 'gallery', label: 'Image Gallery', icon: 'grid_view' },
-                                        { id: 'document', label: 'Files / Docs', icon: 'description' }
+                                        { id: 'document', label: 'Files / Docs', icon: 'description' },
+                                        { id: 'external_link', label: 'Link / Resource', icon: 'link' }
                                     ].map(item => (
                                         <button
                                             key={item.id}

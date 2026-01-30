@@ -267,6 +267,25 @@ const CaseStudy = () => {
                             </div>
                         )}
 
+                        {/* External Link Render */}
+                        {section.type === 'external_link' && (
+                            <a
+                                href={section.content}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-4 p-5 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all group my-6"
+                            >
+                                <div className="w-14 h-14 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 group-hover:scale-110 transition-all">
+                                    <span className="material-symbols-outlined text-2xl">link</span>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-lg font-bold text-white truncate group-hover:text-blue-400 transition-colors">Open External Resource</p>
+                                    <p className="text-sm text-white/40 truncate mt-0.5">{section.content || 'No URL provided'}</p>
+                                </div>
+                                <span className="material-symbols-outlined text-white/20 group-hover:text-white transition-colors text-2xl">open_in_new</span>
+                            </a>
+                        )}
+
                         {/* Visual Placeholder - Matches LivePreview */}
                         {['problem', 'solution', 'results'].includes(section.type) && (
                             <div className="mt-12 rounded-2xl overflow-hidden aspect-video relative group bg-gradient-to-br from-white/5 to-white/0 border border-white/10">

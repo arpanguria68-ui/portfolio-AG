@@ -180,6 +180,25 @@ const LivePreview: React.FC<LivePreviewProps> = ({ data, template }) => {
                             </div>
                         )}
 
+                        {/* External Link Render */}
+                        {section.type === 'external_link' && (
+                            <a
+                                href={section.content}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all group my-4"
+                            >
+                                <div className="w-12 h-12 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500 group-hover:scale-110 transition-all">
+                                    <span className="material-symbols-outlined">link</span>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-bold text-white truncate">Open External Resource</p>
+                                    <p className="text-xs text-white/40 truncate">{section.content || 'No URL provided'}</p>
+                                </div>
+                                <span className="material-symbols-outlined text-white/20 group-hover:text-white transition-colors">open_in_new</span>
+                            </a>
+                        )}
+
                         {/* Mock Media Render - Only for text-based problem/solution/results */}
                         {['problem', 'solution', 'results'].includes(section.type) && (
                             <div className={`mt-8 rounded-xl overflow-hidden aspect-video relative group ${template === 'ghibli' ? 'border-4 border-white shadow-[8px_8px_0_rgba(0,0,0,0.1)]' : 'bg-white/5 border border-white/10'}`}>
