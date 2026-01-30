@@ -2,6 +2,17 @@ import { useState } from 'react';
 import { useMutation } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 import LivePreview from './LivePreview';
+import { uploadImage } from '../../lib/cloudinary';
+
+interface Section {
+    id: number;
+    type: string;
+    title: string;
+    content: string;
+    collapsed: boolean;
+    icon: string;
+    isEnabled: boolean;
+}
 
 interface CaseStudyEditorProps {
     onBack: () => void;
@@ -9,15 +20,21 @@ interface CaseStudyEditorProps {
 }
 
 const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }) => {
-    const [title, setTitle] = useState(initialData?.title || "Reimagining User Onboarding");
-    const [slug, setSlug] = useState(initialData?.slug || "user-onboarding-2024");
+    const [title, setTitle] = useState(initialData?.title || "");
+    const [slug, setSlug] = useState(initialData?.slug || "");
+    const [description, setDescription] = useState(initialData?.description || "");
+    const [year, setYear] = useState(initialData?.year || new Date().getFullYear().toString());
+    const [tags, setTags] = useState<string[]>(initialData?.tags || []);
+    const [image, setImage] = useState(initialData?.image || "");
+    const [link, setLink] = useState(initialData?.link || "");
     const [template, setTemplate] = useState<'default' | 'ghibli' | 'glass'>('glass');
     const [isSaving, setIsSaving] = useState(false);
+    const [isUploadingImage, setIsUploadingImage] = useState(false);
 
-    const [sections, setSections] = useState([
-        { id: 1, type: 'hero', title: 'Hero Section', content: 'Main headline and intro text...', collapsed: true, icon: 'web_asset', isEnabled: true },
-        { id: 2, type: 'problem', title: 'The Problem', content: 'Users were dropping off significantly...', collapsed: false, icon: 'error', isEnabled: true },
-        { id: 3, type: 'figma', title: 'Design System', content: 'https://figma.com/file/...', collapsed: true, icon: 'design_services', isEnabled: true },
+    const [sections, setSections] = useState<Section[]>(initialData?.sections || [
+        { id: 1, type: 'hero', title: 'Hero Section', content: '', collapsed: true, icon: 'web_asset', isEnabled: true },
+        { id: 2, type: 'problem', title: 'The Problem', content: '', collapsed: false, icon: 'error', isEnabled: true },
+        { id: 3, type: 'figma', title: 'Design System', content: '', collapsed: true, icon: 'design_services', isEnabled: true },
     ]);
 
     const [showAddMenu, setShowAddMenu] = useState(false);
@@ -48,25 +65,63 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
     };
 
     const createProject = useMutation(api.projects.create);
+    const updateProject = useMutation(api.projects.update);
+
+    // Handle image upload via Cloudinary
+    const handleImageUpload = async () => {
+        setIsUploadingImage(true);
+        try {
+            const result = await uploadImage({
+                folder: 'portfolio/projects',
+            });
+            setImage(result.url);
+        } catch (error) {
+            if ((error as Error).message !== 'Upload cancelled') {
+                console.error('Failed to upload image:', error);
+                alert('Failed to upload image. Please try again.');
+            }
+        } finally {
+            setIsUploadingImage(false);
+        }
+    };
 
     const handleSave = async () => {
+        if (!title.trim()) {
+            alert('Please enter a project title');
+            return;
+        }
+        if (!image) {
+            alert('Please upload a project image');
+            return;
+        }
+
         setIsSaving(true);
         try {
             const projectData = {
                 title,
-                description: sections.map(s => s.content).join('\n\n'),
-                year: new Date().getFullYear().toString(),
-                tags: ['Case Study', template],
-                image: 'https://placehold.co/600x400',
-                link: `/project/${slug}`
+                description: description || sections.filter(s => s.isEnabled).map(s => s.content).join('\n\n'),
+                year,
+                tags: tags.length > 0 ? tags : ['Case Study', template],
+                image,
+                link: link || `/project/${slug || title.toLowerCase().replace(/\s+/g, '-')}`
             };
 
-            await createProject(projectData);
-            alert('Project saved successfully!');
+            if (initialData?._id) {
+                // Update existing project
+                await updateProject({
+                    id: initialData._id,
+                    ...projectData
+                });
+                alert('Project updated successfully!');
+            } else {
+                // Create new project
+                await createProject(projectData);
+                alert('Project created successfully!');
+            }
             onBack();
         } catch (error) {
             console.error("Failed to save project", error);
-            alert('Failed to save project');
+            alert('Failed to save project: ' + (error as Error).message);
         } finally {
             setIsSaving(false);
         }
@@ -117,6 +172,7 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
                                 className="w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm text-white focus:border-primary focus:outline-none transition-all"
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
+                                placeholder="Enter project title..."
                             />
                         </label>
                         <label className="flex flex-col gap-2">
@@ -125,8 +181,57 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
                                 className="w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm text-white font-mono focus:border-primary focus:outline-none transition-all"
                                 value={slug}
                                 onChange={(e) => setSlug(e.target.value)}
+                                placeholder="project-slug"
                             />
                         </label>
+                    </div>
+
+                    {/* Cover Image Upload */}
+                    <div className="flex flex-col gap-2">
+                        <span className="text-white text-xs font-bold ml-1 uppercase tracking-wider opacity-60">Cover Image</span>
+                        {image ? (
+                            <div className="relative rounded-xl overflow-hidden border border-white/10 group">
+                                <img
+                                    src={image}
+                                    alt="Project cover"
+                                    className="w-full h-48 object-cover"
+                                />
+                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                                    <button
+                                        onClick={handleImageUpload}
+                                        disabled={isUploadingImage}
+                                        className="px-4 py-2 bg-primary text-black text-xs font-bold rounded-lg hover:shadow-[0_0_15px_rgba(128,242,13,0.3)] transition-all"
+                                    >
+                                        Replace Image
+                                    </button>
+                                    <button
+                                        onClick={() => setImage('')}
+                                        className="px-4 py-2 bg-red-500/20 text-red-400 text-xs font-bold rounded-lg hover:bg-red-500/30 transition-all"
+                                    >
+                                        Remove
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <button
+                                onClick={handleImageUpload}
+                                disabled={isUploadingImage}
+                                className="w-full h-48 rounded-xl border-2 border-dashed border-white/20 hover:border-primary/50 hover:bg-primary/5 transition-all flex flex-col items-center justify-center gap-2 group"
+                            >
+                                {isUploadingImage ? (
+                                    <>
+                                        <span className="material-symbols-outlined text-3xl text-primary animate-pulse">cloud_upload</span>
+                                        <span className="text-sm text-white/60">Uploading...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <span className="material-symbols-outlined text-3xl text-white/30 group-hover:text-primary transition-colors">add_photo_alternate</span>
+                                        <span className="text-sm text-white/40 group-hover:text-white/60 transition-colors">Click to upload cover image</span>
+                                        <span className="text-xs text-white/20">Recommended: 1200x800px</span>
+                                    </>
+                                )}
+                            </button>
+                        )}
                     </div>
 
                     {/* Section Manager */}
