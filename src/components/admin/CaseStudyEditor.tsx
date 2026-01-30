@@ -38,8 +38,10 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
     ]);
 
     const [showAddMenu, setShowAddMenu] = useState(false);
+    const [isReorderMode, setIsReorderMode] = useState(false);
 
     const toggleSection = (id: number) => {
+        if (isReorderMode) return; // Don't toggle while reordering
         setSections(sections.map(s => s.id === id ? { ...s, collapsed: !s.collapsed } : s));
     };
 
@@ -48,14 +50,59 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
         setSections(sections.map(s => s.id === id ? { ...s, isEnabled: !s.isEnabled } : s));
     };
 
+    // Section reorder handlers
+    const moveSection = (id: number, direction: 'up' | 'down') => {
+        const currentIndex = sections.findIndex(s => s.id === id);
+        if (currentIndex === -1) return;
+
+        const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+        if (newIndex < 0 || newIndex >= sections.length) return;
+
+        const newSections = [...sections];
+        [newSections[currentIndex], newSections[newIndex]] = [newSections[newIndex], newSections[currentIndex]];
+        setSections(newSections);
+    };
+
+    const deleteSection = (id: number) => {
+        if (confirm('Are you sure you want to delete this section?')) {
+            setSections(sections.filter(s => s.id !== id));
+        }
+    };
+
+    // Toolbar formatting helpers
+    const insertFormatting = (sectionId: number, format: 'bold' | 'list' | 'link') => {
+        const section = sections.find(s => s.id === sectionId);
+        if (!section) return;
+
+        let prefix = '';
+        let suffix = '';
+        switch (format) {
+            case 'bold':
+                prefix = '**';
+                suffix = '**';
+                break;
+            case 'list':
+                prefix = '\n- ';
+                suffix = '';
+                break;
+            case 'link':
+                prefix = '[';
+                suffix = '](url)';
+                break;
+        }
+
+        const newContent = section.content + prefix + 'text' + suffix;
+        setSections(sections.map(s => s.id === sectionId ? { ...s, content: newContent } : s));
+    };
+
     const addSection = (type: string) => {
-        const icons: any = { video: 'play_circle', figma: 'design_services', miro: 'board', gallery: 'grid_view', document: 'description', text: 'article' };
-        const titles: any = { video: 'Video Demo', figma: 'Figma Prototype', miro: 'Miro Board', gallery: 'Image Gallery', document: 'Project Files', text: 'New Section' };
+        const icons: Record<string, string> = { video: 'play_circle', figma: 'design_services', miro: 'board', gallery: 'grid_view', document: 'description', text: 'article' };
+        const titles: Record<string, string> = { video: 'Video Demo', figma: 'Figma Prototype', miro: 'Miro Board', gallery: 'Image Gallery', document: 'Project Files', text: 'New Section' };
 
         setSections([...sections, {
             id: Date.now(),
             type,
-            title: titles[type],
+            title: titles[type] || 'New Section',
             content: '',
             collapsed: false,
             icon: icons[type] || 'article',
@@ -238,7 +285,12 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
                     <div className="pb-10">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-sm font-bold text-white uppercase tracking-wider opacity-60">Project Sections</h3>
-                            <button className="text-[10px] font-bold text-primary uppercase hover:underline">Reorder</button>
+                            <button
+                                onClick={() => setIsReorderMode(!isReorderMode)}
+                                className={`text-[10px] font-bold uppercase px-3 py-1 rounded-full transition-all ${isReorderMode ? 'bg-primary text-black' : 'text-primary hover:underline'}`}
+                            >
+                                {isReorderMode ? 'Done' : 'Reorder'}
+                            </button>
                         </div>
 
                         <div className="flex flex-col gap-3">
@@ -259,12 +311,42 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
                                             </div>
                                         </div>
 
-                                        {/* Enable/Disable Toggle */}
-                                        <div onClick={(e) => toggleEnable(section.id, e)} className={`relative flex h-5 w-9 cursor-pointer items-center rounded-full transition-colors ${section.isEnabled ? 'bg-primary' : 'bg-white/10'}`}>
-                                            <div className={`h-3.5 w-3.5 rounded-full bg-black shadow-sm transition-transform ${section.isEnabled ? 'translate-x-[18px]' : 'translate-x-[3px]'}`}></div>
-                                        </div>
-
-                                        <span className="material-symbols-outlined text-white/20 cursor-grab active:cursor-grabbing ml-2">drag_indicator</span>
+                                        {/* Reorder Mode Controls or Enable Toggle */}
+                                        {isReorderMode ? (
+                                            <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                                                <button
+                                                    onClick={() => moveSection(section.id, 'up')}
+                                                    disabled={sections.findIndex(s => s.id === section.id) === 0}
+                                                    className="p-1 rounded hover:bg-white/10 text-white/40 hover:text-primary disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-white/40 transition-colors"
+                                                    title="Move up"
+                                                >
+                                                    <span className="material-symbols-outlined text-lg">arrow_upward</span>
+                                                </button>
+                                                <button
+                                                    onClick={() => moveSection(section.id, 'down')}
+                                                    disabled={sections.findIndex(s => s.id === section.id) === sections.length - 1}
+                                                    className="p-1 rounded hover:bg-white/10 text-white/40 hover:text-primary disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-white/40 transition-colors"
+                                                    title="Move down"
+                                                >
+                                                    <span className="material-symbols-outlined text-lg">arrow_downward</span>
+                                                </button>
+                                                <button
+                                                    onClick={() => deleteSection(section.id)}
+                                                    className="p-1 rounded hover:bg-red-500/20 text-white/40 hover:text-red-400 transition-colors ml-1"
+                                                    title="Delete section"
+                                                >
+                                                    <span className="material-symbols-outlined text-lg">delete</span>
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                {/* Enable/Disable Toggle */}
+                                                <div onClick={(e) => toggleEnable(section.id, e)} className={`relative flex h-5 w-9 cursor-pointer items-center rounded-full transition-colors ${section.isEnabled ? 'bg-primary' : 'bg-white/10'}`}>
+                                                    <div className={`h-3.5 w-3.5 rounded-full bg-black shadow-sm transition-transform ${section.isEnabled ? 'translate-x-[18px]' : 'translate-x-[3px]'}`}></div>
+                                                </div>
+                                                <span className="material-symbols-outlined text-white/20 ml-2">drag_indicator</span>
+                                            </>
+                                        )}
                                     </div>
 
                                     {/* Editor Body */}
@@ -278,9 +360,27 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
                                                     {/* AI Toolbar */}
                                                     <div className="flex items-center justify-between mb-2">
                                                         <div className="flex gap-1">
-                                                            <button className="p-1.5 rounded hover:bg-white/10 text-white/50 hover:text-white transition-colors"><span className="material-symbols-outlined text-[16px]">format_bold</span></button>
-                                                            <button className="p-1.5 rounded hover:bg-white/10 text-white/50 hover:text-white transition-colors"><span className="material-symbols-outlined text-[16px]">format_list_bulleted</span></button>
-                                                            <button className="p-1.5 rounded hover:bg-white/10 text-white/50 hover:text-white transition-colors"><span className="material-symbols-outlined text-[16px]">add_link</span></button>
+                                                            <button
+                                                                onClick={() => insertFormatting(section.id, 'bold')}
+                                                                className="p-1.5 rounded hover:bg-white/10 text-white/50 hover:text-white transition-colors"
+                                                                title="Add bold text"
+                                                            >
+                                                                <span className="material-symbols-outlined text-[16px]">format_bold</span>
+                                                            </button>
+                                                            <button
+                                                                onClick={() => insertFormatting(section.id, 'list')}
+                                                                className="p-1.5 rounded hover:bg-white/10 text-white/50 hover:text-white transition-colors"
+                                                                title="Add bullet list"
+                                                            >
+                                                                <span className="material-symbols-outlined text-[16px]">format_list_bulleted</span>
+                                                            </button>
+                                                            <button
+                                                                onClick={() => insertFormatting(section.id, 'link')}
+                                                                className="p-1.5 rounded hover:bg-white/10 text-white/50 hover:text-white transition-colors"
+                                                                title="Add link"
+                                                            >
+                                                                <span className="material-symbols-outlined text-[16px]">add_link</span>
+                                                            </button>
                                                         </div>
                                                         <button className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 text-[10px] font-bold transition-colors">
                                                             <span className="material-symbols-outlined text-[12px]">auto_awesome</span>
