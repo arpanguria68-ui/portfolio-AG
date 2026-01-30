@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useMutation } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 import LivePreview from './LivePreview';
@@ -69,30 +69,41 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
         }
     };
 
-    // Toolbar formatting helpers
-    const insertFormatting = (sectionId: number, format: 'bold' | 'list' | 'link') => {
-        const section = sections.find(s => s.id === sectionId);
-        if (!section) return;
+    // Refs to track textarea elements for cursor position
+    const textareaRefs = useRef<Map<number, HTMLTextAreaElement>>(new Map());
 
-        let prefix = '';
-        let suffix = '';
+    // Toolbar formatting helpers - inserts at cursor position
+    const insertFormatting = (sectionId: number, format: 'bold' | 'list' | 'link') => {
+        const textarea = textareaRefs.current.get(sectionId);
+        const section = sections.find(s => s.id === sectionId);
+        if (!section || !textarea) return;
+
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const selectedText = section.content.substring(start, end) || 'text';
+
+        let formattedText = '';
         switch (format) {
             case 'bold':
-                prefix = '**';
-                suffix = '**';
+                formattedText = `**${selectedText}**`;
                 break;
             case 'list':
-                prefix = '\n- ';
-                suffix = '';
+                formattedText = `\n- ${selectedText}`;
                 break;
             case 'link':
-                prefix = '[';
-                suffix = '](url)';
+                formattedText = `[${selectedText}](url)`;
                 break;
         }
 
-        const newContent = section.content + prefix + 'text' + suffix;
+        const newContent = section.content.substring(0, start) + formattedText + section.content.substring(end);
         setSections(sections.map(s => s.id === sectionId ? { ...s, content: newContent } : s));
+
+        // Focus back on textarea and set cursor after the inserted text
+        setTimeout(() => {
+            textarea.focus();
+            const newCursorPos = start + formattedText.length;
+            textarea.setSelectionRange(newCursorPos, newCursorPos);
+        }, 0);
     };
 
     const addSection = (type: string) => {
@@ -388,8 +399,12 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
                                                         </button>
                                                     </div>
                                                     <textarea
+                                                        ref={(el) => {
+                                                            if (el) textareaRefs.current.set(section.id, el);
+                                                        }}
                                                         className="w-full resize-none rounded-lg bg-black/40 p-3 text-sm leading-relaxed text-white placeholder-white/20 focus:outline-none focus:ring-1 focus:ring-primary/50 min-h-[150px] font-sans"
-                                                        defaultValue={section.content}
+                                                        value={section.content}
+                                                        placeholder="Start writing your content here..."
                                                         onChange={(e) => {
                                                             const newSections = [...sections];
                                                             const idx = newSections.findIndex(s => s.id === section.id);
