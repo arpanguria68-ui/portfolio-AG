@@ -161,7 +161,8 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
                 year,
                 tags: tags.length > 0 ? tags : ['Case Study', template],
                 image,
-                link: link || `/project/${slug || title.toLowerCase().replace(/\s+/g, '-')}`
+                link: link || `/project/${slug || title.toLowerCase().replace(/\s+/g, '-')}`,
+                sections: sections, // Save the full sections array
             };
 
             if (initialData?._id) {

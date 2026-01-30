@@ -16,6 +16,15 @@ export default defineSchema({
         tags: v.array(v.string()),
         image: v.string(),
         link: v.optional(v.string()),
+        sections: v.optional(v.array(v.object({
+            id: v.number(),
+            type: v.string(),
+            title: v.string(),
+            content: v.string(),
+            collapsed: v.boolean(),
+            icon: v.string(),
+            isEnabled: v.boolean(),
+        }))),
     }),
 
     socialLinks: defineTable({

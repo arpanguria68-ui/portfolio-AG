@@ -20,6 +20,15 @@ export const create = mutation({
         tags: v.array(v.string()),
         image: v.string(),
         link: v.optional(v.string()),
+        sections: v.optional(v.array(v.object({
+            id: v.number(),
+            type: v.string(),
+            title: v.string(),
+            content: v.string(),
+            collapsed: v.boolean(),
+            icon: v.string(),
+            isEnabled: v.boolean(),
+        }))),
     },
     handler: async (ctx, args) => {
         const projectId = await ctx.db.insert("projects", {
@@ -29,6 +38,7 @@ export const create = mutation({
             tags: args.tags,
             image: args.image,
             link: args.link,
+            sections: args.sections,
         });
         return projectId;
     },
@@ -43,6 +53,15 @@ export const update = mutation({
         tags: v.optional(v.array(v.string())),
         image: v.optional(v.string()),
         link: v.optional(v.string()),
+        sections: v.optional(v.array(v.object({
+            id: v.number(),
+            type: v.string(),
+            title: v.string(),
+            content: v.string(),
+            collapsed: v.boolean(),
+            icon: v.string(),
+            isEnabled: v.boolean(),
+        }))),
     },
     handler: async (ctx, args) => {
         const { id, ...updates } = args;
