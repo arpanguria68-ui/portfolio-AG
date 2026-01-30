@@ -331,9 +331,9 @@ const Admin = () => {
                     </nav>
                 </div>
                 <div className="mt-auto p-6 border-t border-white/10">
-                    <Link to="/" className="flex items-center gap-3 text-white/40 hover:text-white transition-colors text-sm font-medium">
-                        <span className="material-symbols-outlined text-[20px]">logout</span>
-                        <span>Logout</span>
+                    <Link to="/" className="flex items-center gap-3 text-white/60 hover:text-primary transition-colors text-sm font-medium bg-white/5 hover:bg-primary/10 px-4 py-3 rounded-xl">
+                        <span className="material-symbols-outlined text-[20px]">arrow_back</span>
+                        <span>View Site</span>
                     </Link>
                 </div>
             </aside>
@@ -343,11 +343,15 @@ const Admin = () => {
                 {/* Mobile Header */}
                 <header className="md:hidden sticky top-0 z-30 bg-background-dark/95 backdrop-blur-md border-b border-white/10 p-4 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-black font-bold font-display text-sm">
-                            AP
-                        </div>
+                        <Link to="/" className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/60 hover:text-primary hover:bg-primary/10 transition-all">
+                            <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+                        </Link>
                         <h2 className="font-display font-bold text-lg">Admin</h2>
                     </div>
+                    <Link to="/" className="text-xs font-bold text-white/40 hover:text-primary transition-colors flex items-center gap-1">
+                        <span>View Site</span>
+                        <span className="material-symbols-outlined text-[14px]">open_in_new</span>
+                    </Link>
                 </header>
 
                 <div className="p-6 md:p-12 max-w-7xl mx-auto">
