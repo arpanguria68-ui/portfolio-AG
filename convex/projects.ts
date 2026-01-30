@@ -28,6 +28,7 @@ export const create = mutation({
             collapsed: v.boolean(),
             icon: v.string(),
             isEnabled: v.boolean(),
+            image: v.optional(v.string()),
         }))),
     },
     handler: async (ctx, args) => {
@@ -61,6 +62,7 @@ export const update = mutation({
             collapsed: v.boolean(),
             icon: v.string(),
             isEnabled: v.boolean(),
+            image: v.optional(v.string()),
         }))),
     },
     handler: async (ctx, args) => {
