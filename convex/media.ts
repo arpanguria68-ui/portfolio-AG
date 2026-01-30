@@ -56,10 +56,28 @@ export const update = mutation({
     },
     handler: async (ctx, args) => {
         const { id, ...updates } = args;
-        const filteredUpdates = Object.fromEntries(
-            Object.entries(updates).filter(([, value]) => value !== undefined)
-        );
-        await ctx.db.patch(id, filteredUpdates);
+
+        // Check if document exists
+        const existing = await ctx.db.get(id);
+        if (!existing) {
+            throw new Error("Media item not found");
+        }
+
+        // Build update object, only including fields that are explicitly provided
+        const updateObj: Record<string, string | undefined> = {};
+        if (updates.name !== undefined) updateObj.name = updates.name;
+        if (updates.url !== undefined) updateObj.url = updates.url;
+        if (updates.status !== undefined) updateObj.status = updates.status;
+        if (updates.title !== undefined) updateObj.title = updates.title;
+        if (updates.subtitle !== undefined) updateObj.subtitle = updates.subtitle;
+        if (updates.category !== undefined) updateObj.category = updates.category;
+
+        // Only patch if there are updates
+        if (Object.keys(updateObj).length > 0) {
+            await ctx.db.patch(id, updateObj);
+        }
+
+        return { success: true };
     },
 });
 
