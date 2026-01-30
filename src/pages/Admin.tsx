@@ -254,16 +254,19 @@ const Admin = () => {
     const saveMediaEdit = async () => {
         if (!editingMedia) return;
         try {
+            console.log('Saving media edit:', editingMedia);
             await updateMedia({
                 id: editingMedia.id,
                 title: editingMedia.title || undefined,
                 subtitle: editingMedia.subtitle || undefined,
                 category: editingMedia.category || undefined,
             });
+            console.log('Media edit saved successfully');
             setEditingMedia(null);
         } catch (error) {
             console.error('Failed to update media:', error);
-            alert('Failed to save changes. Please try again.');
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            alert(`Failed to save changes: ${errorMessage}`);
         }
     };
 
