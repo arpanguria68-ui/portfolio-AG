@@ -72,6 +72,27 @@ const Admin = () => {
         category: string;
     } | null>(null);
 
+    // ===== SETTINGS STATE =====
+    const [geminiKeyInput, setGeminiKeyInput] = useState("");
+    const [isSavingKey, setIsSavingKey] = useState(false);
+    const setGeminiKey = useMutation(api.settings.set);
+    const isGeminiKeySet = useQuery(api.settings.isSet, { key: "gemini_api_key" });
+
+    const handleSaveGeminiKey = async () => {
+        if (!geminiKeyInput.trim()) return;
+        setIsSavingKey(true);
+        try {
+            await setGeminiKey({ key: "gemini_api_key", value: geminiKeyInput.trim() });
+            setGeminiKeyInput(""); // Clear input after save for security
+            alert("API Key saved successfully!");
+        } catch (error) {
+            console.error("Failed to save key:", error);
+            alert("Failed to save API key.");
+        } finally {
+            setIsSavingKey(false);
+        }
+    };
+
     // Sync profile from Convex
     useEffect(() => {
         if (convexProfile) {
@@ -323,7 +344,7 @@ const Admin = () => {
                     </div>
 
                     <nav className="flex flex-col gap-2">
-                        {['dashboard', 'messages', 'projects', 'story', 'toolbox', 'highlights'].map((tab) => (
+                        {['dashboard', 'messages', 'projects', 'story', 'toolbox', 'highlights', 'settings'].map((tab) => (
                             <button
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
@@ -334,7 +355,8 @@ const Admin = () => {
                                         tab === 'messages' ? 'mail' :
                                             tab === 'projects' ? 'work' :
                                                 tab === 'story' ? 'person' :
-                                                    tab === 'toolbox' ? 'construction' : 'image'}
+                                                    tab === 'toolbox' ? 'construction' :
+                                                        tab === 'settings' ? 'settings' : 'image'}
                                 </span>
                                 <span className="capitalize">{tab === 'highlights' ? 'Media Library' : tab}</span>
                             </button>
@@ -999,6 +1021,68 @@ const Admin = () => {
                                     </div>
                                 </>
                             )}
+                        </div>
+                    )}
+
+                    {/* Settings / AI Config */}
+                    {activeTab === 'settings' && (
+                        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-2xl mx-auto">
+                            <header className="mb-10">
+                                <h1 className="text-3xl font-display font-bold mb-2">AI <span className="text-primary">Configuration</span></h1>
+                                <p className="text-white/40">Manage API keys and AI settings.</p>
+                            </header>
+
+                            <div className="bg-card-dark/50 border border-white/10 rounded-3xl p-8 mb-8">
+                                <div className="flex items-center gap-4 mb-6">
+                                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white shadow-lg">
+                                        <span className="material-symbols-outlined text-2xl">auto_awesome</span>
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-bold">Gemini API Connection</h3>
+                                        <p className="text-sm text-white/40">Powered by Google Generative AI</p>
+                                    </div>
+                                    <div className={`ml-auto px-3 py-1 rounded-full text-xs font-bold border ${isGeminiKeySet ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-red-500/10 text-red-500 border-red-500/20'}`}>
+                                        {isGeminiKeySet ? 'CONNECTED' : 'NOT CONFIGURED'}
+                                    </div>
+                                </div>
+
+                                <p className="text-white/60 text-sm mb-6 leading-relaxed">
+                                    To enable the AI Chat Assistant on your portfolio, you need to provide a Google Gemini API Key.
+                                    The key is stored securely and used only for chat functionality.
+                                </p>
+
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="text-xs uppercase tracking-wider font-bold text-white/40 mb-2 block">API Key</label>
+                                        <div className="relative">
+                                            <input
+                                                type="password"
+                                                value={geminiKeyInput}
+                                                onChange={(e) => setGeminiKeyInput(e.target.value)}
+                                                placeholder={isGeminiKeySet ? "•••••••••••••••••••••••••" : "Enter your AIza..."}
+                                                className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-primary/50 font-mono transition-all"
+                                            />
+                                            <span className="absolute right-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-white/20">key</span>
+                                        </div>
+                                        <p className="mt-2 text-xs text-white/30">
+                                            Get your key from <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Google AI Studio</a>.
+                                        </p>
+                                    </div>
+
+                                    <button
+                                        onClick={handleSaveGeminiKey}
+                                        disabled={!geminiKeyInput.trim() || isSavingKey}
+                                        className="w-full py-3 bg-primary text-black font-bold rounded-xl hover:shadow-[0_0_20px_rgba(212,255,63,0.4)] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                    >
+                                        {isSavingKey ? (
+                                            <span className="material-symbols-outlined animate-spin">sync</span>
+                                        ) : (
+                                            <span className="material-symbols-outlined">save</span>
+                                        )}
+                                        {isSavingKey ? 'Saving...' : 'Save Configuration'}
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     )}
                 </div>

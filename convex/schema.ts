@@ -87,4 +87,9 @@ export default defineSchema({
         content: v.string(),
         timestamp: v.number(),
     }).index("by_session", ["sessionId"]),
+
+    settings: defineTable({
+        key: v.string(), // e.g., "gemini_api_key"
+        value: v.string(),
+    }).index("by_key", ["key"]),
 });

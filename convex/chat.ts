@@ -1,6 +1,6 @@
 import { query, mutation, action } from "./_generated/server";
 import { v } from "convex/values";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 
 // Get chat history for a session
 export const getHistory = query({
@@ -73,11 +73,16 @@ export const sendToGemini = action({
         message: v.string(),
     },
     handler: async (ctx, args): Promise<string> => {
-        const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+        // Fetch API key from settings table
+        // We use internal query to keep it safe from client-side usage
+        const GEMINI_API_KEY = await ctx.runQuery(internal.settings.getSecret, { key: "gemini_api_key" });
 
-        if (!GEMINI_API_KEY) {
+        // Fallback to Env var if not in DB (for backward compat)
+        const apiKey = GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+
+        if (!apiKey) {
             // If no API key, return a helpful message
-            const fallbackResponse = "Hi! I'm the AI assistant for this portfolio. The Gemini API key hasn't been configured yet, but feel free to explore the portfolio and reach out through the contact form!";
+            const fallbackResponse = "Hi! I'm the AI assistant for this portfolio. The Gemini API key hasn't been configured yet in the new Admin Settings panel. Please log in and set it up to chat with me!";
 
             await ctx.runMutation(api.chat.storeMessage, {
                 sessionId: args.sessionId,
@@ -114,7 +119,7 @@ Keep responses brief (2-3 sentences) unless more detail is requested.`;
 
         try {
             const response = await fetch(
-                `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+                `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
                 {
                     method: "POST",
                     headers: {
@@ -134,6 +139,11 @@ Keep responses brief (2-3 sentences) unless more detail is requested.`;
             );
 
             if (!response.ok) {
+                // Check if it's an invalid key error
+                if (response.status === 400 || response.status === 403) {
+                    console.error(`Gemini API Key Error: ${response.status}`);
+                    throw new Error("Invalid API Key");
+                }
                 throw new Error(`Gemini API error: ${response.status}`);
             }
 
@@ -151,7 +161,11 @@ Keep responses brief (2-3 sentences) unless more detail is requested.`;
             return aiResponse;
         } catch (error) {
             console.error("Gemini API error:", error);
-            const errorResponse = "I'm having trouble connecting right now. Please try again in a moment.";
+
+            let errorResponse = "I'm having trouble connecting right now. Please try again in a moment.";
+            if (error instanceof Error && error.message === "Invalid API Key") {
+                errorResponse = "The configured Gemini API Key seems to be invalid. Please check the Admin Settings.";
+            }
 
             await ctx.runMutation(api.chat.storeMessage, {
                 sessionId: args.sessionId,

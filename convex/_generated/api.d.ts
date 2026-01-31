@@ -13,6 +13,7 @@ import type * as media from "../media.js";
 import type * as messages from "../messages.js";
 import type * as profile from "../profile.js";
 import type * as projects from "../projects.js";
+import type * as settings from "../settings.js";
 import type * as skills from "../skills.js";
 import type * as socials from "../socials.js";
 import type * as tools from "../tools.js";
@@ -29,6 +30,7 @@ declare const fullApi: ApiFromModules<{
   messages: typeof messages;
   profile: typeof profile;
   projects: typeof projects;
+  settings: typeof settings;
   skills: typeof skills;
   socials: typeof socials;
   tools: typeof tools;
