@@ -71,10 +71,10 @@ export const get = query({
 // Test connection to Gemini API
 export const testGeminiConnection = action({
     args: {},
-    handler: async (ctx) => {
+    handler: async (ctx): Promise<{ success: boolean; message: string }> => {
         // Securely fetch API key using internal query
-        const apiKey = await ctx.runQuery(internal.settings.getSecret, { key: "gemini_api_key" });
-        const model = await ctx.runQuery(internal.settings.getSecret, { key: "gemini_model" }) || "gemini-1.5-flash";
+        const apiKey: string | null = await ctx.runQuery(internal.settings.getSecret, { key: "gemini_api_key" });
+        const model: string = await ctx.runQuery(internal.settings.getSecret, { key: "gemini_model" }) || "gemini-1.5-flash";
 
         if (!apiKey) {
             return { success: false, message: "API Key not found in settings." };

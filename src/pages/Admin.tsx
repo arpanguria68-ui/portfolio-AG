@@ -1118,14 +1118,17 @@ const Admin = () => {
                                                 onChange={(e) => setSelectedModel(e.target.value)}
                                                 className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary/50 appearance-none cursor-pointer"
                                             >
+                                                <option value="gemini-3-flash-preview">Gemini 3 Flash (Preview)</option>
+                                                <option value="gemini-3-pro-preview">Gemini 3 Pro (Preview)</option>
+                                                <option value="gemini-2.5-pro">Gemini 2.5 Pro (Latest Intelligent)</option>
+                                                <option value="gemini-2.5-flash">Gemini 2.5 Flash (Latest Fast)</option>
                                                 <option value="gemini-1.5-flash">Gemini 1.5 Flash (Fast & Stable)</option>
                                                 <option value="gemini-1.5-pro">Gemini 1.5 Pro (Reasoning)</option>
-                                                <option value="gemini-pro">Gemini Pro (Legacy)</option>
                                             </select>
                                             <span className="absolute right-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-white/20 pointer-events-none">expand_more</span>
                                         </div>
                                         <p className="mt-2 text-xs text-white/30">
-                                            Select the model version to use for chat responses.
+                                            Select the model version. Note: Preview models (3.0/2.5) may not work with all keys.
                                         </p>
                                     </div>
 

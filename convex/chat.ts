@@ -102,7 +102,7 @@ export const sendToGemini = action({
         });
 
         // Build conversation context (map role correctly for Gemini)
-        const conversationHistory = history.slice(-10).map((msg) => ({
+        const conversationHistory = history.slice(-10).map((msg: any) => ({
             role: msg.role === "assistant" ? "model" : "user",
             parts: [{ text: msg.content }],
         }));
