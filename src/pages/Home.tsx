@@ -437,20 +437,20 @@ const Home = () => {
 
                         {/* Timeline Container */}
                         <div className="relative">
-                            <div className="absolute left-[85px] md:left-1/2 md:-ml-[1px] top-2 bottom-0 w-[2px] bg-[#1A1A1A] rounded-full overflow-hidden">
+                            <div className="absolute left-[100px] md:left-1/2 md:-ml-[1px] top-2 bottom-0 w-[2px] bg-[#1A1A1A] rounded-full overflow-hidden">
                                 <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-primary via-primary/40 to-white/5 shadow-[0_0_15px_rgba(212,255,63,0.5)]"></div>
                             </div>
 
                             {/* Present Role */}
                             <div className="flex flex-col md:flex-row gap-0 md:gap-12 group mb-12 relative items-start md:items-center justify-between">
                                 {/* Date (Left on Desktop) */}
-                                <div className="w-[85px] md:w-1/2 pr-6 md:pr-0 md:text-right flex flex-col md:block items-end pt-1 flex-shrink-0">
+                                <div className="w-[100px] md:w-1/2 pr-6 md:pr-0 md:text-right flex flex-col md:block items-end pt-1 flex-shrink-0">
                                     <span className="text-primary font-bold text-sm md:text-lg tracking-wide">Present</span>
                                     <span className="text-white/30 text-[10px] md:text-xs font-display font-medium mt-0.5 md:block">2023</span>
                                 </div>
 
                                 {/* Dot */}
-                                <div className="absolute left-[85px] md:left-1/2 top-[0.6rem] md:top-1/2 md:-translate-y-1/2 -translate-x-1/2 z-10">
+                                <div className="absolute left-[100px] md:left-1/2 top-[0.6rem] md:top-1/2 md:-translate-y-1/2 -translate-x-1/2 z-10">
                                     <div className="w-4 h-4 rounded-full bg-primary shadow-[0_0_15px_rgba(212,255,63,0.8)] flex items-center justify-center relative">
                                         <div className="absolute inset-0 bg-primary rounded-full animate-ping opacity-60"></div>
                                         <div className="w-1.5 h-1.5 bg-black rounded-full relative z-10"></div>
@@ -481,11 +481,11 @@ const Home = () => {
 
                             {/* Past Role 1 */}
                             <div className="flex flex-col md:flex-row gap-0 md:gap-12 group mb-12 relative items-start md:items-center justify-between">
-                                <div className="w-[85px] md:w-1/2 pr-6 md:pr-0 md:text-right flex flex-col md:block items-end pt-1 flex-shrink-0">
+                                <div className="w-[100px] md:w-1/2 pr-6 md:pr-0 md:text-right flex flex-col md:block items-end pt-1 flex-shrink-0">
                                     <span className="text-white font-bold text-sm md:text-lg tracking-wide">2023</span>
                                     <span className="text-white/30 text-[10px] md:text-xs font-display font-medium mt-0.5 md:block">2021</span>
                                 </div>
-                                <div className="absolute left-[85px] md:left-1/2 top-[0.6rem] md:top-1/2 md:-translate-y-1/2 -translate-x-1/2 z-10">
+                                <div className="absolute left-[100px] md:left-1/2 top-[0.6rem] md:top-1/2 md:-translate-y-1/2 -translate-x-1/2 z-10">
                                     <div className="w-3 h-3 rounded-full bg-[#0D0D0D] border-2 border-white/20 group-hover:border-primary/60 group-hover:scale-125 transition-all duration-300 shadow-[0_0_0_4px_#0D0D0D]"></div>
                                 </div>
                                 <div className="flex-1 pl-6 md:pl-0 md:w-1/2 min-w-0">
@@ -508,11 +508,11 @@ const Home = () => {
 
                             {/* Past Role 2 */}
                             <div className="flex flex-col md:flex-row gap-0 md:gap-12 group relative items-start md:items-center justify-between">
-                                <div className="w-[85px] md:w-1/2 pr-6 md:pr-0 md:text-right flex flex-col md:block items-end pt-1 flex-shrink-0">
+                                <div className="w-[100px] md:w-1/2 pr-6 md:pr-0 md:text-right flex flex-col md:block items-end pt-1 flex-shrink-0">
                                     <span className="text-white font-bold text-sm md:text-lg tracking-wide">2021</span>
                                     <span className="text-white/30 text-[10px] md:text-xs font-display font-medium mt-0.5 md:block">2019</span>
                                 </div>
-                                <div className="absolute left-[85px] md:left-1/2 top-[0.6rem] md:top-1/2 md:-translate-y-1/2 -translate-x-1/2 z-10">
+                                <div className="absolute left-[100px] md:left-1/2 top-[0.6rem] md:top-1/2 md:-translate-y-1/2 -translate-x-1/2 z-10">
                                     <div className="w-3 h-3 rounded-full bg-[#0D0D0D] border-2 border-white/20 group-hover:border-primary/60 group-hover:scale-125 transition-all duration-300 shadow-[0_0_0_4px_#0D0D0D]"></div>
                                 </div>
                                 <div className="flex-1 pl-6 md:pl-0 md:w-1/2 min-w-0">
