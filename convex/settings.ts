@@ -54,7 +54,7 @@ export const get = query({
     args: { key: v.string() },
     handler: async (ctx, args) => {
         // Allow list for public settings
-        const ALLOWED_KEYS = ["gemini_model"];
+        const ALLOWED_KEYS = ["gemini_model", "background_music_url", "background_music_enabled"];
 
         if (!ALLOWED_KEYS.includes(args.key)) {
             return null;
