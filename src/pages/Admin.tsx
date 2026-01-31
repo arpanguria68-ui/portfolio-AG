@@ -1131,7 +1131,8 @@ const Admin = () => {
                                             >
                                                 <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash Lite (Recommend: 10 RPM)</option>
                                                 <option value="gemini-2.5-flash">Gemini 2.5 Flash (5 RPM)</option>
-                                                <option value="gemini-3-flash">Gemini 3 Flash (Preview - 5 RPM)</option>
+                                                <option value="gemini-2.0-flash">Gemini 2.0 Flash (Stable Backup)</option>
+                                                <option value="gemini-3-flash-preview">Gemini 3 Flash (Preview - 5 RPM)</option>
                                                 <option value="gemini-1.5-flash">Gemini 1.5 Flash (Standard)</option>
                                             </select>
                                             <span className="absolute right-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-white/20 pointer-events-none">expand_more</span>
