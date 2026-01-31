@@ -17,9 +17,6 @@ const MusicPlayer = () => {
         if (bgMusicUrl && isEnabled) {
             audioRef.current = new Audio(bgMusicUrl);
             audioRef.current.loop = true;
-
-            // Try auto-play if possible (often blocked by browsers until interaction)
-            // We'll rely on user click primarily
         }
 
         return () => {
@@ -54,58 +51,71 @@ const MusicPlayer = () => {
                 initial={{ opacity: 0, scale: 0.8, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.8, y: 20 }}
-                className="fixed bottom-6 right-6 z-50 flex flex-col items-center gap-2"
+                className="fixed bottom-10 right-10 z-[100] flex flex-col items-center justify-center"
             >
-                {/* Tooltip hint */}
+                {/* Rotating Text Ring */}
+                <div className="relative w-32 h-32 flex items-center justify-center group cursor-pointer" onClick={togglePlay}>
+                    <motion.div
+                        className="absolute inset-0 w-full h-full pointer-events-none"
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+                    >
+                        <svg viewBox="0 0 100 100" className="w-full h-full">
+                            <defs>
+                                <path id="textPath" d="M 50, 50 m -37, 0 a 37,37 0 1,1 74,0 a 37,37 0 1,1 -74,0" />
+                            </defs>
+                            <text className="text-[10px] uppercase font-bold tracking-widest fill-white/40">
+                                <textPath href="#textPath" startOffset="0%">
+                                    DESIGN • STRATEGY • PRODUCT • VISION •
+                                </textPath>
+                            </text>
+                        </svg>
+                    </motion.div>
+
+                    {/* Central Play Button / Disc */}
+                    <div
+                        className="relative w-16 h-16 flex items-center justify-center rounded-full bg-black border border-white/10 shadow-[0_0_30px_rgba(0,0,0,0.5)] transition-transform group-hover:scale-105"
+                        title={isPlaying ? "Pause Music" : "Play Music"}
+                    >
+                        {/* Spinning Vinyl Effect */}
+                        <div
+                            className={`absolute inset-0 rounded-full overflow-hidden ${isPlaying ? 'animate-spin-slow' : ''}`}
+                            style={{ animationDuration: '3s' }}
+                        >
+                            {/* Grooves */}
+                            <div className="absolute inset-[2px] rounded-full border border-white/5 opacity-50"></div>
+                            <div className="absolute inset-[6px] rounded-full border border-white/5 opacity-40"></div>
+                            <div className="absolute inset-[10px] rounded-full border border-white/5 opacity-30"></div>
+
+                            {/* Shine */}
+                            <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        </div>
+
+                        {/* Icon */}
+                        <div className="relative z-10 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                            <span className="material-symbols-outlined text-xl">
+                                {isPlaying ? 'pause' : 'play_arrow'}
+                            </span>
+                        </div>
+
+                        {/* Playing Glow */}
+                        {isPlaying && (
+                            <div className="absolute inset-0 rounded-full border border-primary/30 animate-ping opacity-20 pointer-events-none"></div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Tooltip hint - moved below or remove if too cluttered */}
                 {!hasInteracted && (
                     <motion.div
-                        initial={{ opacity: 0, y: 10 }}
+                        initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0 }}
-                        className="bg-black/80 backdrop-blur text-white text-[10px] py-1 px-3 rounded-full border border-white/10 mb-2 pointer-events-none"
+                        className="absolute -top-8 bg-black/80 backdrop-blur text-white text-[10px] py-1 px-3 rounded-full border border-white/10 whitespace-nowrap pointer-events-none"
                     >
                         Click to play
                     </motion.div>
                 )}
-
-                <button
-                    onClick={togglePlay}
-                    className="group relative w-12 h-12 md:w-16 md:h-16 flex items-center justify-center rounded-full transition-all focus:outline-none"
-                    title={isPlaying ? "Pause Music" : "Play Music"}
-                >
-                    {/* Vinyl Disc Background */}
-                    <div
-                        className={`absolute inset-0 rounded-full bg-neutral-900 border border-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.5)] overflow-hidden ${isPlaying ? 'animate-spin-slow' : ''}`}
-                        style={{ animationDuration: '4s' }}
-                    >
-                        {/* Grooves */}
-                        <div className="absolute inset-[2px] rounded-full border border-white/5 opacity-50"></div>
-                        <div className="absolute inset-[6px] rounded-full border border-white/5 opacity-40"></div>
-                        <div className="absolute inset-[10px] rounded-full border border-white/5 opacity-30"></div>
-
-                        {/* Center Label */}
-                        <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="w-1/3 h-1/3 rounded-full bg-primary/20 flex items-center justify-center relative">
-                                <div className="w-1.5 h-1.5 rounded-full bg-black"></div>
-                            </div>
-                        </div>
-
-                        {/* Shine effect */}
-                        <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                    </div>
-
-                    {/* Icon - Always upright thanks to being outside the spinning div */}
-                    <div className="relative z-10 w-8 h-8 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-primary border border-white/5 group-hover:scale-110 transition-transform">
-                        <span className="material-symbols-outlined text-sm md:text-base">
-                            {isPlaying ? 'pause' : 'play_arrow'}
-                        </span>
-                    </div>
-
-                    {/* Pulse effect when playing */}
-                    {isPlaying && (
-                        <div className="absolute inset-0 rounded-full border border-primary/30 animate-ping opacity-20 pointer-events-none"></div>
-                    )}
-                </button>
             </motion.div>
         </AnimatePresence>
     );
