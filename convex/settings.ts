@@ -1,4 +1,5 @@
-import { query, mutation, internalQuery } from "./_generated/server";
+import { internal } from "./_generated/api";
+import { mutation, query, internalQuery, action } from "./_generated/server";
 import { v } from "convex/values";
 
 // Set a setting (Protected mutation - in real app add auth check)
@@ -68,28 +69,20 @@ export const get = query({
 });
 
 // Test connection to Gemini API
-export const testGeminiConnection = mutation({
+export const testGeminiConnection = action({
     args: {},
     handler: async (ctx) => {
-        const apiKey = await ctx.db
-            .query("settings")
-            .withIndex("by_key", (q) => q.eq("key", "gemini_api_key"))
-            .first();
+        // Securely fetch API key using internal query
+        const apiKey = await ctx.runQuery(internal.settings.getSecret, { key: "gemini_api_key" });
+        const model = await ctx.runQuery(internal.settings.getSecret, { key: "gemini_model" }) || "gemini-1.5-flash";
 
-        const modelSetting = await ctx.db
-            .query("settings")
-            .withIndex("by_key", (q) => q.eq("key", "gemini_model"))
-            .first();
-
-        const model = modelSetting?.value || "gemini-1.5-flash";
-
-        if (!apiKey?.value) {
+        if (!apiKey) {
             return { success: false, message: "API Key not found in settings." };
         }
 
         try {
             const response = await fetch(
-                `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey.value}`,
+                `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
                 {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -104,7 +97,7 @@ export const testGeminiConnection = mutation({
                 return { success: false, message: `API Error ${response.status}: ${errorText}` };
             }
 
-            const data = await response.json();
+            await response.json();
             return { success: true, message: "Connected to Gemini successfully! Model: " + model };
         } catch (error: any) {
             return { success: false, message: "Network/Server Error: " + error.message };

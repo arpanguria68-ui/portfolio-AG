@@ -79,7 +79,7 @@ const Admin = () => {
     const setGeminiKey = useMutation(api.settings.set);
     const isGeminiKeySet = useQuery(api.settings.isSet, { key: "gemini_api_key" });
     const savedModel = useQuery(api.settings.get, { key: "gemini_model" });
-    const testConnection = useMutation(api.settings.testGeminiConnection);
+    const testConnection = useAction(api.settings.testGeminiConnection);
 
     // Sync saved model when loaded
     useEffect(() => {
