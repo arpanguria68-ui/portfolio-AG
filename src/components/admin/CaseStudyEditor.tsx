@@ -165,11 +165,11 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
                 link: link || `/project/${slug || title.toLowerCase().replace(/\s+/g, '-')}`,
                 sections: sections.map(s => ({
                     id: s.id,
-                    type: s.type,
-                    title: s.title,
-                    content: s.content,
+                    type: s.type || 'text',
+                    title: s.title || '',
+                    content: s.content || '',
                     collapsed: s.collapsed || false,
-                    icon: s.icon,
+                    icon: s.icon || 'article',
                     isEnabled: s.isEnabled || false,
                     image: s.image || undefined, // Ensure no nulls
                 })),
