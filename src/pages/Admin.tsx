@@ -75,11 +75,21 @@ const Admin = () => {
     // ===== SETTINGS STATE =====
     const [geminiKeyInput, setGeminiKeyInput] = useState("");
     const [isSavingKey, setIsSavingKey] = useState(false);
-    const [selectedModel, setSelectedModel] = useState("gemini-1.5-flash"); // Default
+    const [selectedModel, setSelectedModel] = useState("gemini-2.5-flash-lite"); // Default
     const setGeminiKey = useMutation(api.settings.set);
     const isGeminiKeySet = useQuery(api.settings.isSet, { key: "gemini_api_key" });
     const savedModel = useQuery(api.settings.get, { key: "gemini_model" });
     const testConnection = useAction(api.settings.testGeminiConnection);
+    // ...
+    <select
+        value={selectedModel}
+        onChange={(e) => setSelectedModel(e.target.value)}
+        className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary/50 appearance-none cursor-pointer"
+    >
+        <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash Lite (Recommend: 10 RPM)</option>
+        <option value="gemini-2.5-flash">Gemini 2.5 Flash (5 RPM)</option>
+        <option value="gemini-3-flash">Gemini 3 Flash (Preview - 5 RPM)</option>
+    </select>
 
     // Sync saved model when loaded
     useEffect(() => {

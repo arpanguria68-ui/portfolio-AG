@@ -74,7 +74,7 @@ export const testGeminiConnection = action({
     handler: async (ctx): Promise<{ success: boolean; message: string }> => {
         // Securely fetch API key using internal query
         const apiKey: string | null = await ctx.runQuery(internal.settings.getSecret, { key: "gemini_api_key" });
-        const model: string = await ctx.runQuery(internal.settings.getSecret, { key: "gemini_model" }) || "gemini-1.5-flash";
+        const model = await ctx.runQuery(internal.settings.getSecret, { key: "gemini_model" }) || "gemini-2.5-flash-lite";
 
         if (!apiKey) {
             return { success: false, message: "API Key not found in settings." };
@@ -100,7 +100,7 @@ export const testGeminiConnection = action({
                     const errorJson = JSON.parse(errorText);
                     if (errorJson.error) {
                         if (errorJson.error.status === "RESOURCE_EXHAUSTED") {
-                            errorMessage = "Quota Limit Exceeded. This model may not be available on your plan. Try 'Gemini 1.5 Flash'.";
+                            errorMessage = "Quota Limit Exceeded. This model may not be available on your plan. Try 'Gemini 2.5 Flash Lite'.";
                         } else {
                             errorMessage = errorJson.error.message || errorJson.error.status;
                         }

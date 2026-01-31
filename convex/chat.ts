@@ -141,10 +141,10 @@ Keep responses brief (2-3 sentences) unless more detail is requested.`;
 
             // Fallback logic for Resource Exhausted or Not Found (if using advanced models)
             if (!response.ok && (response.status === 429 || response.status === 404)) {
-                console.warn(`Primary model ${model} failed (${response.status}). Retrying with gemini-1.5-flash...`);
-                // Only retry if we weren't already using flash
-                if (model !== "gemini-1.5-flash") {
-                    response = await callGemini("gemini-1.5-flash");
+                console.warn(`Primary model ${model} failed (${response.status}). Retrying with gemini-2.5-flash-lite...`);
+                // Only retry if we weren't already using the lite model
+                if (model !== "gemini-2.5-flash-lite") {
+                    response = await callGemini("gemini-2.5-flash-lite");
                 }
             }
 
