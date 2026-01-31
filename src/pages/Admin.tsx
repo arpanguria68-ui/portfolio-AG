@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useAction } from 'convex/react';
 import { api } from '../../convex/_generated/api';
-import type { Id } from '../../convex/_generated/dataModel';
+import type { Id, Doc } from '../../convex/_generated/dataModel';
 import { Link } from 'react-router-dom';
 import CaseStudyEditor from '../components/admin/CaseStudyEditor';
 import MessageCenter from '../components/admin/MessageCenter';
 import { uploadImage, uploadMultipleImages, formatFileSize } from '../lib/cloudinary';
+import { Reorder } from "framer-motion";
+import { SkillItem } from '../components/admin/SkillItem';
 
 const Admin = () => {
     const [activeTab, setActiveTab] = useState('dashboard');
@@ -50,10 +52,14 @@ const Admin = () => {
     const updateResume = useMutation(api.resumes.update);
     const removeResume = useMutation(api.resumes.remove);
 
+    const reorderSkills = useMutation(api.skills.reorder);
+
     // ===== LOCAL STATE FOR EDITING =====
     const [headline, setHeadline] = useState("");
     const [bio, setBio] = useState("");
     const [isSaving, setIsSaving] = useState(false);
+    // ...
+    const [localSkills, setLocalSkills] = useState<Doc<"skills">[]>([]);
     const [profileSaved, setProfileSaved] = useState(false);
     const [profileImage, setProfileImage] = useState("");
     const [isUploading, setIsUploading] = useState(false);
@@ -137,18 +143,26 @@ const Admin = () => {
     // Derived data with fallbacks
     const projects = convexProjects ?? [];
     const skills = convexSkills ?? [];
+
+    useEffect(() => {
+        if (convexSkills) {
+            setLocalSkills(convexSkills);
+        }
+    }, [convexSkills]);
+
+    const handleReorderSkills = (newOrder: Doc<"skills">[]) => {
+        setLocalSkills(newOrder);
+        const updates = newOrder.map((skill, index) => ({
+            id: skill._id,
+            order: index
+        }));
+        reorderSkills({ items: updates });
+    };
+
+    // Derived state for other lists
     const socials = convexSocials ?? [];
     const mediaItems = convexMedia ?? [];
     const tools = convexTools ?? [];
-
-    // ===== SKILL HANDLERS =====
-    const handleSkillChange = async (id: Id<"skills">, newValue: number) => {
-        await updateSkill({ id, value: newValue });
-    };
-
-    const toggleSkillVisibility = async (id: Id<"skills">, currentVisible: boolean) => {
-        await updateSkill({ id, visible: !currentVisible });
-    };
 
     const addSkill = async () => {
         if (!newSkillName.trim()) return;
@@ -502,43 +516,21 @@ const Admin = () => {
                                     </button>
                                 </div>
                                 <div className="space-y-4">
-                                    {skills.map((skill) => (
-                                        <div key={skill._id} className={`bg-black/20 rounded-2xl p-4 border transition-all ${skill.visible ? 'border-white/10' : 'border-white/5 opacity-60'}`}>
-                                            <div className="flex items-center justify-between mb-4">
-                                                <div className="flex items-center gap-3">
-                                                    <span className="material-symbols-outlined text-white/20 cursor-grab hover:text-white transition-colors">drag_indicator</span>
-                                                    <span className="font-bold">{skill.name}</span>
-                                                </div>
-                                                <div className="flex items-center gap-3">
-                                                    <span className="text-primary font-bold">{skill.value}%</span>
-                                                    <button onClick={() => toggleSkillVisibility(skill._id, skill.visible)} className="text-white/40 hover:text-white transition-colors">
-                                                        <span className="material-symbols-outlined">{skill.visible ? 'visibility' : 'visibility_off'}</span>
-                                                    </button>
-                                                    <button onClick={() => removeSkill(skill._id)} className="text-white/40 hover:text-red-400 transition-colors">
-                                                        <span className="material-symbols-outlined">delete</span>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                            <div className="relative h-2 bg-white/5 rounded-full overflow-hidden group hover:h-4 transition-all duration-300">
-                                                <div
-                                                    className="absolute top-0 left-0 h-full bg-primary rounded-full transition-all duration-300"
-                                                    style={{ width: `${skill.value}%` }}
-                                                ></div>
-                                                <input
-                                                    type="range"
-                                                    min="0"
-                                                    max="100"
-                                                    value={skill.value}
-                                                    onChange={(e) => handleSkillChange(skill._id, parseInt(e.target.value))}
-                                                    className="absolute inset-0 w-full opacity-0 cursor-pointer"
-                                                />
-                                            </div>
-                                        </div>
-                                    ))}
-                                    {skills.length === 0 && (
-                                        <div className="text-center py-8 text-white/40">
-                                            <span className="material-symbols-outlined text-4xl mb-2 block">psychology_alt</span>
-                                            No skills added yet. Click "Add Skill" to get started.
+                                    <Reorder.Group axis="y" values={localSkills} onReorder={handleReorderSkills} className="space-y-4">
+                                        {localSkills.map((skill) => (
+                                            <SkillItem
+                                                key={skill._id}
+                                                skill={skill}
+                                                handleSkillChange={(id, value) => updateSkill({ id, value })}
+                                                toggleSkillVisibility={(id, visible) => updateSkill({ id, visible: !visible })}
+                                                removeSkill={(id) => removeSkill({ id })}
+                                            />
+                                        ))}
+                                    </Reorder.Group>
+
+                                    {localSkills.length === 0 && (
+                                        <div className="text-center py-6 border border-dashed border-white/10 rounded-xl text-white/30 text-xs">
+                                            No skills added yet.
                                         </div>
                                     )}
                                 </div>
