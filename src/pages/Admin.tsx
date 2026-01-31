@@ -1088,11 +1088,9 @@ const Admin = () => {
                                                 onChange={(e) => setSelectedModel(e.target.value)}
                                                 className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary/50 appearance-none cursor-pointer"
                                             >
-                                                <option value="gemini-2.5-pro">Gemini 2.5 Pro (Latest Intelligent)</option>
-                                                <option value="gemini-2.5-flash">Gemini 2.5 Flash (Latest Fast)</option>
-                                                <option value="gemini-2.0-flash">Gemini 2.0 Flash (Stable)</option>
-                                                <option value="gemini-1.5-pro-002">Gemini 1.5 Pro-002 (Legacy)</option>
-                                                <option value="gemini-1.5-flash-002">Gemini 1.5 Flash-002 (Legacy)</option>
+                                                <option value="gemini-1.5-flash">Gemini 1.5 Flash (Fast & Stable)</option>
+                                                <option value="gemini-1.5-pro">Gemini 1.5 Pro (Reasoning)</option>
+                                                <option value="gemini-pro">Gemini Pro (Legacy)</option>
                                             </select>
                                             <span className="absolute right-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-white/20 pointer-events-none">expand_more</span>
                                         </div>
