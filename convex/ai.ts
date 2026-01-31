@@ -9,8 +9,8 @@ export const enhanceText = action({
         tone: v.optional(v.string()), // e.g. "Professional", "Casual", "Confident"
     },
     handler: async (ctx, args) => {
-        const apiKey = await ctx.runQuery(internal.settings.getSecret, { key: "gemini_api_key" });
-        const model = await ctx.runQuery(internal.settings.getSecret, { key: "gemini_model" }) || "gemini-2.5-flash-lite";
+        const apiKey = (await ctx.runQuery(internal.settings.getSecret, { key: "gemini_api_key" })) as string;
+        const model = (await ctx.runQuery(internal.settings.getSecret, { key: "gemini_model" }) || "gemini-2.5-flash-lite") as string;
 
         if (!apiKey) {
             throw new Error("Gemini API Key not configured in Settings.");
