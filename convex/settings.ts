@@ -94,7 +94,22 @@ export const testGeminiConnection = action({
 
             if (!response.ok) {
                 const errorText = await response.text();
-                return { success: false, message: `API Error ${response.status}: ${errorText}` };
+                let errorMessage = `API Error ${response.status}`;
+
+                try {
+                    const errorJson = JSON.parse(errorText);
+                    if (errorJson.error) {
+                        if (errorJson.error.status === "RESOURCE_EXHAUSTED") {
+                            errorMessage = "Quota Limit Exceeded. This model may not be available on your plan. Try 'Gemini 1.5 Flash'.";
+                        } else {
+                            errorMessage = errorJson.error.message || errorJson.error.status;
+                        }
+                    }
+                } catch (e) {
+                    errorMessage += `: ${errorText}`;
+                }
+
+                return { success: false, message: errorMessage };
             }
 
             await response.json();

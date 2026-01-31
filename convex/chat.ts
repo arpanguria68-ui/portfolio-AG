@@ -120,36 +120,39 @@ Be friendly, concise, and helpful. If asked about specific projects or skills,
 provide relevant information based on what you know about the portfolio.
 Keep responses brief (2-3 sentences) unless more detail is requested.`;
 
-        try {
-            const response = await fetch(
-                `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+        // Helper to query Gemini
+        const callGemini = async (modelToUse: string) => {
+            return fetch(
+                `https://generativelanguage.googleapis.com/v1beta/models/${modelToUse}:generateContent?key=${apiKey}`,
                 {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         contents: conversationHistory,
-                        systemInstruction: {
-                            parts: [{ text: systemInstruction }],
-                        },
-                        generationConfig: {
-                            temperature: 0.7,
-                            maxOutputTokens: 500,
-                        },
+                        systemInstruction: { parts: [{ text: systemInstruction }] },
+                        generationConfig: { temperature: 0.7, maxOutputTokens: 500 },
                     }),
                 }
             );
+        };
+
+        try {
+            let response = await callGemini(model);
+
+            // Fallback logic for Resource Exhausted or Not Found (if using advanced models)
+            if (!response.ok && (response.status === 429 || response.status === 404)) {
+                console.warn(`Primary model ${model} failed (${response.status}). Retrying with gemini-1.5-flash...`);
+                // Only retry if we weren't already using flash
+                if (model !== "gemini-1.5-flash") {
+                    response = await callGemini("gemini-1.5-flash");
+                }
+            }
 
             if (!response.ok) {
                 const errorText = await response.text();
-                console.error(`Gemini API Key Error: ${response.status} - ${errorText}`);
-
-                // Check if it's an invalid key error
-                if (response.status === 400) {
-                    throw new Error("Invalid API Key");
-                }
-                throw new Error(`Gemini API error: ${response.status}`);
+                // ...existing error handling...
+                if (response.status === 400) throw new Error("Invalid API Key");
+                throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
             }
 
             const data: GeminiResponse = await response.json();
