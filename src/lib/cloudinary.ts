@@ -390,7 +390,62 @@ export function getOptimizedImageUrl(url: string | undefined, options: ImageOpti
 export function generateSrcSet(url: string, widths: number[] = [640, 768, 1024, 1280, 1536]) {
     if (!url || !url.includes('cloudinary.com')) return undefined;
 
+
     return widths
         .map(w => `${getOptimizedImageUrl(url, { width: w, crop: 'limit' })} ${w}w`)
         .join(', ');
+}
+
+/**
+ * Opens Cloudinary upload widget for audio files
+ */
+export function uploadAudio(options?: {
+    folder?: string;
+}): Promise<UploadedImage> {
+    return new Promise((resolve, reject) => {
+        if (!window.cloudinary) {
+            reject(new Error('Cloudinary widget not loaded'));
+            return;
+        }
+
+        const widget = window.cloudinary.createUploadWidget(
+            {
+                cloudName: CLOUD_NAME,
+                uploadPreset: UPLOAD_PRESET,
+                sources: ['local', 'url'],
+                multiple: false,
+                maxFiles: 1,
+                maxFileSize: 20000000, // 20MB
+                clientAllowedFormats: ['mp3', 'wav', 'ogg'],
+                folder: options?.folder || 'portfolio/audio',
+                resourceType: 'video', // Cloudinary treats audio as video
+                styles: widgetStyles,
+            },
+            (error, result) => {
+                if (error) {
+                    reject(error);
+                    return;
+                }
+
+                if (result.event === 'success' && result.info) {
+                    resolve({
+                        url: result.info.secure_url,
+                        publicId: result.info.public_id,
+                        name: result.info.original_filename,
+                        format: result.info.format,
+                        width: 0,
+                        height: 0,
+                        size: result.info.bytes,
+                    });
+                    widget.close();
+                }
+
+                if (result.event === 'close' || result.event === 'abort') {
+                    reject(new Error('Upload cancelled'));
+                }
+            }
+        );
+
+        widget.open();
+    });
 }

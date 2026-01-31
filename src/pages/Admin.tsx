@@ -5,7 +5,7 @@ import type { Id, Doc } from '../../convex/_generated/dataModel';
 import { Link } from 'react-router-dom';
 import CaseStudyEditor from '../components/admin/CaseStudyEditor';
 import MessageCenter from '../components/admin/MessageCenter';
-import { uploadImage, uploadMultipleImages, formatFileSize } from '../lib/cloudinary';
+import { uploadImage, uploadMultipleImages, uploadAudio, formatFileSize } from '../lib/cloudinary';
 import { Reorder } from "framer-motion";
 import { SkillItem } from '../components/admin/SkillItem';
 import { SocialItem } from '../components/admin/SocialItem';
@@ -103,6 +103,35 @@ const Admin = () => {
     const isGeminiKeySet = useQuery(api.settings.isSet, { key: "gemini_api_key" });
     const savedModel = useQuery(api.settings.get, { key: "gemini_model" });
     const testConnection = useAction(api.settings.testGeminiConnection);
+
+    // Audio Settings
+    const setSetting = useMutation(api.settings.set);
+    const bgMusicUrl = useQuery(api.settings.get, { key: "background_music_url" });
+    const bgMusicEnabledStr = useQuery(api.settings.get, { key: "background_music_enabled" });
+    const bgMusicEnabled = bgMusicEnabledStr === "true";
+    const [isUploadingAudio, setIsUploadingAudio] = useState(false);
+
+    const handleUploadAudio = async () => {
+        try {
+            setIsUploadingAudio(true);
+            const result = await uploadAudio();
+            await setSetting({ key: "background_music_url", value: result.url });
+            // Auto-enable when uploading new track
+            await setSetting({ key: "background_music_enabled", value: "true" });
+            alert("Background music updated successfully!");
+        } catch (error) {
+            if ((error as Error).message !== 'Upload cancelled') {
+                console.error('Failed to upload audio:', error);
+                alert('Failed to upload audio.');
+            }
+        } finally {
+            setIsUploadingAudio(false);
+        }
+    };
+
+    const toggleMusic = async () => {
+        await setSetting({ key: "background_music_enabled", value: bgMusicEnabled ? "false" : "true" });
+    };
     // ...
 
     // Sync saved model when loaded
@@ -555,7 +584,7 @@ const Admin = () => {
                                                 skill={skill}
                                                 handleSkillChange={(id, value) => updateSkill({ id, value })}
                                                 toggleSkillVisibility={(id, visible) => updateSkill({ id, visible: !visible })}
-                                                removeSkill={(id) => removeSkill({ id })}
+                                                removeSkill={(id) => removeSkill(id)}
                                             />
                                         ))}
                                     </Reorder.Group>
@@ -1140,6 +1169,57 @@ const Admin = () => {
                     {/* Settings / AI Config */}
                     {activeTab === 'settings' && (
                         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-2xl mx-auto">
+                            {/* Audio Configuration */}
+                            <div className="bg-card-dark/50 border border-white/10 rounded-3xl p-8 mb-8">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                                        <span className="material-symbols-outlined">music_note</span>
+                                    </div>
+                                    <h3 className="text-xl font-bold">Background Music</h3>
+                                </div>
+
+                                <div className="space-y-6">
+                                    <div className="flex items-center justify-between p-4 bg-black/20 rounded-xl border border-white/5">
+                                        <span className="font-medium text-white/80">Enable Music Player</span>
+                                        <button
+                                            onClick={toggleMusic}
+                                            className={`relative w-12 h-7 rounded-full cursor-pointer transition-colors duration-300 ${bgMusicEnabled ? 'bg-primary' : 'bg-white/10'}`}
+                                        >
+                                            <div className={`absolute top-1 left-1 bg-black w-5 h-5 rounded-full shadow-sm transition-transform duration-300 ${bgMusicEnabled ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                                        </button>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-xs uppercase tracking-wider font-bold text-white/40 block">Audio Track</label>
+
+                                        {bgMusicUrl && (
+                                            <div className="p-3 bg-white/5 rounded-xl border border-white/10 flex items-center gap-3 mb-3">
+                                                <div className="w-8 h-8 rounded-full bg-black flex items-center justify-center text-primary animate-spin-slow" style={{ animationDuration: '3s' }}>
+                                                    <span className="material-symbols-outlined text-sm">album</span>
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="text-xs font-mono text-white/60 truncate">{bgMusicUrl.split('/').pop()}</div>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        <button
+                                            onClick={handleUploadAudio}
+                                            disabled={isUploadingAudio}
+                                            className="w-full py-3 border border-dashed border-white/20 rounded-xl text-white/60 hover:text-primary hover:border-primary/50 hover:bg-primary/5 transition-all flex items-center justify-center gap-2"
+                                        >
+                                            {isUploadingAudio ? (
+                                                <span className="material-symbols-outlined animate-spin">sync</span>
+                                            ) : (
+                                                <span className="material-symbols-outlined">upload_file</span>
+                                            )}
+                                            {isUploadingAudio ? 'Uploading...' : 'Upload New Track (MP3)'}
+                                        </button>
+                                        <p className="text-[10px] text-white/30 text-center">Supported formats: MP3, WAV. Max 20MB.</p>
+                                    </div>
+                                </div>
+                            </div>
+
                             {/* AI Configuration Section */}
                             <div className="bg-card-dark/50 border border-white/10 rounded-3xl p-8 mb-8">
                                 <div className="flex items-center gap-4 mb-6">
