@@ -44,6 +44,12 @@ const Admin = () => {
     const removeToolMutation = useMutation(api.tools.remove);
     const deleteProject = useMutation(api.projects.remove);
 
+    // Resumes (CVs)
+    const convexResumes = useQuery(api.resumes.list);
+    const createResume = useMutation(api.resumes.create);
+    const updateResume = useMutation(api.resumes.update);
+    const removeResume = useMutation(api.resumes.remove);
+
     // ===== LOCAL STATE FOR EDITING =====
     const [headline, setHeadline] = useState("");
     const [bio, setBio] = useState("");
@@ -745,6 +751,60 @@ const Admin = () => {
                                         value={bio}
                                         onChange={(e) => setBio(e.target.value)}
                                     />
+                                </div>
+                            </section>
+
+                            <section className="mb-12">
+                                <div className="flex items-center justify-between mb-4">
+                                    <label className="text-xs uppercase tracking-wider font-bold text-white/40">Resumes / CVs</label>
+                                    <button
+                                        onClick={async () => {
+                                            const label = prompt("Enter Label (e.g. Indian Version):");
+                                            if (!label) return;
+                                            const url = prompt("Enter Google Drive Link:");
+                                            if (!url) return;
+                                            await createResume({ label, url, visible: true });
+                                        }}
+                                        className="text-[10px] bg-primary/10 text-primary px-3 py-1 rounded-full font-bold hover:bg-primary hover:text-black transition-all flex items-center gap-1"
+                                    >
+                                        <span className="material-symbols-outlined text-xs">add</span>
+                                        Add CV
+                                    </button>
+                                </div>
+                                <div className="flex flex-col gap-3">
+                                    {(convexResumes || []).sort((a, b) => a.order - b.order).map((cv) => (
+                                        <div key={cv._id} className="glass p-4 rounded-xl border border-white/10 flex items-center justify-between bg-card-dark/30">
+                                            <div className="flex items-center gap-3 overflow-hidden">
+                                                <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0">
+                                                    <span className="material-symbols-outlined text-white/50">description</span>
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <h4 className="font-bold text-sm text-white truncate">{cv.label}</h4>
+                                                    <a href={cv.url} target="_blank" rel="noopener noreferrer" className="text-xs text-white/40 truncate hover:text-primary transition-colors block">{cv.url}</a>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={() => updateResume({ id: cv._id, visible: !cv.visible })}
+                                                    className={`p-2 rounded-lg transition-colors ${cv.visible ? 'text-primary bg-primary/10 hover:bg-primary/20' : 'text-white/20 hover:text-white hover:bg-white/10'}`}
+                                                    title={cv.visible ? "Visible" : "Hidden"}
+                                                >
+                                                    <span className="material-symbols-outlined text-lg">{cv.visible ? 'visibility' : 'visibility_off'}</span>
+                                                </button>
+                                                <button
+                                                    onClick={() => removeResume({ id: cv._id })}
+                                                    className="p-2 rounded-lg text-white/20 hover:text-red-400 hover:bg-red-400/10 transition-colors"
+                                                >
+                                                    <span className="material-symbols-outlined text-lg">delete</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {(convexResumes || []).length === 0 && (
+                                        <div className="text-center py-6 border border-dashed border-white/10 rounded-xl text-white/30 text-xs">
+                                            No resumes added yet.
+                                        </div>
+                                    )}
                                 </div>
                             </section>
 

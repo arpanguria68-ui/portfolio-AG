@@ -52,6 +52,8 @@ const Home = () => {
     const convexSkills = useQuery(api.skills.list);
     const convexTools = useQuery(api.tools.list);
     const convexMedia = useQuery(api.media.list);
+    const convexResumes = useQuery(api.resumes.list);
+    const [showCvMenu, setShowCvMenu] = useState(false);
 
     // Profile data with fallbacks
     const profileImage = convexProfile?.profileImage || "https://lh3.googleusercontent.com/aida-public/AB6AXuBmUw9mOGIBUUKTMjLGS3PuCvlZ6tOEkE7Pk4fTqTPRNbyAi8VcOwUJT_Tg7nKQJEJPQUfHhYixf-vDAK5kti7OjS5PBRpTcXy4CYgV5yqLq_8BD9a7D6poQMOIRzQwjPwPy0xUcU4theBgi44FCwTIHWKslp6S1l-DXQD8bGxXSPF7jUS7Jpf1Tx1yTiWGknjjykiWzFMhOmjljznoIL3K1-gKiPmbYu6R0ghqGG3mgw4aBRoYAihl0sZ7Rayj8fsM5dyG5Rpjaupp";
@@ -146,6 +148,37 @@ const Home = () => {
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
+                    {/* CV Dropdown */}
+                    {convexResumes && convexResumes.filter(r => r.visible).length > 0 && (
+                        <div className="relative">
+                            <button
+                                onClick={() => setShowCvMenu(!showCvMenu)}
+                                className="px-4 py-2 rounded-full border border-white/10 text-xs font-medium uppercase tracking-wider hover:bg-white hover:text-black transition-all flex items-center gap-2"
+                            >
+                                <span>Download CV</span>
+                                <span className="material-symbols-outlined text-[16px]">expand_more</span>
+                            </button>
+
+                            {showCvMenu && (
+                                <div className="absolute top-full right-0 mt-2 w-48 bg-card-dark border border-white/10 rounded-xl shadow-xl overflow-hidden py-1 z-50">
+                                    {convexResumes.filter(r => r.visible).sort((a, b) => a.order - b.order).map(cv => (
+                                        <a
+                                            key={cv._id}
+                                            href={cv.url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="block px-4 py-3 text-sm text-white/70 hover:bg-primary hover:text-black transition-colors flex items-center gap-2"
+                                            onClick={() => setShowCvMenu(false)}
+                                        >
+                                            <span className="material-symbols-outlined text-xs">open_in_new</span>
+                                            {cv.label}
+                                        </a>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                     <button className="w-10 h-10 rounded-full flex items-center justify-center text-white/70 hover:text-primary transition-colors hover:bg-white/5">
                         <span className="material-symbols-outlined text-[20px]">light_mode</span>
                     </button>

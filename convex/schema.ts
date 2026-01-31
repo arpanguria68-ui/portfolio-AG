@@ -39,6 +39,13 @@ export default defineSchema({
         order: v.optional(v.number()),
     }),
 
+    resumes: defineTable({
+        label: v.string(), // e.g. "Indian Version", "Global Format"
+        url: v.string(), // GDrive Link
+        order: v.number(),
+        visible: v.boolean(),
+    }),
+
     profile: defineTable({
         key: v.string(), // singleton key = "main"
         headline: v.optional(v.string()),
