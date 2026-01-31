@@ -47,3 +47,22 @@ export const getSecret = internalQuery({
         return setting?.value;
     },
 });
+
+// Public query to get non-sensitive settings
+export const get = query({
+    args: { key: v.string() },
+    handler: async (ctx, args) => {
+        // Allow list for public settings
+        const ALLOWED_KEYS = ["gemini_model"];
+
+        if (!ALLOWED_KEYS.includes(args.key)) {
+            return null;
+        }
+
+        const setting = await ctx.db
+            .query("settings")
+            .withIndex("by_key", (q) => q.eq("key", args.key))
+            .first();
+        return setting?.value;
+    },
+});

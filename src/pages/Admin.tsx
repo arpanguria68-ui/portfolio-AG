@@ -75,19 +75,34 @@ const Admin = () => {
     // ===== SETTINGS STATE =====
     const [geminiKeyInput, setGeminiKeyInput] = useState("");
     const [isSavingKey, setIsSavingKey] = useState(false);
+    const [selectedModel, setSelectedModel] = useState("gemini-1.5-flash"); // Default
     const setGeminiKey = useMutation(api.settings.set);
     const isGeminiKeySet = useQuery(api.settings.isSet, { key: "gemini_api_key" });
+    const savedModel = useQuery(api.settings.get, { key: "gemini_model" });
+
+    // Sync saved model when loaded
+    useEffect(() => {
+        if (savedModel) {
+            setSelectedModel(savedModel);
+        }
+    }, [savedModel]);
 
     const handleSaveGeminiKey = async () => {
-        if (!geminiKeyInput.trim()) return;
         setIsSavingKey(true);
         try {
-            await setGeminiKey({ key: "gemini_api_key", value: geminiKeyInput.trim() });
-            setGeminiKeyInput(""); // Clear input after save for security
-            alert("API Key saved successfully!");
+            // Only save key if entered (to avoid clearing it if just changing model)
+            if (geminiKeyInput.trim()) {
+                await setGeminiKey({ key: "gemini_api_key", value: geminiKeyInput.trim() });
+                setGeminiKeyInput(""); // Clear input after save for security
+            }
+
+            // Always save model
+            await setGeminiKey({ key: "gemini_model", value: selectedModel });
+
+            alert("Settings saved successfully!");
         } catch (error) {
-            console.error("Failed to save key:", error);
-            alert("Failed to save API key.");
+            console.error("Failed to save settings:", error);
+            alert("Failed to save settings.");
         } finally {
             setIsSavingKey(false);
         }
@@ -1027,11 +1042,7 @@ const Admin = () => {
                     {/* Settings / AI Config */}
                     {activeTab === 'settings' && (
                         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-2xl mx-auto">
-                            <header className="mb-10">
-                                <h1 className="text-3xl font-display font-bold mb-2">AI <span className="text-primary">Configuration</span></h1>
-                                <p className="text-white/40">Manage API keys and AI settings.</p>
-                            </header>
-
+                            {/* AI Configuration Section */}
                             <div className="bg-card-dark/50 border border-white/10 rounded-3xl p-8 mb-8">
                                 <div className="flex items-center gap-4 mb-6">
                                     <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white shadow-lg">
@@ -1051,7 +1062,7 @@ const Admin = () => {
                                     The key is stored securely and used only for chat functionality.
                                 </p>
 
-                                <div className="space-y-4">
+                                <div className="space-y-6">
                                     <div>
                                         <label className="text-xs uppercase tracking-wider font-bold text-white/40 mb-2 block">API Key</label>
                                         <div className="relative">
@@ -1069,9 +1080,29 @@ const Admin = () => {
                                         </p>
                                     </div>
 
+                                    <div>
+                                        <label className="text-xs uppercase tracking-wider font-bold text-white/40 mb-2 block">AI Model</label>
+                                        <div className="relative">
+                                            <select
+                                                value={selectedModel}
+                                                onChange={(e) => setSelectedModel(e.target.value)}
+                                                className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary/50 appearance-none cursor-pointer"
+                                            >
+                                                <option value="gemini-2.0-flash">Gemini 2.0 Flash (Latest & Best)</option>
+                                                <option value="gemini-1.5-pro-002">Gemini 1.5 Pro-002 (Complex Reasoning)</option>
+                                                <option value="gemini-1.5-flash-002">Gemini 1.5 Flash-002 (Stable & Fast)</option>
+                                                <option value="gemini-1.5-flash-8b">Gemini 1.5 Flash-8b (High Speed)</option>
+                                            </select>
+                                            <span className="absolute right-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-white/20 pointer-events-none">expand_more</span>
+                                        </div>
+                                        <p className="mt-2 text-xs text-white/30">
+                                            Select the model version to use for chat responses. Older models may be deprecated.
+                                        </p>
+                                    </div>
+
                                     <button
                                         onClick={handleSaveGeminiKey}
-                                        disabled={!geminiKeyInput.trim() || isSavingKey}
+                                        disabled={isSavingKey}
                                         className="w-full py-3 bg-primary text-black font-bold rounded-xl hover:shadow-[0_0_20px_rgba(212,255,63,0.4)] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                     >
                                         {isSavingKey ? (

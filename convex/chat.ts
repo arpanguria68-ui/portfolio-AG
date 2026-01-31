@@ -76,9 +76,12 @@ export const sendToGemini = action({
         // Fetch API key from settings table
         // We use internal query to keep it safe from client-side usage
         const GEMINI_API_KEY = await ctx.runQuery(internal.settings.getSecret, { key: "gemini_api_key" });
+        const GEMINI_MODEL = await ctx.runQuery(internal.settings.getSecret, { key: "gemini_model" });
 
         // Fallback to Env var if not in DB (for backward compat)
         const apiKey = GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+        // Default model if not set
+        const model = GEMINI_MODEL || "gemini-1.5-flash";
 
         if (!apiKey) {
             // If no API key, return a helpful message
@@ -119,7 +122,7 @@ Keep responses brief (2-3 sentences) unless more detail is requested.`;
 
         try {
             const response = await fetch(
-                `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+                `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
                 {
                     method: "POST",
                     headers: {
@@ -139,9 +142,11 @@ Keep responses brief (2-3 sentences) unless more detail is requested.`;
             );
 
             if (!response.ok) {
+                const errorText = await response.text();
+                console.error(`Gemini API Key Error: ${response.status} - ${errorText}`);
+
                 // Check if it's an invalid key error
-                if (response.status === 400 || response.status === 403) {
-                    console.error(`Gemini API Key Error: ${response.status}`);
+                if (response.status === 400) {
                     throw new Error("Invalid API Key");
                 }
                 throw new Error(`Gemini API error: ${response.status}`);
