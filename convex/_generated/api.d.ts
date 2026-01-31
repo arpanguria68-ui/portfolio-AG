@@ -10,6 +10,7 @@
 
 import type * as ai from "../ai.js";
 import type * as chat from "../chat.js";
+import type * as experiences from "../experiences.js";
 import type * as media from "../media.js";
 import type * as messages from "../messages.js";
 import type * as profile from "../profile.js";
@@ -29,6 +30,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   ai: typeof ai;
   chat: typeof chat;
+  experiences: typeof experiences;
   media: typeof media;
   messages: typeof messages;
   profile: typeof profile;

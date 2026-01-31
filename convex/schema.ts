@@ -39,6 +39,17 @@ export default defineSchema({
         order: v.optional(v.number()),
     }),
 
+    experiences: defineTable({
+        title: v.string(),
+        company: v.string(),
+        startDate: v.string(),
+        endDate: v.optional(v.string()), // Optional if currently working
+        present: v.boolean(),
+        description: v.string(),
+        visible: v.boolean(),
+        order: v.number(),
+    }),
+
     resumes: defineTable({
         label: v.string(), // e.g. "Indian Version", "Global Format"
         url: v.string(), // GDrive Link

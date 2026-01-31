@@ -8,6 +8,8 @@ import MessageCenter from '../components/admin/MessageCenter';
 import { uploadImage, uploadMultipleImages, formatFileSize } from '../lib/cloudinary';
 import { Reorder } from "framer-motion";
 import { SkillItem } from '../components/admin/SkillItem';
+import { SocialItem } from '../components/admin/SocialItem';
+import { ExperienceItem } from '../components/admin/ExperienceItem';
 
 const Admin = () => {
     const [activeTab, setActiveTab] = useState('dashboard');
@@ -21,6 +23,7 @@ const Admin = () => {
     const convexProjects = useQuery(api.projects.list);
     const convexSkills = useQuery(api.skills.list);
     const convexSocials = useQuery(api.socials.list);
+    const convexExperiences = useQuery(api.experiences.list);
     const convexMedia = useQuery(api.media.list);
     const convexProfile = useQuery(api.profile.get);
     const convexTools = useQuery(api.tools.list);
@@ -33,6 +36,10 @@ const Admin = () => {
     const updateSocial = useMutation(api.socials.update);
     const createSocial = useMutation(api.socials.create);
     const removeSocialMutation = useMutation(api.socials.remove);
+
+    const updateExperience = useMutation(api.experiences.update);
+    const createExperience = useMutation(api.experiences.create);
+    const removeExperienceMutation = useMutation(api.experiences.remove);
 
     const upsertProfile = useMutation(api.profile.upsert);
 
@@ -53,6 +60,8 @@ const Admin = () => {
     const removeResume = useMutation(api.resumes.remove);
 
     const reorderSkills = useMutation(api.skills.reorder);
+    const reorderSocials = useMutation(api.socials.reorder);
+    const reorderExperiences = useMutation(api.experiences.reorder);
 
     // ===== LOCAL STATE FOR EDITING =====
     const [headline, setHeadline] = useState("");
@@ -60,6 +69,8 @@ const Admin = () => {
     const [isSaving, setIsSaving] = useState(false);
     // ...
     const [localSkills, setLocalSkills] = useState<Doc<"skills">[]>([]);
+    const [localSocials, setLocalSocials] = useState<Doc<"socialLinks">[]>([]);
+    const [localExperiences, setLocalExperiences] = useState<Doc<"experiences">[]>([]);
     const [profileSaved, setProfileSaved] = useState(false);
     const [profileImage, setProfileImage] = useState("");
     const [isUploading, setIsUploading] = useState(false);
@@ -93,15 +104,6 @@ const Admin = () => {
     const savedModel = useQuery(api.settings.get, { key: "gemini_model" });
     const testConnection = useAction(api.settings.testGeminiConnection);
     // ...
-    <select
-        value={selectedModel}
-        onChange={(e) => setSelectedModel(e.target.value)}
-        className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary/50 appearance-none cursor-pointer"
-    >
-        <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash Lite (Recommend: 10 RPM)</option>
-        <option value="gemini-2.5-flash">Gemini 2.5 Flash (5 RPM)</option>
-        <option value="gemini-3-flash">Gemini 3 Flash (Preview - 5 RPM)</option>
-    </select>
 
     // Sync saved model when loaded
     useEffect(() => {
@@ -160,7 +162,48 @@ const Admin = () => {
     };
 
     // Derived state for other lists
-    const socials = convexSocials ?? [];
+
+    useEffect(() => {
+        if (convexSocials) {
+            setLocalSocials(convexSocials);
+        }
+    }, [convexSocials]);
+
+    const handleReorderSocials = (newOrder: Doc<"socialLinks">[]) => {
+        setLocalSocials(newOrder);
+        const updates = newOrder.map((social, index) => ({
+            id: social._id,
+            order: index
+        }));
+        reorderSocials({ items: updates });
+    };
+
+    useEffect(() => {
+        if (convexExperiences) {
+            setLocalExperiences(convexExperiences);
+        }
+    }, [convexExperiences]);
+
+    const handleReorderExperiences = (newOrder: Doc<"experiences">[]) => {
+        setLocalExperiences(newOrder);
+        const updates = newOrder.map((experience, index) => ({
+            id: experience._id,
+            order: index
+        }));
+        reorderExperiences({ items: updates });
+    };
+
+    const addExperience = async () => {
+        await createExperience({
+            title: "New Role",
+            company: "Company Name",
+            startDate: "2024",
+            present: true,
+            description: "Describe your role...",
+            visible: true,
+        });
+    };
+
     const mediaItems = convexMedia ?? [];
     const tools = convexTools ?? [];
 
@@ -213,29 +256,18 @@ const Admin = () => {
     };
 
     // ===== SOCIAL HANDLERS =====
-    const toggleSocialVisibility = async (id: Id<"socialLinks">, currentVisible: boolean) => {
-        await updateSocial({ id, visible: !currentVisible });
-    };
-
-    const updateSocialHandle = async (id: Id<"socialLinks">, val: string) => {
-        await updateSocial({ id, handle: val, url: val });
-    };
-
-    const removeSocial = async (id: Id<"socialLinks">) => {
-        await removeSocialMutation({ id });
-    };
-
     const addSocial = async () => {
         await createSocial({
-            platform: 'Custom Link',
-            handle: 'https://',
-            url: 'https://',
-            icon: 'link',
+            platform: "Custom Link",
+            handle: "",
+            url: "#",
+            icon: "link",
             visible: true,
-            color: 'text-white',
-            bgColor: 'bg-white/10'
+            bgColor: "bg-gray-600",
+            color: "text-white"
         });
     };
+
 
     // ===== PROFILE HANDLERS =====
     const saveProfile = async () => {
@@ -803,42 +835,17 @@ const Admin = () => {
                             <section className="pb-8">
                                 <label className="text-xs uppercase tracking-wider font-bold text-white/40 mb-4 block">Social Links</label>
                                 <div className="flex flex-col gap-4">
-                                    {socials.map((social) => (
-                                        <div key={social._id} className={`rounded-2xl overflow-hidden transition-all duration-300 border ${social.visible ? 'bg-card-dark border-white/10 shadow-lg' : 'bg-black/10 border-white/5 opacity-70'}`}>
-                                            <div className="p-4 flex items-center justify-between">
-                                                <div className="flex items-center gap-3">
-                                                    <div className={`flex items-center justify-center w-10 h-10 rounded-full shadow-inner ${social.bgColor} ${social.color}`}>
-                                                        <span className="material-symbols-outlined text-xl">{social.icon}</span>
-                                                    </div>
-                                                    <div>
-                                                        <h3 className="font-bold text-sm text-white leading-tight">{social.platform}</h3>
-                                                        <p className="text-[10px] text-white/40 uppercase tracking-wider">Social Profile</p>
-                                                    </div>
-                                                </div>
-
-                                                <div
-                                                    className={`relative w-12 h-7 rounded-full cursor-pointer transition-colors duration-300 ${social.visible ? 'bg-primary' : 'bg-white/10'}`}
-                                                    onClick={() => toggleSocialVisibility(social._id, social.visible)}
-                                                >
-                                                    <div className={`absolute top-1 left-1 bg-black w-5 h-5 rounded-full shadow-sm transition-transform duration-300 ${social.visible ? 'translate-x-5' : 'translate-x-0'}`}></div>
-                                                </div>
-                                            </div>
-
-                                            {/* Input Area */}
-                                            <div className={`bg-black/20 px-4 py-3 border-t border-white/5 flex items-center gap-3 transition-colors ${social.visible ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
-                                                <span className="material-symbols-outlined text-white/20 text-lg">link</span>
-                                                <input
-                                                    className="bg-transparent border-0 p-0 text-sm text-white w-full focus:outline-none placeholder:text-white/20 font-mono"
-                                                    value={social.handle}
-                                                    onChange={(e) => updateSocialHandle(social._id, e.target.value)}
-                                                    placeholder="https://..."
-                                                />
-                                                <button onClick={() => removeSocial(social._id)} className="text-white/20 hover:text-red-400 transition-colors" title="Remove Link">
-                                                    <span className="material-symbols-outlined text-lg">delete</span>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
+                                    <Reorder.Group axis="y" values={localSocials} onReorder={handleReorderSocials} className="space-y-4">
+                                        {localSocials.map((social) => (
+                                            <SocialItem
+                                                key={social._id}
+                                                social={social}
+                                                updateSocialHandle={(id, handle) => updateSocial({ id, handle })}
+                                                toggleSocialVisibility={(id, visible) => updateSocial({ id, visible: !visible })}
+                                                removeSocial={(id) => removeSocialMutation({ id })}
+                                            />
+                                        ))}
+                                    </Reorder.Group>
 
                                     {/* Add Button */}
                                     <button
@@ -850,6 +857,34 @@ const Admin = () => {
                                             <span className="material-symbols-outlined text-lg">add</span>
                                         </div>
                                         <span className="text-xs font-bold uppercase tracking-wider">Add Custom Link</span>
+                                    </button>
+                                </div>
+                            </section>
+
+                            <section className="pb-8">
+                                <label className="text-xs uppercase tracking-wider font-bold text-white/40 mb-4 block">My Journey</label>
+                                <div className="flex flex-col gap-4">
+                                    <Reorder.Group axis="y" values={localExperiences} onReorder={handleReorderExperiences} className="space-y-4">
+                                        {localExperiences.map((experience) => (
+                                            <ExperienceItem
+                                                key={experience._id}
+                                                experience={experience}
+                                                updateExperience={(id, updates) => updateExperience({ id, ...updates })}
+                                                removeExperience={(id) => removeExperienceMutation({ id })}
+                                            />
+                                        ))}
+                                    </Reorder.Group>
+
+                                    {/* Add Button */}
+                                    <button
+                                        className="mt-2 w-full py-4 border border-dashed border-white/20 rounded-2xl flex items-center justify-center gap-2 text-white/40 hover:text-primary hover:border-primary/50 hover:bg-primary/5 transition-all group"
+                                        type="button"
+                                        onClick={() => addExperience()}
+                                    >
+                                        <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-primary group-hover:text-black transition-colors">
+                                            <span className="material-symbols-outlined text-lg">add</span>
+                                        </div>
+                                        <span className="text-xs font-bold uppercase tracking-wider">Add Experience</span>
                                     </button>
                                 </div>
                             </section>

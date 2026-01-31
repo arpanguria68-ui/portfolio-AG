@@ -53,6 +53,8 @@ const Home = () => {
     const convexTools = useQuery(api.tools.list);
     const convexMedia = useQuery(api.media.list);
     const convexResumes = useQuery(api.resumes.list);
+    const convexSocials = useQuery(api.socials.list);
+    const convexExperiences = useQuery(api.experiences.list);
     const [showCvMenu, setShowCvMenu] = useState(false);
 
     // Profile data with fallbacks
@@ -267,13 +269,19 @@ const Home = () => {
                             <p className="text-white/60 leading-relaxed mb-8 text-base md:text-lg">
                                 {bio}
                             </p>
-                            <div className="flex gap-4">
-                                <a className="w-12 h-12 flex items-center justify-center rounded-full glass hover:bg-white hover:text-black transition-all" href="#">
-                                    <span className="material-symbols-outlined text-lg">public</span>
-                                </a>
-                                <a className="w-12 h-12 flex items-center justify-center rounded-full glass hover:bg-white hover:text-black transition-all" href="#">
-                                    <span className="material-symbols-outlined text-lg">alternate_email</span>
-                                </a>
+                            <div className="flex gap-4 flex-wrap">
+                                {convexSocials && convexSocials.filter(s => s.visible).sort((a, b) => (a.order ?? 0) - (b.order ?? 0)).map((social) => (
+                                    <a
+                                        key={social._id}
+                                        className={`w-12 h-12 flex items-center justify-center rounded-full glass hover:bg-white hover:text-black transition-all group ${social.bgColor || ''}`}
+                                        href={social.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        title={social.platform}
+                                    >
+                                        <span className={`material-symbols-outlined text-lg ${social.color || ''} group-hover:text-current transition-colors`}>{social.icon}</span>
+                                    </a>
+                                ))}
                             </div>
                         </div>
                     </div>
@@ -441,97 +449,55 @@ const Home = () => {
                                 <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-primary via-primary/40 to-white/5 shadow-[0_0_15px_rgba(212,255,63,0.5)]"></div>
                             </div>
 
-                            {/* Present Role */}
-                            <div className="flex flex-col md:flex-row gap-0 md:gap-12 group mb-12 relative items-start md:items-center justify-between">
-                                {/* Date (Left on Desktop) */}
-                                <div className="w-[100px] md:w-1/2 pr-6 md:pr-0 md:text-right flex flex-col md:block items-end pt-1 flex-shrink-0">
-                                    <span className="text-primary font-bold text-sm md:text-lg tracking-wide">Present</span>
-                                    <span className="text-white/30 text-[10px] md:text-xs font-display font-medium mt-0.5 md:block">2023</span>
-                                </div>
+                            {/* Dynamic Timeline Items */}
+                            {convexExperiences && convexExperiences.filter(e => e.visible).sort((a, b) => (a.order ?? 0) - (b.order ?? 0)).map((experience, index) => (
+                                <div key={experience._id} className="flex flex-col md:flex-row gap-0 md:gap-12 group mb-12 relative items-start md:items-center justify-between">
+                                    {/* Date (Left on Desktop) */}
+                                    <div className="w-[100px] md:w-1/2 pr-6 md:pr-0 md:text-right flex flex-col md:block items-end pt-1 flex-shrink-0">
+                                        <span className={`font-bold text-sm md:text-lg tracking-wide ${experience.present ? 'text-primary' : 'text-white'}`}>
+                                            {experience.present ? 'Present' : experience.endDate}
+                                        </span>
+                                        <span className="text-white/30 text-[10px] md:text-xs font-display font-medium mt-0.5 md:block">
+                                            {experience.startDate}
+                                        </span>
+                                    </div>
 
-                                {/* Dot */}
-                                <div className="absolute left-[100px] md:left-1/2 top-[0.6rem] md:top-1/2 md:-translate-y-1/2 -translate-x-1/2 z-10">
-                                    <div className="w-4 h-4 rounded-full bg-primary shadow-[0_0_15px_rgba(212,255,63,0.8)] flex items-center justify-center relative">
-                                        <div className="absolute inset-0 bg-primary rounded-full animate-ping opacity-60"></div>
-                                        <div className="w-1.5 h-1.5 bg-black rounded-full relative z-10"></div>
+                                    {/* Dot */}
+                                    <div className="absolute left-[100px] md:left-1/2 top-[0.6rem] md:top-1/2 md:-translate-y-1/2 -translate-x-1/2 z-10">
+                                        {experience.present ? (
+                                            <div className="w-4 h-4 rounded-full bg-primary shadow-[0_0_15px_rgba(212,255,63,0.8)] flex items-center justify-center relative">
+                                                <div className="absolute inset-0 bg-primary rounded-full animate-ping opacity-60"></div>
+                                                <div className="w-1.5 h-1.5 bg-black rounded-full relative z-10"></div>
+                                            </div>
+                                        ) : (
+                                            <div className="w-3 h-3 rounded-full bg-[#0D0D0D] border-2 border-white/20 group-hover:border-primary/60 group-hover:scale-125 transition-all duration-300 shadow-[0_0_0_4px_#0D0D0D]"></div>
+                                        )}
+                                    </div>
+
+                                    {/* Card (Right on Desktop) */}
+                                    <div className="flex-1 pl-6 md:pl-0 md:w-1/2 min-w-0">
+                                        <div className={`glass p-5 rounded-2xl border ${experience.present ? 'border-white/10 glow-border' : 'border-white/5'} group-hover:bg-white/5 transition-all duration-300 relative`}>
+                                            {experience.present && (
+                                                <div className="absolute top-3 right-3 opacity-50">
+                                                    <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[9px] font-bold uppercase tracking-wider border border-primary/20">Active</span>
+                                                </div>
+                                            )}
+                                            <div className="flex items-center gap-4 mb-3">
+                                                <div className={`w-10 h-10 rounded-xl ${experience.present ? 'bg-white/5 border border-white/5 text-primary shadow-inner' : 'bg-white/5 text-white/40'} flex items-center justify-center`}>
+                                                    <span className="material-symbols-outlined text-[20px]">{experience.present ? 'workspace_premium' : 'work'}</span>
+                                                </div>
+                                                <div>
+                                                    <h3 className="text-base font-display font-bold text-white leading-tight">{experience.title}</h3>
+                                                    <p className="text-white/40 text-[10px] uppercase tracking-wider mt-0.5 font-medium">{experience.company}</p>
+                                                </div>
+                                            </div>
+                                            <p className={`text-white/60 text-xs leading-relaxed ${experience.present ? 'border-l-2 border-primary/20 pl-3' : ''}`}>
+                                                {experience.description}
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
-
-                                {/* Card (Right on Desktop) */}
-                                <div className="flex-1 pl-6 md:pl-0 md:w-1/2 min-w-0">
-                                    <div className="glass p-5 rounded-2xl border border-white/10 glow-border group-hover:bg-white/5 transition-all duration-300 relative">
-                                        <div className="absolute top-3 right-3 opacity-50">
-                                            <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[9px] font-bold uppercase tracking-wider border border-primary/20">Active</span>
-                                        </div>
-                                        <div className="flex items-center gap-4 mb-3">
-                                            <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-primary shadow-inner">
-                                                <span className="material-symbols-outlined text-[20px]">workspace_premium</span>
-                                            </div>
-                                            <div>
-                                                <h3 className="text-base font-display font-bold text-white leading-tight">Senior PM</h3>
-                                                <p className="text-white/40 text-[10px] uppercase tracking-wider mt-0.5 font-medium">TechFlow Inc.</p>
-                                            </div>
-                                        </div>
-                                        <p className="text-white/60 text-xs leading-relaxed border-l-2 border-primary/20 pl-3">
-                                            Leading cross-functional teams to deliver AI-driven product solutions.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Past Role 1 */}
-                            <div className="flex flex-col md:flex-row gap-0 md:gap-12 group mb-12 relative items-start md:items-center justify-between">
-                                <div className="w-[100px] md:w-1/2 pr-6 md:pr-0 md:text-right flex flex-col md:block items-end pt-1 flex-shrink-0">
-                                    <span className="text-white font-bold text-sm md:text-lg tracking-wide">2023</span>
-                                    <span className="text-white/30 text-[10px] md:text-xs font-display font-medium mt-0.5 md:block">2021</span>
-                                </div>
-                                <div className="absolute left-[100px] md:left-1/2 top-[0.6rem] md:top-1/2 md:-translate-y-1/2 -translate-x-1/2 z-10">
-                                    <div className="w-3 h-3 rounded-full bg-[#0D0D0D] border-2 border-white/20 group-hover:border-primary/60 group-hover:scale-125 transition-all duration-300 shadow-[0_0_0_4px_#0D0D0D]"></div>
-                                </div>
-                                <div className="flex-1 pl-6 md:pl-0 md:w-1/2 min-w-0">
-                                    <div className="glass p-5 rounded-2xl border border-white/10 glow-border group-hover:bg-white/5 transition-all duration-300">
-                                        <div className="flex items-center gap-4 mb-3">
-                                            <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-white/50 group-hover:text-white transition-colors">
-                                                <span className="material-symbols-outlined text-[20px]">palette</span>
-                                            </div>
-                                            <div>
-                                                <h3 className="text-base font-display font-bold text-white leading-tight">Art Director</h3>
-                                                <p className="text-white/40 text-[10px] uppercase tracking-wider mt-0.5 font-medium">Creative Studio</p>
-                                            </div>
-                                        </div>
-                                        <p className="text-white/60 text-xs leading-relaxed pl-3 border-l-2 border-white/5">
-                                            Oversaw visual identity and brand strategy for global clients.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Past Role 2 */}
-                            <div className="flex flex-col md:flex-row gap-0 md:gap-12 group relative items-start md:items-center justify-between">
-                                <div className="w-[100px] md:w-1/2 pr-6 md:pr-0 md:text-right flex flex-col md:block items-end pt-1 flex-shrink-0">
-                                    <span className="text-white font-bold text-sm md:text-lg tracking-wide">2021</span>
-                                    <span className="text-white/30 text-[10px] md:text-xs font-display font-medium mt-0.5 md:block">2019</span>
-                                </div>
-                                <div className="absolute left-[100px] md:left-1/2 top-[0.6rem] md:top-1/2 md:-translate-y-1/2 -translate-x-1/2 z-10">
-                                    <div className="w-3 h-3 rounded-full bg-[#0D0D0D] border-2 border-white/20 group-hover:border-primary/60 group-hover:scale-125 transition-all duration-300 shadow-[0_0_0_4px_#0D0D0D]"></div>
-                                </div>
-                                <div className="flex-1 pl-6 md:pl-0 md:w-1/2 min-w-0">
-                                    <div className="glass p-5 rounded-2xl border border-white/10 glow-border group-hover:bg-white/5 transition-all duration-300">
-                                        <div className="flex items-center gap-4 mb-3">
-                                            <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-white/50 group-hover:text-white transition-colors">
-                                                <span className="material-symbols-outlined text-[20px]">code</span>
-                                            </div>
-                                            <div>
-                                                <h3 className="text-base font-display font-bold text-white leading-tight">UI Designer</h3>
-                                                <p className="text-white/40 text-[10px] uppercase tracking-wider mt-0.5 font-medium">Freelance</p>
-                                            </div>
-                                        </div>
-                                        <p className="text-white/60 text-xs leading-relaxed pl-3 border-l-2 border-white/5">
-                                            Crafted pixel-perfect interfaces and user-centric design systems.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
+                            ))}
                         </div>
                     </div>
                 </section>
