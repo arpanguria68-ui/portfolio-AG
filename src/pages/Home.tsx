@@ -50,6 +50,7 @@ const Home = () => {
     const convexProjects = useQuery(api.projects.list);
     const convexProfile = useQuery(api.profile.get);
     const convexSkills = useQuery(api.skills.list);
+    const convexTools = useQuery(api.tools.list);
     const convexMedia = useQuery(api.media.list);
 
     // Profile data with fallbacks
@@ -305,15 +306,16 @@ const Home = () => {
                             </div>
                         </div>
                         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 gap-4">
-                            {[
-                                { icon: "design_services", label: "Figma" },
-                                { icon: "view_kanban", label: "Jira" },
-                                { icon: "analytics", label: "Mixpanel" },
-                                { icon: "code", label: "Python" }
-                            ].map((tool, i) => (
-                                <div key={i} className="aspect-square glass rounded-2xl flex flex-col items-center justify-center gap-4 hover:bg-white/5 transition-colors group">
-                                    <span className="material-symbols-outlined text-4xl text-white/70 group-hover:text-primary transition-colors">{tool.icon}</span>
-                                    <span className="text-xs opacity-50 uppercase tracking-widest">{tool.label}</span>
+                            {(convexTools && convexTools.length > 0 ? convexTools : [
+                                { icon: "design_services", name: "Figma", bgColor: "bg-blue-600", _id: "f1" },
+                                { icon: "view_kanban", name: "Jira", bgColor: "bg-blue-500", _id: "f2" },
+                                { icon: "analytics", name: "Mixpanel", bgColor: "bg-purple-600", _id: "f3" },
+                                { icon: "code", name: "Python", bgColor: "bg-yellow-500", _id: "f4" }
+                            ]).map((tool, i) => (
+                                <div key={tool._id || i} className="aspect-square glass rounded-2xl flex flex-col items-center justify-center gap-4 hover:bg-white/5 transition-colors group relative overflow-hidden">
+                                    <div className={`absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity ${tool.bgColor || 'bg-white/5'}`}></div>
+                                    <span className="material-symbols-outlined text-4xl text-white/70 group-hover:text-white transition-colors relative z-10">{tool.icon}</span>
+                                    <span className="text-xs opacity-50 uppercase tracking-widest relative z-10">{tool.name}</span>
                                 </div>
                             ))}
                         </div>

@@ -142,9 +142,7 @@ const Admin = () => {
     };
 
     const removeTool = async (id: Id<"tools">) => {
-        if (confirm("Are you sure you want to remove this tool?")) {
-            await removeToolMutation({ id });
-        }
+        await removeToolMutation({ id });
     };
 
     // ===== SOCIAL HANDLERS =====
