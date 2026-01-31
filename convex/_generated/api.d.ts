@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as ai from "../ai.js";
 import type * as chat from "../chat.js";
 import type * as media from "../media.js";
 import type * as messages from "../messages.js";
@@ -25,6 +26,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  ai: typeof ai;
   chat: typeof chat;
   media: typeof media;
   messages: typeof messages;

@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { useMutation } from 'convex/react';
+import { useMutation, useAction } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 import LivePreview from './LivePreview';
 import { uploadImage, uploadMultipleImages, uploadMultipleFiles } from '../../lib/cloudinary';
@@ -40,6 +40,39 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
 
     const [showAddMenu, setShowAddMenu] = useState(false);
     const [isReorderMode, setIsReorderMode] = useState(false);
+
+    // AI Enhancement State
+    const [showEnhanceMenu, setShowEnhanceMenu] = useState<number | null>(null);
+    const [enhanceTone, setEnhanceTone] = useState("Professional");
+    const [isEnhancing, setIsEnhancing] = useState<number | null>(null);
+    const enhanceTextAction = useAction(api.ai.enhanceText);
+
+    const handleEnhance = async (sectionId: number, mode: 'rewrite' | 'grammar' | 'expand' | 'shorten') => {
+        const section = sections.find(s => s.id === sectionId);
+        if (!section || !section.content) return;
+
+        setIsEnhancing(sectionId);
+        setShowEnhanceMenu(null); // Close menu
+        try {
+            const result = await enhanceTextAction({
+                text: section.content,
+                mode,
+                tone: enhanceTone
+            });
+
+            if (result.success && result.text) {
+                const newSections = sections.map(s => s.id === sectionId ? { ...s, content: result.text! } : s);
+                setSections(newSections);
+            } else if (result.error) {
+                alert("Enhancement failed: " + result.error);
+            }
+        } catch (error) {
+            console.error(error);
+            alert("Failed to enhance text. Check API key.");
+        } finally {
+            setIsEnhancing(null);
+        }
+    };
 
     const toggleSection = (id: number) => {
         if (isReorderMode) return; // Don't toggle while reordering
@@ -404,10 +437,64 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
                                                                 <span className="material-symbols-outlined text-[16px]">add_link</span>
                                                             </button>
                                                         </div>
-                                                        <button className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 text-[10px] font-bold transition-colors">
-                                                            <span className="material-symbols-outlined text-[12px]">auto_awesome</span>
-                                                            Enhance
-                                                        </button>
+
+                                                        {/* Enhance Menu */}
+                                                        <div className="relative">
+                                                            <button
+                                                                onClick={() => setShowEnhanceMenu(showEnhanceMenu === section.id ? null : section.id)}
+                                                                disabled={isEnhancing === section.id}
+                                                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[10px] font-bold transition-all ${isEnhancing === section.id ? 'bg-purple-500/20 text-purple-300 cursor-wait' : 'bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 hover:shadow-[0_0_10px_rgba(168,85,247,0.2)]'}`}
+                                                            >
+                                                                {isEnhancing === section.id ? (
+                                                                    <>
+                                                                        <span className="material-symbols-outlined text-[12px] animate-spin">refresh</span>
+                                                                        Enhancing...
+                                                                    </>
+                                                                ) : (
+                                                                    <>
+                                                                        <span className="material-symbols-outlined text-[12px]">auto_awesome</span>
+                                                                        Enhance
+                                                                    </>
+                                                                )}
+                                                            </button>
+
+                                                            {/* Dropdown */}
+                                                            {showEnhanceMenu === section.id && (
+                                                                <div className="absolute right-0 top-full mt-2 w-48 bg-[#1a1a1a] border border-white/10 rounded-xl shadow-xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2">
+                                                                    <div className="p-2 border-b border-white/5 bg-white/5">
+                                                                        <span className="text-[10px] uppercase font-bold text-white/40 ml-1">Tone</span>
+                                                                        <select
+                                                                            value={enhanceTone}
+                                                                            onChange={(e) => setEnhanceTone(e.target.value)}
+                                                                            className="w-full mt-1 bg-black/40 border border-white/10 rounded-md text-xs text-white p-1 focus:outline-none focus:border-purple-500/50"
+                                                                        >
+                                                                            <option value="Professional">Professional</option>
+                                                                            <option value="Casual">Casual</option>
+                                                                            <option value="Confident">Confident</option>
+                                                                            <option value="Straightforward">Straightforward</option>
+                                                                            <option value="Enthusiastic">Enthusiastic</option>
+                                                                        </select>
+                                                                    </div>
+                                                                    <div className="p-1">
+                                                                        {[
+                                                                            { id: 'rewrite', label: 'Rewrite', icon: 'edit' },
+                                                                            { id: 'grammar', label: 'Fix Grammar', icon: 'spellcheck' },
+                                                                            { id: 'expand', label: 'Expand', icon: 'open_in_full' },
+                                                                            { id: 'shorten', label: 'Shorten', icon: 'close_fullscreen' }
+                                                                        ].map((opt) => (
+                                                                            <button
+                                                                                key={opt.id}
+                                                                                onClick={() => handleEnhance(section.id, opt.id as any)}
+                                                                                className="w-full flex items-center gap-2 px-3 py-2 text-xs text-white/80 hover:text-white hover:bg-purple-500/10 rounded-lg transition-colors text-left"
+                                                                            >
+                                                                                <span className="material-symbols-outlined text-[14px] text-purple-400">{opt.icon}</span>
+                                                                                {opt.label}
+                                                                            </button>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                     <textarea
                                                         ref={(el) => {
@@ -738,7 +825,7 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
                 </div>
                 <LivePreview data={{ title, slug, sections, image, year, tags, description: sections.filter(s => s.isEnabled).map(s => s.content).join('\n\n') }} template={template} />
             </div>
-        </div>
+        </div >
     );
 };
 
