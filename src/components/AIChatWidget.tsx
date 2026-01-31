@@ -81,7 +81,7 @@ const AIChatWidget = () => {
             {/* Chat Bubble Button */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className={`fixed bottom-10 right-36 w-14 h-14 rounded-full shadow-lg z-50 flex items-center justify-center transition-all duration-300 ${isOpen
+                className={`fixed bottom-10 right-56 w-14 h-14 rounded-full shadow-lg z-50 flex items-center justify-center transition-all duration-300 ${isOpen
                     ? 'bg-white/10 backdrop-blur-md border border-white/20 rotate-0'
                     : 'bg-primary text-black hover:scale-110 hover:shadow-[0_0_30px_rgba(212,255,63,0.4)]'
                     }`}
@@ -93,7 +93,7 @@ const AIChatWidget = () => {
 
             {/* Chat Panel */}
             <div
-                className={`fixed bottom-28 right-36 w-[380px] max-w-[calc(100vw-48px)] h-[500px] max-h-[calc(100vh-150px)] bg-[#0a0a0a] border border-white/10 rounded-3xl shadow-2xl z-50 flex flex-col overflow-hidden transition-all duration-300 ${isOpen
+                className={`fixed bottom-28 right-56 w-[380px] max-w-[calc(100vw-48px)] h-[500px] max-h-[calc(100vh-150px)] bg-[#0a0a0a] border border-white/10 rounded-3xl shadow-2xl z-50 flex flex-col overflow-hidden transition-all duration-300 ${isOpen
                     ? 'opacity-100 translate-y-0 pointer-events-auto'
                     : 'opacity-0 translate-y-4 pointer-events-none'
                     }`}
