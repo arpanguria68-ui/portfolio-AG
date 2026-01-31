@@ -1,5 +1,7 @@
 
 
+import { getOptimizedImageUrl } from '../../lib/cloudinary';
+
 interface LivePreviewProps {
     data: any;
     template: 'default' | 'ghibli' | 'glass';
@@ -11,7 +13,7 @@ const LivePreview: React.FC<LivePreviewProps> = ({ data, template }) => {
     const getContainerClass = () => {
         switch (template) {
             case 'ghibli': return 'font-serif bg-[#F5F2EA] text-[#4A4A4A]';
-            case 'glass': return `font-sans bg-slate-900 text-white bg-[url('${data.image || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop"}')] bg-cover bg-fixed`;
+            case 'glass': return `font-sans bg-slate-900 text-white bg-[url('${getOptimizedImageUrl(data.image, { width: 1920, quality: 'auto' }) || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop"}')] bg-cover bg-fixed`;
             default: return 'font-sans bg-white text-slate-900 dark:bg-[#111] dark:text-white';
         }
     };
@@ -115,7 +117,11 @@ const LivePreview: React.FC<LivePreviewProps> = ({ data, template }) => {
                                         const images = JSON.parse(section.content || '[]');
                                         return images.map((img: string, i: number) => (
                                             <div key={i} className="aspect-square rounded-xl overflow-hidden bg-white/5">
-                                                <img src={img} alt="" className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
+                                                <img
+                                                    src={getOptimizedImageUrl(img, { width: 400, height: 400, crop: 'fill' })}
+                                                    alt=""
+                                                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                                                />
                                             </div>
                                         ));
                                     } catch (e) {
@@ -202,7 +208,11 @@ const LivePreview: React.FC<LivePreviewProps> = ({ data, template }) => {
                         {/* Optional Visual Render */}
                         {['problem', 'solution', 'results'].includes(section.type) && section.image && (
                             <div className={`mt-8 rounded-xl overflow-hidden aspect-video relative group ${template === 'ghibli' ? 'border-4 border-white shadow-[8px_8px_0_rgba(0,0,0,0.1)]' : 'bg-white/5 border border-white/10'}`}>
-                                <img src={section.image} alt={section.title} className="w-full h-full object-cover" />
+                                <img
+                                    src={getOptimizedImageUrl(section.image, { width: 800, quality: 'auto' })}
+                                    alt={section.title}
+                                    className="w-full h-full object-cover"
+                                />
                                 <div className="absolute bottom-4 left-4 bg-black/60 backdrop-blur-sm px-3 py-1 rounded-lg text-xs text-white font-mono">
                                     {section.title} Visual
                                 </div>

@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
+import { getOptimizedImageUrl } from '../lib/cloudinary';
 
 // Fallback projects for when Convex is not connected
 const getEmbedUrl = (url: string, type: string) => {
@@ -107,7 +108,7 @@ const CaseStudy = () => {
                 {/* Background Image */}
                 <div className="absolute inset-0">
                     <img
-                        src={project.image}
+                        src={getOptimizedImageUrl(project.image, { width: 1920, quality: 'auto' })}
                         alt={project.title}
                         className="w-full h-full object-cover"
                     />
@@ -210,7 +211,11 @@ const CaseStudy = () => {
                                         const images = JSON.parse(section.content || '[]');
                                         return images.map((img: string, i: number) => (
                                             <div key={i} className="aspect-square rounded-xl overflow-hidden bg-white/5">
-                                                <img src={img} alt="" className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
+                                                <img
+                                                    src={getOptimizedImageUrl(img, { width: 800, height: 800, crop: 'fill' })}
+                                                    alt=""
+                                                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                                                />
                                             </div>
                                         ));
                                     } catch (e) {
@@ -289,7 +294,11 @@ const CaseStudy = () => {
                         {/* Optional Visual Render */}
                         {['problem', 'solution', 'results'].includes(section.type) && section.image && (
                             <div className="mt-12 rounded-2xl overflow-hidden aspect-video relative group bg-gradient-to-br from-white/5 to-white/0 border border-white/10">
-                                <img src={section.image} alt={section.title} className="w-full h-full object-cover" />
+                                <img
+                                    src={getOptimizedImageUrl(section.image, { width: 1200, quality: 'auto' })}
+                                    alt={section.title}
+                                    className="w-full h-full object-cover"
+                                />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60"></div>
                                 <div className="absolute bottom-6 left-6">
                                     <p className="text-sm text-white/50 font-medium font-mono uppercase tracking-wider">{section.title} Visual</p>

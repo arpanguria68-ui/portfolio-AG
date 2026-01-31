@@ -318,3 +318,79 @@ export function formatFileSize(bytes: number): string {
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
+
+/**
+ * Cloudinary URL transformation options
+ */
+interface ImageOptimizationOptions {
+    width?: number;
+    height?: number;
+    quality?: 'auto' | 'best' | 'good' | 'eco' | 'low' | number;
+    format?: 'auto' | 'webp' | 'jpg' | 'png' | 'avif';
+    crop?: 'scale' | 'fit' | 'fill' | 'limit' | 'pad' | 'crop' | 'thumb';
+    gravity?: 'auto' | 'face' | 'center' | 'north' | 'west' | 'east' | 'south';
+    effect?: string; // e.g., 'grayscale', 'sepia', 'blur:100'
+}
+
+/**
+ * Generates an optimized Cloudinary URL based on the provided options.
+ * Inserts transformation parameters into the URL string.
+ * Defaults to f_auto,q_auto for performance.
+ * 
+ * @param url The original Cloudinary secure_url
+ * @param options Optimization params (width, height, crop, etc.)
+ */
+export function getOptimizedImageUrl(url: string | undefined, options: ImageOptimizationOptions = {}) {
+    if (!url) return '';
+    if (!url.includes('cloudinary.com')) return url; // specific to Cloudinary
+
+    const {
+        width,
+        height,
+        quality = 'auto',
+        format = 'auto',
+        crop,
+        gravity,
+        effect
+    } = options;
+
+    const params: string[] = [];
+
+    // Always use auto format and auto quality if not specified
+    params.push(`f_${format}`);
+
+    // Handle numeric or string quality
+    params.push(`q_${quality}`);
+
+    if (width) params.push(`w_${width}`);
+    if (height) params.push(`h_${height}`);
+
+    if (crop) params.push(`c_${crop}`);
+    if (gravity) params.push(`g_${gravity}`);
+    if (effect) params.push(`e_${effect}`);
+
+    const transformationString = params.join(',');
+
+    // Insert params after '/upload/'
+    // URL format: https://res.cloudinary.com/<cloud>/image/upload/<params>/v<ver>/<id>
+    // OR: https://res.cloudinary.com/<cloud>/image/upload/v<ver>/<id> (no params)
+
+    // Split by '/upload/'
+    const [baseUrl, rest] = url.split('/upload/');
+
+    if (!rest) return url; // parsing error safety
+
+    // Reconstruct
+    return `${baseUrl}/upload/${transformationString}/${rest}`;
+}
+
+/**
+ * Helper to generate responsive `srcset` for an image
+ */
+export function generateSrcSet(url: string, widths: number[] = [640, 768, 1024, 1280, 1536]) {
+    if (!url || !url.includes('cloudinary.com')) return undefined;
+
+    return widths
+        .map(w => `${getOptimizedImageUrl(url, { width: w, crop: 'limit' })} ${w}w`)
+        .join(', ');
+}
