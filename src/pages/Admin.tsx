@@ -1080,7 +1080,8 @@ const Admin = () => {
                                         <button
                                             onClick={async () => {
                                                 try {
-                                                    const result = await testConnection({});
+                                                    // Pass the currently selected model to test it specifically
+                                                    const result = await testConnection({ model: selectedModel });
                                                     if (result.success) {
                                                         alert("Success! " + result.message);
                                                     } else {
@@ -1094,7 +1095,7 @@ const Admin = () => {
                                             className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-lg transition-all flex items-center gap-2"
                                         >
                                             <span className="material-symbols-outlined text-sm">wifi_tethering</span>
-                                            Test API Connection
+                                            Test Selected Model
                                         </button>
                                         <p className="text-xs text-white/40">
                                             Click to verify your API Key and Model selection.
