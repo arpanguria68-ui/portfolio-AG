@@ -66,3 +66,48 @@ export const get = query({
         return setting?.value;
     },
 });
+
+// Test connection to Gemini API
+export const testGeminiConnection = mutation({
+    args: {},
+    handler: async (ctx) => {
+        const apiKey = await ctx.db
+            .query("settings")
+            .withIndex("by_key", (q) => q.eq("key", "gemini_api_key"))
+            .first();
+
+        const modelSetting = await ctx.db
+            .query("settings")
+            .withIndex("by_key", (q) => q.eq("key", "gemini_model"))
+            .first();
+
+        const model = modelSetting?.value || "gemini-1.5-flash";
+
+        if (!apiKey?.value) {
+            return { success: false, message: "API Key not found in settings." };
+        }
+
+        try {
+            const response = await fetch(
+                `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey.value}`,
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: "Hello, this is a connection test." }] }],
+                    }),
+                }
+            );
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                return { success: false, message: `API Error ${response.status}: ${errorText}` };
+            }
+
+            const data = await response.json();
+            return { success: true, message: "Connected to Gemini successfully! Model: " + model };
+        } catch (error: any) {
+            return { success: false, message: "Network/Server Error: " + error.message };
+        }
+    },
+});

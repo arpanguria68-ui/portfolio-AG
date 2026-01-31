@@ -79,6 +79,7 @@ const Admin = () => {
     const setGeminiKey = useMutation(api.settings.set);
     const isGeminiKeySet = useQuery(api.settings.isSet, { key: "gemini_api_key" });
     const savedModel = useQuery(api.settings.get, { key: "gemini_model" });
+    const testConnection = useMutation(api.settings.testGeminiConnection);
 
     // Sync saved model when loaded
     useEffect(() => {
@@ -1061,6 +1062,35 @@ const Admin = () => {
                                     To enable the AI Chat Assistant on your portfolio, you need to provide a Google Gemini API Key.
                                     The key is stored securely and used only for chat functionality.
                                 </p>
+
+                                {/* Test Connection Feature */}
+                                <div className="mb-6 p-4 rounded-xl bg-white/5 border border-white/10">
+                                    <h4 className="text-sm font-bold text-white mb-2">Connection Status</h4>
+                                    <div className="flex items-center gap-4">
+                                        <button
+                                            onClick={async () => {
+                                                try {
+                                                    const result = await testConnection({});
+                                                    if (result.success) {
+                                                        alert("Success! " + result.message);
+                                                    } else {
+                                                        alert("Error: " + result.message);
+                                                    }
+                                                } catch (e) {
+                                                    alert("Failed to run test. Check console.");
+                                                    console.error(e);
+                                                }
+                                            }}
+                                            className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-lg transition-all flex items-center gap-2"
+                                        >
+                                            <span className="material-symbols-outlined text-sm">wifi_tethering</span>
+                                            Test API Connection
+                                        </button>
+                                        <p className="text-xs text-white/40">
+                                            Click to verify your API Key and Model selection.
+                                        </p>
+                                    </div>
+                                </div>
 
                                 <div className="space-y-6">
                                     <div>
