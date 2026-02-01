@@ -1002,7 +1002,7 @@ const Admin = () => {
                                             <SocialItem
                                                 key={social._id}
                                                 social={social}
-                                                updateSocialHandle={(id, handle) => updateSocial({ id, handle })}
+                                                updateSocial={(id, updates) => updateSocial({ id, ...updates })}
                                                 toggleSocialVisibility={(id, visible) => updateSocial({ id, visible: !visible })}
                                                 removeSocial={(id) => removeSocialMutation({ id })}
                                             />

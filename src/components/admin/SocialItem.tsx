@@ -1,15 +1,34 @@
 import { Reorder, useDragControls } from "framer-motion";
 import type { Doc, Id } from "../../../convex/_generated/dataModel";
+import { uploadImage } from "../../lib/cloudinary";
+import { useState } from "react";
 
 interface SocialItemProps {
     social: Doc<"socialLinks">;
-    updateSocialHandle: (id: Id<"socialLinks">, handle: string) => void;
+    updateSocial: (id: Id<"socialLinks">, updates: { handle?: string; logo?: string }) => void;
     toggleSocialVisibility: (id: Id<"socialLinks">, visible: boolean) => void;
     removeSocial: (id: Id<"socialLinks">) => void;
 }
 
-export const SocialItem = ({ social, updateSocialHandle, toggleSocialVisibility, removeSocial }: SocialItemProps) => {
+export const SocialItem = ({ social, updateSocial, toggleSocialVisibility, removeSocial }: SocialItemProps) => {
     const dragControls = useDragControls();
+    const [isUploading, setIsUploading] = useState(false);
+
+    const handleLogoUpload = async () => {
+        try {
+            setIsUploading(true);
+            const result = await uploadImage({
+                folder: "portfolio/logos",
+                cropping: true,
+                aspectRatio: 1, // Square aspect ratio for icons
+            });
+            updateSocial(social._id, { logo: result.url });
+        } catch (error) {
+            console.error("Logo upload failed:", error);
+        } finally {
+            setIsUploading(false);
+        }
+    };
 
     return (
         <Reorder.Item
@@ -28,9 +47,28 @@ export const SocialItem = ({ social, updateSocialHandle, toggleSocialVisibility,
                     >
                         drag_indicator
                     </span>
-                    <div className={`flex items-center justify-center w-10 h-10 rounded-full shadow-inner ${social.bgColor} ${social.color}`}>
-                        <span className="material-symbols-outlined text-xl">{social.icon}</span>
-                    </div>
+
+                    {/* Logo/Icon Trigger */}
+                    <button
+                        onClick={handleLogoUpload}
+                        disabled={isUploading}
+                        className={`relative flex items-center justify-center w-10 h-10 rounded-full shadow-inner ${social.bgColor || 'bg-white/5'} ${social.color || 'text-white'} hover:opacity-80 transition-opacity group overflow-hidden`}
+                        title="Click to upload custom logo"
+                    >
+                        {isUploading ? (
+                            <span className="material-symbols-outlined text-lg animate-spin">sync</span>
+                        ) : social.logo ? (
+                            <img src={social.logo} alt={social.platform} className="w-full h-full object-cover" />
+                        ) : (
+                            <span className="material-symbols-outlined text-xl">{social.icon}</span>
+                        )}
+
+                        {/* Hover Overlay */}
+                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <span className="material-symbols-outlined text-[10px] text-white">edit</span>
+                        </div>
+                    </button>
+
                     <div>
                         <h3 className="font-bold text-sm text-white leading-tight">{social.platform}</h3>
                         <p className="text-[10px] text-white/40 uppercase tracking-wider">Social Profile</p>
@@ -51,7 +89,7 @@ export const SocialItem = ({ social, updateSocialHandle, toggleSocialVisibility,
                 <input
                     className="bg-transparent border-0 p-0 text-sm text-white w-full focus:outline-none placeholder:text-white/20 font-mono"
                     value={social.handle}
-                    onChange={(e) => updateSocialHandle(social._id, e.target.value)}
+                    onChange={(e) => updateSocial(social._id, { handle: e.target.value })}
                     placeholder="https://..."
                 />
                 <button onClick={() => removeSocial(social._id)} className="text-white/20 hover:text-red-400 transition-colors" title="Remove Link">

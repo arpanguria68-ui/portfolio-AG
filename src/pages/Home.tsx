@@ -278,7 +278,13 @@ const Home = () => {
                                         rel="noopener noreferrer"
                                         title={social.platform}
                                     >
-                                        <span className={`material-symbols-outlined text-lg ${social.color || ''} group-hover:text-current transition-colors`}>{social.icon}</span>
+                                        {social.logo ? (
+                                            <img src={social.logo} alt={social.platform} className="w-6 h-6 object-contain rounded-full" />
+                                        ) : (
+                                            <span className="material-symbols-outlined text-xl text-white/70 group-hover:text-black transition-colors">
+                                                {social.icon}
+                                            </span>
+                                        )}
                                     </a>
                                 ))}
                             </div>

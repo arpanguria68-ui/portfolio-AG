@@ -41,6 +41,7 @@ export default defineSchema({
         visible: v.boolean(),
         color: v.optional(v.string()),
         bgColor: v.optional(v.string()),
+        logo: v.optional(v.string()),
         order: v.optional(v.number()),
     }),
 

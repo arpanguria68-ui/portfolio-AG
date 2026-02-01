@@ -18,6 +18,7 @@ export const create = mutation({
         visible: v.boolean(),
         color: v.optional(v.string()),
         bgColor: v.optional(v.string()),
+        logo: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
         const socials = await ctx.db.query("socialLinks").collect();
@@ -43,6 +44,7 @@ export const update = mutation({
         visible: v.optional(v.boolean()),
         color: v.optional(v.string()),
         bgColor: v.optional(v.string()),
+        logo: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
         const { id, ...updates } = args;
