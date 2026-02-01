@@ -7,7 +7,7 @@ const EMBEDDING_MODEL = "models/text-embedding-004";
 
 export const generateEmbedding = action({
     args: { text: v.string() },
-    handler: async (ctx, args) => {
+    handler: async (ctx, args): Promise<number[]> => {
         // 1. Get API Key from settings (created in previous turn)
         const apiKey = await ctx.runQuery(internal.settings.getSecret, { key: "gemini_api_key" });
         if (!apiKey) {
