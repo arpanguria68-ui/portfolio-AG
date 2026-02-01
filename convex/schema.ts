@@ -2,6 +2,11 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
 export default defineSchema({
+    visits: defineTable({
+        date: v.string(), // YYYY-MM-DD
+        count: v.number(),
+    }).index("by_date", ["date"]),
+
     messages: defineTable({
         name: v.string(),
         email: v.string(),

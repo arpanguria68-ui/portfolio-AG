@@ -1,4 +1,7 @@
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
+import { useMutation } from 'convex/react';
+import { api } from '../convex/_generated/api';
 import Home from './pages/Home';
 import Gallery from './pages/Gallery';
 import Admin from './pages/Admin';
@@ -20,6 +23,16 @@ const ChatWidgetWrapper = () => {
 import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/clerk-react";
 
 function App() {
+  const logVisit = useMutation(api.analytics.logVisit);
+
+  useEffect(() => {
+    const visited = sessionStorage.getItem('visited');
+    if (!visited) {
+      logVisit();
+      sessionStorage.setItem('visited', 'true');
+    }
+  }, [logVisit]);
+
   return (
     <ErrorBoundary>
       <BrowserRouter>

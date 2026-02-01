@@ -10,12 +10,14 @@ import { Reorder } from "framer-motion";
 import { SkillItem } from '../components/admin/SkillItem';
 import { SocialItem } from '../components/admin/SocialItem';
 import { ExperienceItem } from '../components/admin/ExperienceItem';
+import ChatHistoryCenter from '../components/admin/ChatHistoryCenter';
 import { UserButton, useUser } from "@clerk/clerk-react";
 
 const Admin = () => {
     const { user, isLoaded } = useUser();
     const adminEmail = import.meta.env.VITE_ADMIN_EMAIL;
     const [activeTab, setActiveTab] = useState('dashboard');
+    const stats = useQuery(api.analytics.getDashboardStats);
 
     if (!isLoaded) return <div className="min-h-screen bg-black text-white flex items-center justify-center">Loading...</div>;
 
@@ -473,7 +475,7 @@ const Admin = () => {
                     </div>
 
                     <nav className="flex flex-col gap-2">
-                        {['dashboard', 'messages', 'projects', 'story', 'toolbox', 'highlights', 'settings'].map((tab) => (
+                        {['dashboard', 'messages', 'ai-history', 'projects', 'story', 'toolbox', 'highlights', 'settings'].map((tab) => (
                             <button
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
@@ -482,12 +484,16 @@ const Admin = () => {
                                 <span className="material-symbols-outlined text-[20px]">
                                     {tab === 'dashboard' ? 'dashboard' :
                                         tab === 'messages' ? 'mail' :
-                                            tab === 'projects' ? 'work' :
-                                                tab === 'story' ? 'person' :
-                                                    tab === 'toolbox' ? 'construction' :
-                                                        tab === 'settings' ? 'settings' : 'image'}
+                                            tab === 'ai-history' ? 'smart_toy' :
+                                                tab === 'projects' ? 'work' :
+                                                    tab === 'story' ? 'person' :
+                                                        tab === 'toolbox' ? 'construction' :
+                                                            tab === 'settings' ? 'settings' : 'image'}
                                 </span>
-                                <span className="capitalize">{tab === 'highlights' ? 'Media Library' : tab}</span>
+                                <span className="capitalize">
+                                    {tab === 'highlights' ? 'Media Library' :
+                                        tab === 'ai-history' ? 'AI History' : tab}
+                                </span>
                             </button>
                         ))}
                     </nav>
@@ -531,15 +537,18 @@ const Admin = () => {
                             </header>
 
                             {/* Stats Grid */}
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
                                 <div className="glass p-6 rounded-3xl border border-white/10 relative overflow-hidden group hover:border-primary/50 transition-colors">
                                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                                         <span className="material-symbols-outlined text-6xl text-primary">visibility</span>
                                     </div>
                                     <div className="relative z-10">
                                         <p className="text-white/40 text-xs font-bold uppercase tracking-wider mb-2">Total Visits</p>
-                                        <h3 className="text-4xl font-display font-bold">12.4k</h3>
-                                        <span className="text-primary text-xs font-bold bg-primary/10 px-2 py-1 rounded-full mt-2 inline-block">+12% this week</span>
+                                        <h3 className="text-4xl font-display font-bold">{stats?.totalVisits ?? 0}</h3>
+                                        {/* StatCounter Link */}
+                                        <a href="https://statcounter.com" target="_blank" rel="noreferrer" className="text-primary text-xs font-bold bg-primary/10 px-2 py-1 rounded-full mt-2 inline-flex items-center gap-1 hover:bg-primary hover:text-black transition-colors">
+                                            View Report <span className="material-symbols-outlined text-[10px]">open_in_new</span>
+                                        </a>
                                     </div>
                                 </div>
                                 <div className="glass p-6 rounded-3xl border border-white/10 relative overflow-hidden group hover:border-primary/50 transition-colors">
@@ -548,8 +557,8 @@ const Admin = () => {
                                     </div>
                                     <div className="relative z-10">
                                         <p className="text-white/40 text-xs font-bold uppercase tracking-wider mb-2">Active Projects</p>
-                                        <h3 className="text-4xl font-display font-bold">8</h3>
-                                        <span className="text-white/40 text-xs mt-2 inline-block">3 Featured</span>
+                                        <h3 className="text-4xl font-display font-bold">{stats?.activeProjects ?? 0}</h3>
+                                        <span className="text-white/40 text-xs mt-2 inline-block">Portfolio Items</span>
                                     </div>
                                 </div>
                                 <div className="glass p-6 rounded-3xl border border-white/10 relative overflow-hidden group hover:border-primary/50 transition-colors">
@@ -558,8 +567,18 @@ const Admin = () => {
                                     </div>
                                     <div className="relative z-10">
                                         <p className="text-white/40 text-xs font-bold uppercase tracking-wider mb-2">Messages</p>
-                                        <h3 className="text-4xl font-display font-bold">5</h3>
-                                        <span className="text-primary text-xs font-bold bg-primary/10 px-2 py-1 rounded-full mt-2 inline-block">2 New</span>
+                                        <h3 className="text-4xl font-display font-bold">{stats?.newMessages ?? 0}</h3>
+                                        <span className="text-primary text-xs font-bold bg-primary/10 px-2 py-1 rounded-full mt-2 inline-block">Unread</span>
+                                    </div>
+                                </div>
+                                <div className="glass p-6 rounded-3xl border border-white/10 relative overflow-hidden group hover:border-primary/50 transition-colors">
+                                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                                        <span className="material-symbols-outlined text-6xl text-primary">smart_toy</span>
+                                    </div>
+                                    <div className="relative z-10">
+                                        <p className="text-white/40 text-xs font-bold uppercase tracking-wider mb-2">AI Conversations</p>
+                                        <h3 className="text-4xl font-display font-bold">{stats?.totalSessions ?? 0}</h3>
+                                        <span className="text-white/40 text-xs mt-2 inline-block">Engagements</span>
                                     </div>
                                 </div>
                             </div>
@@ -570,6 +589,13 @@ const Admin = () => {
                     {activeTab === 'messages' && (
                         <div className="h-[calc(100vh-100px)] animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <MessageCenter />
+                        </div>
+                    )}
+
+                    {/* AI History View */}
+                    {activeTab === 'ai-history' && (
+                        <div className="h-[calc(100vh-100px)] animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <ChatHistoryCenter />
                         </div>
                     )}
 
