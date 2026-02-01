@@ -128,9 +128,9 @@ ${sectionsText}
 // Search Action
 export const search = action({
     args: { query: v.string(), limit: v.optional(v.number()) },
-    handler: async (ctx, args) => {
-        // 1. Embed query
-        const embedding = await ctx.runAction(internal.rag.generateEmbedding, { text: args.query });
+    handler: async (ctx, args): Promise<any[]> => {
+        // 1. Embed query (Explicitly typed)
+        const embedding: number[] = await ctx.runAction(internal.rag.generateEmbedding, { text: args.query });
 
         // 2. Vector Search
         // Note: vectorSearch is a method on the query builder in Convex
