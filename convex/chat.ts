@@ -113,11 +113,28 @@ export const sendToGemini = action({
             parts: [{ text: args.message }],
         });
 
-        // System instruction for the AI
-        const systemInstruction = `You are a helpful AI assistant for a portfolio website. 
-You help visitors learn about the portfolio owner's work, skills, and projects.
-Be friendly, concise, and helpful. If asked about specific projects or skills, 
-provide relevant information based on what you know about the portfolio.
+        // 1. Retrieve RAG Context
+        let contextText = "";
+        try {
+            const searchResults = await ctx.runAction(internal.rag.search, { query: args.message, limit: 3 });
+            if (searchResults && searchResults.length > 0) {
+                contextText = searchResults.map((doc: any) => `--- ${doc.type.toUpperCase()}: ${doc.title} ---\n${doc.text}`).join("\n\n");
+            }
+        } catch (e) {
+            console.error("RAG Search failed:", e);
+        }
+
+        // System instruction for the AI (With Context)
+        const systemInstruction = `You are a helpful AI assistant for Alexander Portz's portfolio website. 
+You help visitors learn about his work, skills, and projects.
+Be friendly, professional, and concise.
+
+Use the following CONTEXT from his CV and Projects to answer the user's question. 
+If the answer is not in the context, just rely on your general knowledge but mention you aren't sure about specific portfolio details.
+
+CONTEXT:
+${contextText || "No specific portfolio context found for this query."}
+
 Keep responses brief (2-3 sentences) unless more detail is requested.`;
 
         // Helper to query Gemini

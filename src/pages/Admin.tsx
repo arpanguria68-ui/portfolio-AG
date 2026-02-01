@@ -135,6 +135,44 @@ const Admin = () => {
     const bgMusicEnabled = bgMusicEnabledStr === "true";
     const [isUploadingAudio, setIsUploadingAudio] = useState(false);
 
+    // RAG State
+    const [resumeText, setResumeText] = useState("");
+    const [isIndexing, setIsIndexing] = useState(false);
+    const ingestContext = useAction(api.rag.ingestContext);
+    const syncProjects = useAction(api.rag.syncAllProjects);
+
+    const handleIngestResume = async () => {
+        if (!resumeText.trim()) return;
+        setIsIndexing(true);
+        try {
+            await ingestContext({
+                title: "Resume / CV",
+                text: resumeText,
+                type: "cv"
+            });
+            alert("Resume indexed successfully!");
+            setResumeText("");
+        } catch (e) {
+            console.error(e);
+            alert("Failed to index resume.");
+        } finally {
+            setIsIndexing(false);
+        }
+    };
+
+    const handleSyncProjects = async () => {
+        setIsIndexing(true);
+        try {
+            const res = await syncProjects();
+            alert(res);
+        } catch (e) {
+            console.error(e);
+            alert("Failed to sync projects.");
+        } finally {
+            setIsIndexing(false);
+        }
+    };
+
     const handleUploadAudio = async () => {
         try {
             setIsUploadingAudio(true);
@@ -1374,6 +1412,55 @@ const Admin = () => {
                                         )}
                                         {isSavingKey ? 'Saving...' : 'Save Configuration'}
                                     </button>
+                                </div>
+                            </div>
+
+                            {/* AI Knowledge Base Section */}
+                            <div className="bg-card-dark/50 border border-white/10 rounded-3xl p-8 mb-8">
+                                <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-primary">psychology</span>
+                                    AI Knowledge Base
+                                </h3>
+
+                                <div className="space-y-6">
+                                    {/* Resume Ingestion */}
+                                    <div>
+                                        <label className="block text-white/60 text-sm font-bold mb-2">My Resume / CV Data</label>
+                                        <p className="text-xs text-white/40 mb-3">Paste your raw resume text here. The AI will read this to answer questions about your background.</p>
+                                        <textarea
+                                            value={resumeText}
+                                            onChange={(e) => setResumeText(e.target.value)}
+                                            className="w-full bg-black/20 border border-white/10 rounded-xl p-4 text-white h-40 focus:outline-none focus:border-primary/50 transition-colors resize-none mb-2"
+                                            placeholder="Paste full resume text here..."
+                                        />
+                                        <div className="flex justify-end">
+                                            <button
+                                                onClick={handleIngestResume}
+                                                disabled={isIndexing || !resumeText.trim()}
+                                                className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-bold transition-all disabled:opacity-50"
+                                            >
+                                                {isIndexing ? "Learning..." : "Save to Memory"}
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Project Sync */}
+                                    <div className="border-t border-white/5 pt-6">
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <h4 className="font-bold">Sync Projects</h4>
+                                                <p className="text-xs text-white/40">Re-scan all portfolio projects and update the AI's memory.</p>
+                                            </div>
+                                            <button
+                                                onClick={handleSyncProjects}
+                                                disabled={isIndexing}
+                                                className="px-4 py-2 bg-primary/10 hover:bg-primary hover:text-black text-primary rounded-lg text-sm font-bold transition-all disabled:opacity-50 flex items-center gap-2"
+                                            >
+                                                <span className="material-symbols-outlined text-lg">sync</span>
+                                                Sync Now
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

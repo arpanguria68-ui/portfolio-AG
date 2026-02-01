@@ -111,6 +111,17 @@ export default defineSchema({
         timestamp: v.number(),
     }).index("by_session", ["sessionId"]),
 
+    documents: defineTable({
+        title: v.string(),
+        text: v.string(),
+        type: v.string(), // 'project' | 'cv' | 'experience'
+        sourceId: v.optional(v.string()),
+        embedding: v.array(v.number()),
+    }).vectorIndex("by_embedding", {
+        vectorField: "embedding",
+        dimensions: 768, // text-embedding-004 standard
+    }),
+
     settings: defineTable({
         key: v.string(), // e.g., "gemini_api_key"
         value: v.string(),
