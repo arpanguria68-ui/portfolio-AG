@@ -644,7 +644,7 @@ const Home = () => {
                 </div>
             </div>
 
-            <MusicPlayer />
+
         </div >
     );
 };
