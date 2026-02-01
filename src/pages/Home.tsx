@@ -5,7 +5,6 @@ import { api } from '../../convex/_generated/api';
 
 import { GlowBorderCard } from '../components/ui/glow-border-card';
 import { FlipFadeText } from '../components/ui/flip-fade-text';
-import MusicPlayer from '../components/MusicPlayer';
 import ToolIcon from '../components/ToolIcon';
 
 const FALLBACK_PROJECTS = [

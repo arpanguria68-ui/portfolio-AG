@@ -2,8 +2,12 @@ import { useState, useEffect, useRef } from 'react';
 import { useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLocation } from 'react-router-dom';
 
 const MusicPlayer = () => {
+    const location = useLocation();
+    const isHome = location.pathname === '/';
+
     const bgMusicUrl = useQuery(api.settings.get, { key: "background_music_url" });
     const bgMusicEnabledStr = useQuery(api.settings.get, { key: "background_music_enabled" });
     const isEnabled = bgMusicEnabledStr === "true";
@@ -11,6 +15,8 @@ const MusicPlayer = () => {
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const [hasInteracted, setHasInteracted] = useState(false);
+
+    // ... stats ...
 
     // Initialize audio
     useEffect(() => {
@@ -44,6 +50,9 @@ const MusicPlayer = () => {
     };
 
     if (!isEnabled || !bgMusicUrl) return null;
+
+    // Only render UI on Home page
+    if (!isHome) return null;
 
     return (
         <AnimatePresence>

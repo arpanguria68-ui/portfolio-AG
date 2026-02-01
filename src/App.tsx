@@ -9,6 +9,7 @@ import Login from './pages/Login';
 import CaseStudy from './pages/CaseStudy';
 import ErrorBoundary from './components/ErrorBoundary';
 import AIChatWidget from './components/AIChatWidget';
+import MusicPlayer from './components/MusicPlayer'; // Import MusicPlayer
 
 // Wrapper component to conditionally render chat widget
 const ChatWidgetWrapper = () => {
@@ -38,6 +39,9 @@ function App() {
       <BrowserRouter>
         {/* AI Chat Widget - hidden on admin/login pages */}
         <ChatWidgetWrapper />
+
+        {/* Persistent Music Player - UI visibility handled internally */}
+        <MusicPlayer />
 
         <Routes>
           <Route path="/" element={<Home />} />
