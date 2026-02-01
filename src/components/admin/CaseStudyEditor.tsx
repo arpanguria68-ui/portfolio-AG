@@ -40,8 +40,11 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
     };
 
     const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!e.target.value) return; // Handle empty input
         const date = new Date(e.target.value);
-        setCreationDate(date.getTime());
+        if (!isNaN(date.getTime())) {
+            setCreationDate(date.getTime());
+        }
     };
 
     const [template, setTemplate] = useState<'default' | 'ghibli' | 'glass'>('glass');
