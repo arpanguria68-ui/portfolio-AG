@@ -23,7 +23,8 @@ const Login = () => {
                             socialButtonsBlockButton: 'text-white border-white/20 hover:bg-white/5',
                             formFieldLabel: 'text-white/70',
                             formFieldInput: 'bg-black/20 border-white/10 text-white placeholder-white/20',
-                            footerActionLink: 'text-primary hover:text-primary/80'
+                            footerActionLink: 'text-primary hover:text-primary/80',
+                            footer: "hidden"
                         }
                     }}
                     fallbackRedirectUrl="/admin"
