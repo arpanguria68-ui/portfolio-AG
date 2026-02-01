@@ -28,6 +28,22 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
     const [tags, setTags] = useState<string[]>(initialData?.tags || []);
     const [image, setImage] = useState(initialData?.image || "");
     const [link, setLink] = useState(initialData?.link || "");
+    const [category, setCategory] = useState(initialData?.category || "SaaS");
+    const [creationDate, setCreationDate] = useState(initialData?.creationDate || Date.now());
+
+    const CATEGORIES = ['SaaS', 'Mobile', 'B2B', 'Fintech', 'Health', 'Gen AI apps', 'mobile apps', 'blog'];
+
+    // Convert timestamp to datetime-local string format (YYYY-MM-DDTHH:mm)
+    const getDatetimeString = (timestamp: number) => {
+        const date = new Date(timestamp);
+        return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    };
+
+    const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const date = new Date(e.target.value);
+        setCreationDate(date.getTime());
+    };
+
     const [template, setTemplate] = useState<'default' | 'ghibli' | 'glass'>('glass');
     const [isSaving, setIsSaving] = useState(false);
     const [isUploadingImage, setIsUploadingImage] = useState(false);
@@ -196,6 +212,8 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
                 tags: tags.length > 0 ? tags : ['Case Study', template],
                 image,
                 link: link || `/project/${slug || title.toLowerCase().replace(/\s+/g, '-')}`,
+                category,
+                creationDate,
                 sections: sections.map(s => ({
                     id: s.id,
                     type: s.type || 'text',
@@ -284,6 +302,31 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
                                 value={slug}
                                 onChange={(e) => setSlug(e.target.value)}
                                 placeholder="project-slug"
+                            />
+                        </label>
+                    </div>
+
+                    {/* Category & Date */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <label className="flex flex-col gap-2">
+                            <span className="text-white text-xs font-bold ml-1 uppercase tracking-wider opacity-60">Category</span>
+                            <select
+                                className="w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm text-white focus:border-primary focus:outline-none transition-all appearance-none"
+                                value={category}
+                                onChange={(e) => setCategory(e.target.value)}
+                            >
+                                {CATEGORIES.map(cat => (
+                                    <option key={cat} value={cat}>{cat}</option>
+                                ))}
+                            </select>
+                        </label>
+                        <label className="flex flex-col gap-2">
+                            <span className="text-white text-xs font-bold ml-1 uppercase tracking-wider opacity-60">Creation Date</span>
+                            <input
+                                type="datetime-local"
+                                className="w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm text-white focus:border-primary focus:outline-none transition-all"
+                                value={getDatetimeString(creationDate)}
+                                onChange={handleDateChange}
                             />
                         </label>
                     </div>

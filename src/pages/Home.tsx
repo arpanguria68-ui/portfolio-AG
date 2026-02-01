@@ -111,17 +111,23 @@ const Home = () => {
 
     const filteredProjects = projects.filter(p => {
         if (projectFilter === 'All') return true;
-        return p.tags.includes(projectFilter);
+        // Fallback for legacy projects without category: check tags or allow if category not set
+        return p.category === projectFilter || (!p.category && p.tags.includes(projectFilter));
     }).sort((a, b) => {
         if (projectSort === 'Newest') {
             return parseInt(b.year) - parseInt(a.year);
+        }
+        if (projectSort === 'Newest (Date)') {
+            // Defaults to 0 if creationDate is undefined
+            return (b.creationDate || 0) - (a.creationDate || 0);
         }
         if (projectSort === 'Oldest') return parseInt(a.year) - parseInt(b.year);
         if (projectSort === 'A-Z') return a.title.localeCompare(b.title);
         return 0;
     });
 
-    const uniqueTags = ['All', ...Array.from(new Set(projects.flatMap(p => p.tags)))];
+    const CATEGORIES = ['All', 'SaaS', 'Mobile', 'B2B', 'Fintech', 'Health', 'Gen AI apps', 'mobile apps', 'blog'];
+    // const uniqueTags = ['All', ...Array.from(new Set(projects.flatMap(p => p.tags)))];
 
     const [formData, setFormData] = useState({ name: '', email: '', message: '' });
     const [status, setStatus] = useState<'idle' | 'sending' | 'success'>('idle');
@@ -391,256 +397,262 @@ const Home = () => {
                                         className="appearance-none bg-white/5 border border-white/10 rounded-full px-4 py-2 pr-8 text-sm font-medium text-white focus:border-primary focus:outline-none cursor-pointer transition-colors hover:bg-white/10"
                                     >
                                         <option value="Newest" className="bg-background-dark text-white">Newest</option>
-                                        <option value="Oldest" className="bg-background-dark text-white">Oldest</option>
-                                        <option value="A-Z" className="bg-background-dark text-white">A-Z</option>
-                                    </select>
-                                    <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none text-lg">expand_more</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Filters */}
-                        <div className="mb-10 flex flex-wrap gap-2">
-                            {uniqueTags.map(tag => (
-                                <button
-                                    key={tag}
-                                    onClick={() => setProjectFilter(tag)}
-                                    className={`px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all border ${projectFilter === tag ? 'bg-primary border-primary text-black' : 'bg-transparent border-white/10 text-white/60 hover:border-white/30 hover:text-white'}`}
-                                >
-                                    {tag}
-                                </button>
-                            ))}
-                        </div>
-
-                        {/* Grid for desktop, Scroll for mobile */}
-                        <div className="flex md:grid md:grid-cols-2 lg:grid-cols-3 overflow-x-auto md:overflow-visible gap-6 pb-8 md:pb-0 snap-x snap-mandatory no-scrollbar items-stretch">
-                            {filteredProjects.map((project, index) => (
-                                <div key={project._id} className="min-w-[85vw] md:min-w-0 snap-center flex flex-col">
-                                    <Link to={`/project/${project._id || index + 1}`} className="bg-card-dark rounded-[32px] overflow-hidden border border-white/10 flex flex-col h-full group relative transition-transform hover:-translate-y-2 duration-500">
-                                        <div className="relative h-[280px] w-full overflow-hidden bg-[#1A1A1A]">
-                                            <img alt={project.title} className="w-full h-full object-cover opacity-80 group-hover:scale-105 group-hover:opacity-100 transition-all duration-700" src={project.image} />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-card-dark via-transparent to-transparent"></div>
-                                            <div className="absolute top-4 right-4 bg-black/40 backdrop-blur-md border border-white/10 px-3 py-1 rounded-full">
-                                                <span className="text-[10px] font-bold text-white uppercase tracking-wider">{project.year}</span>
-                                            </div>
+                                        <div className="flex items-center gap-2 bg-black/20 rounded-lg p-1 border border-white/5">
+                                            <span className="text-[10px] uppercase font-bold text-white/40 px-2">Sort By</span>
+                                            {['Newest', 'Newest (Date)', 'Oldest', 'A-Z'].map((option) => (
+                                                <button
+                                                    key={option}
+                                                    onClick={() => setProjectSort(option as any)}
+                                                    className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${projectSort === option ? 'bg-primary text-black shadow-lg shadow-primary/20' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
+                                                >
+                                                    {option}
+                                                </button>
+                                            ))}
                                         </div>
-                                        <div className="p-6 pt-2 flex flex-col flex-grow justify-between relative z-10">
-                                            <div>
-                                                <h3 className="text-2xl font-display font-bold text-white mb-2 leading-tight">{project.title}</h3>
-                                                <p className="text-white/50 text-sm leading-relaxed mb-6">{project.description}</p>
-                                            </div>
-                                            <div className="flex flex-wrap gap-2">
-                                                {project.tags.map(tag => (
-                                                    <span key={tag} className="px-3 py-1.5 bg-primary/10 border border-primary/20 text-primary rounded-full text-[10px] font-bold uppercase tracking-wider">{tag}</span>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </Link>
                                 </div>
-                            ))}
-                        </div>
-                    </div>
-                </section>
 
-                {/* My Journey Section */}
-                <section className="px-6 md:px-12 py-24 lg:py-32 bg-[#0D0D0D] relative overflow-hidden" id="my-journey">
-                    <div className="absolute top-1/2 left-0 -translate-y-1/2 w-[300px] h-[300px] bg-primary/5 rounded-full blur-[100px] pointer-events-none"></div>
-                    <div className="relative max-w-lg md:max-w-2xl lg:max-w-4xl mx-auto z-10">
-                        <h2 className="text-3xl md:text-5xl font-display font-bold mb-16 text-center">My <span className="text-primary">Journey</span></h2>
+                                {/* Filters */}
+                                <div className="mb-10 flex flex-wrap gap-2">
+                                    {CATEGORIES.map(tag => (
+                                        <button
+                                            key={tag}
+                                            onClick={() => setProjectFilter(tag)}
+                                            className={`px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all border ${projectFilter === tag ? 'bg-primary border-primary text-black' : 'bg-transparent border-white/10 text-white/60 hover:border-white/30 hover:text-white'}`}
+                                        >
+                                            {tag}
+                                        </button>
+                                    ))}
+                                </div>
 
-                        {/* Timeline Container */}
-                        <div className="relative">
-                            <div className="absolute left-[100px] md:left-1/2 md:-ml-[1px] top-2 bottom-0 w-[2px] bg-[#1A1A1A] rounded-full overflow-hidden">
-                                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-primary via-primary/40 to-white/5 shadow-[0_0_15px_rgba(212,255,63,0.5)]"></div>
-                            </div>
-
-                            {/* Dynamic Timeline Items */}
-                            {convexExperiences && convexExperiences.filter(e => e.visible).sort((a, b) => (a.order ?? 0) - (b.order ?? 0)).map((experience, index) => (
-                                <div key={experience._id} className="flex flex-col md:flex-row gap-0 md:gap-12 group mb-12 relative items-start md:items-center justify-between">
-                                    {/* Date (Left on Desktop) */}
-                                    <div className="w-[100px] md:w-1/2 pr-6 md:pr-0 md:text-right flex flex-col md:block items-end pt-1 flex-shrink-0">
-                                        <span className={`font-bold text-sm md:text-lg tracking-wide ${experience.present ? 'text-primary' : 'text-white'}`}>
-                                            {experience.present ? 'Present' : experience.endDate}
-                                        </span>
-                                        <span className="text-white/30 text-[10px] md:text-xs font-display font-medium mt-0.5 md:block">
-                                            {experience.startDate}
-                                        </span>
-                                    </div>
-
-                                    {/* Dot */}
-                                    <div className="absolute left-[100px] md:left-1/2 top-[0.6rem] md:top-1/2 md:-translate-y-1/2 -translate-x-1/2 z-10">
-                                        {experience.present ? (
-                                            <div className="w-4 h-4 rounded-full bg-primary shadow-[0_0_15px_rgba(212,255,63,0.8)] flex items-center justify-center relative">
-                                                <div className="absolute inset-0 bg-primary rounded-full animate-ping opacity-60"></div>
-                                                <div className="w-1.5 h-1.5 bg-black rounded-full relative z-10"></div>
-                                            </div>
-                                        ) : (
-                                            <div className="w-3 h-3 rounded-full bg-[#0D0D0D] border-2 border-white/20 group-hover:border-primary/60 group-hover:scale-125 transition-all duration-300 shadow-[0_0_0_4px_#0D0D0D]"></div>
-                                        )}
-                                    </div>
-
-                                    {/* Card (Right on Desktop) */}
-                                    <div className="flex-1 pl-6 md:pl-0 md:w-1/2 min-w-0">
-                                        <div className={`glass p-5 rounded-2xl border ${experience.present ? 'border-white/10 glow-border' : 'border-white/5'} group-hover:bg-white/5 transition-all duration-300 relative`}>
-                                            {experience.present && (
-                                                <div className="absolute top-3 right-3 opacity-50">
-                                                    <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[9px] font-bold uppercase tracking-wider border border-primary/20">Active</span>
+                                {/* Grid for desktop, Scroll for mobile */}
+                                <div className="flex md:grid md:grid-cols-2 lg:grid-cols-3 overflow-x-auto md:overflow-visible gap-6 pb-8 md:pb-0 snap-x snap-mandatory no-scrollbar items-stretch">
+                                    {filteredProjects.map((project, index) => (
+                                        <div key={project._id} className="min-w-[85vw] md:min-w-0 snap-center flex flex-col">
+                                            <Link to={`/project/${project._id || index + 1}`} className="bg-card-dark rounded-[32px] overflow-hidden border border-white/10 flex flex-col h-full group relative transition-transform hover:-translate-y-2 duration-500">
+                                                <div className="relative h-[280px] w-full overflow-hidden bg-[#1A1A1A]">
+                                                    <img alt={project.title} className="w-full h-full object-cover opacity-80 group-hover:scale-105 group-hover:opacity-100 transition-all duration-700" src={project.image} />
+                                                    <div className="absolute inset-0 bg-gradient-to-t from-card-dark via-transparent to-transparent"></div>
+                                                    <div className="absolute top-4 right-4 bg-black/40 backdrop-blur-md border border-white/10 px-3 py-1 rounded-full">
+                                                        <span className="text-[10px] font-bold text-white uppercase tracking-wider">{project.year}</span>
+                                                    </div>
                                                 </div>
-                                            )}
-                                            <div className="flex items-center gap-4 mb-3">
-                                                <div className={`w-10 h-10 rounded-xl ${experience.present ? 'bg-white/5 border border-white/5 text-primary shadow-inner' : 'bg-white/5 text-white/40'} flex items-center justify-center`}>
-                                                    <span className="material-symbols-outlined text-[20px]">{experience.present ? 'workspace_premium' : 'work'}</span>
+                                                <div className="p-6 pt-2 flex flex-col flex-grow justify-between relative z-10">
+                                                    <div>
+                                                        <h3 className="text-2xl font-display font-bold text-white mb-2 leading-tight">{project.title}</h3>
+                                                        <p className="text-white/50 text-sm leading-relaxed mb-6">{project.description}</p>
+                                                    </div>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {project.tags.map(tag => (
+                                                            <span key={tag} className="px-3 py-1.5 bg-primary/10 border border-primary/20 text-primary rounded-full text-[10px] font-bold uppercase tracking-wider">{tag}</span>
+                                                        ))}
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <h3 className="text-base font-display font-bold text-white leading-tight">{experience.title}</h3>
-                                                    <p className="text-white/40 text-[10px] uppercase tracking-wider mt-0.5 font-medium">{experience.company}</p>
+                                            </Link>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* My Journey Section */}
+                        <section className="px-6 md:px-12 py-24 lg:py-32 bg-[#0D0D0D] relative overflow-hidden" id="my-journey">
+                            <div className="absolute top-1/2 left-0 -translate-y-1/2 w-[300px] h-[300px] bg-primary/5 rounded-full blur-[100px] pointer-events-none"></div>
+                            <div className="relative max-w-lg md:max-w-2xl lg:max-w-4xl mx-auto z-10">
+                                <h2 className="text-3xl md:text-5xl font-display font-bold mb-16 text-center">My <span className="text-primary">Journey</span></h2>
+
+                                {/* Timeline Container */}
+                                <div className="relative">
+                                    <div className="absolute left-[100px] md:left-1/2 md:-ml-[1px] top-2 bottom-0 w-[2px] bg-[#1A1A1A] rounded-full overflow-hidden">
+                                        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-primary via-primary/40 to-white/5 shadow-[0_0_15px_rgba(212,255,63,0.5)]"></div>
+                                    </div>
+
+                                    {/* Dynamic Timeline Items */}
+                                    {convexExperiences && convexExperiences.filter(e => e.visible).sort((a, b) => (a.order ?? 0) - (b.order ?? 0)).map((experience, index) => (
+                                        <div key={experience._id} className="flex flex-col md:flex-row gap-0 md:gap-12 group mb-12 relative items-start md:items-center justify-between">
+                                            {/* Date (Left on Desktop) */}
+                                            <div className="w-[100px] md:w-1/2 pr-6 md:pr-0 md:text-right flex flex-col md:block items-end pt-1 flex-shrink-0">
+                                                <span className={`font-bold text-sm md:text-lg tracking-wide ${experience.present ? 'text-primary' : 'text-white'}`}>
+                                                    {experience.present ? 'Present' : experience.endDate}
+                                                </span>
+                                                <span className="text-white/30 text-[10px] md:text-xs font-display font-medium mt-0.5 md:block">
+                                                    {experience.startDate}
+                                                </span>
+                                            </div>
+
+                                            {/* Dot */}
+                                            <div className="absolute left-[100px] md:left-1/2 top-[0.6rem] md:top-1/2 md:-translate-y-1/2 -translate-x-1/2 z-10">
+                                                {experience.present ? (
+                                                    <div className="w-4 h-4 rounded-full bg-primary shadow-[0_0_15px_rgba(212,255,63,0.8)] flex items-center justify-center relative">
+                                                        <div className="absolute inset-0 bg-primary rounded-full animate-ping opacity-60"></div>
+                                                        <div className="w-1.5 h-1.5 bg-black rounded-full relative z-10"></div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="w-3 h-3 rounded-full bg-[#0D0D0D] border-2 border-white/20 group-hover:border-primary/60 group-hover:scale-125 transition-all duration-300 shadow-[0_0_0_4px_#0D0D0D]"></div>
+                                                )}
+                                            </div>
+
+                                            {/* Card (Right on Desktop) */}
+                                            <div className="flex-1 pl-6 md:pl-0 md:w-1/2 min-w-0">
+                                                <div className={`glass p-5 rounded-2xl border ${experience.present ? 'border-white/10 glow-border' : 'border-white/5'} group-hover:bg-white/5 transition-all duration-300 relative`}>
+                                                    {experience.present && (
+                                                        <div className="absolute top-3 right-3 opacity-50">
+                                                            <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[9px] font-bold uppercase tracking-wider border border-primary/20">Active</span>
+                                                        </div>
+                                                    )}
+                                                    <div className="flex items-center gap-4 mb-3">
+                                                        <div className={`w-10 h-10 rounded-xl ${experience.present ? 'bg-white/5 border border-white/5 text-primary shadow-inner' : 'bg-white/5 text-white/40'} flex items-center justify-center`}>
+                                                            <span className="material-symbols-outlined text-[20px]">{experience.present ? 'workspace_premium' : 'work'}</span>
+                                                        </div>
+                                                        <div>
+                                                            <h3 className="text-base font-display font-bold text-white leading-tight">{experience.title}</h3>
+                                                            <p className="text-white/40 text-[10px] uppercase tracking-wider mt-0.5 font-medium">{experience.company}</p>
+                                                        </div>
+                                                    </div>
+                                                    <p className={`text-white/60 text-xs leading-relaxed ${experience.present ? 'border-l-2 border-primary/20 pl-3' : ''}`}>
+                                                        {experience.description}
+                                                    </p>
                                                 </div>
                                             </div>
-                                            <p className={`text-white/60 text-xs leading-relaxed ${experience.present ? 'border-l-2 border-primary/20 pl-3' : ''}`}>
-                                                {experience.description}
-                                            </p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* Visual Highlights Section */}
+                        <section className="px-6 md:px-12 py-24 bg-[#0F0F0F] relative overflow-hidden" id="visual-highlights">
+                            <div className="absolute top-1/2 right-0 w-64 h-64 bg-primary/5 rounded-full blur-[100px] pointer-events-none"></div>
+                            <div className="max-w-7xl mx-auto">
+                                <div className="mb-12">
+                                    <h2 className="text-3xl md:text-5xl font-display font-bold leading-tight">
+                                        Visual <span className="text-primary">Highlights</span>
+                                    </h2>
+                                    <p className="text-white/40 text-sm md:text-base mt-4 max-w-sm">Snapshots from recent workshops, certifications, and speaking engagements.</p>
+                                </div>
+                                {/* Grid for desktop, Scroll for mobile */}
+                                <div className="flex md:grid md:grid-cols-3 overflow-x-auto md:overflow-visible gap-6 pb-8 md:pb-0 snap-x snap-mandatory no-scrollbar items-stretch">
+                                    {highlights.map((highlight) => (
+                                        <div key={highlight._id} className="min-w-[75vw] md:min-w-0 snap-center flex flex-col">
+                                            <div className="relative aspect-[4/3] w-full rounded-2xl overflow-hidden group border border-white/10">
+                                                <img
+                                                    alt={highlight.title}
+                                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-90"
+                                                    src={highlight.url}
+                                                />
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
+                                                {highlight.category && (
+                                                    <div className="absolute top-3 right-3 bg-black/40 backdrop-blur-md px-2 py-1 rounded text-[10px] font-bold text-white/80 uppercase tracking-wider border border-white/10">
+                                                        {highlight.category}
+                                                    </div>
+                                                )}
+                                                <div className="absolute bottom-5 left-5 right-5">
+                                                    <h4 className="text-white font-display font-bold text-lg leading-tight mb-1">{highlight.title}</h4>
+                                                    {highlight.subtitle && (
+                                                        <p className="text-white/50 text-xs">{highlight.subtitle}</p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* Contact Me Section */}
+                        <section className="px-6 md:px-12 py-20 lg:py-32 bg-background-dark border-t border-white/5" id="contact-me">
+                            <div className="max-w-md md:max-w-2xl lg:max-w-4xl mx-auto">
+                                <div className="grid md:grid-cols-2 gap-16 items-start">
+                                    <div className="text-center md:text-left">
+                                        <h2 className="text-4xl md:text-5xl font-display font-bold mb-4">Let's work <br /><span className="text-primary">together</span></h2>
+                                        <p className="text-white/50 text-base mb-8">Have an idea? Let's build something amazing. I'm currently available for freelance projects and consultation.</p>
+
+                                        <div className="hidden md:flex flex-col gap-4 text-left">
+                                            <div className="flex items-center gap-3 text-white/70">
+                                                <span className="material-symbols-outlined text-primary">mail</span>
+                                                <span>arpanguria68@gmail.com</span>
+                                            </div>
+                                            <div className="flex items-center gap-3 text-white/70">
+                                                <span className="material-symbols-outlined text-primary">call</span>
+                                                <span>+91 8092864293</span>
+                                            </div>
                                         </div>
                                     </div>
+
+                                    <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
+                                        <div className="group">
+                                            <label className="text-xs uppercase tracking-wider font-bold text-white/40 mb-2 block group-focus-within:text-primary transition-colors">Name</label>
+                                            <input
+                                                required
+                                                name="name"
+                                                className="w-full bg-transparent border-0 border-b border-white/20 py-2 text-white focus:ring-0 focus:border-primary transition-colors placeholder:text-white/10 outline-none"
+                                                placeholder="John Doe"
+                                                type="text"
+                                                value={formData.name}
+                                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                            />
+                                        </div>
+                                        <div className="group">
+                                            <label className="text-xs uppercase tracking-wider font-bold text-white/40 mb-2 block group-focus-within:text-primary transition-colors">Email</label>
+                                            <input
+                                                required
+                                                name="email"
+                                                className="w-full bg-transparent border-0 border-b border-white/20 py-2 text-white focus:ring-0 focus:border-primary transition-colors placeholder:text-white/10 outline-none"
+                                                placeholder="john@example.com"
+                                                type="email"
+                                                value={formData.email}
+                                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                            />
+                                        </div>
+                                        <div className="group">
+                                            <label className="text-xs uppercase tracking-wider font-bold text-white/40 mb-2 block group-focus-within:text-primary transition-colors">Message</label>
+                                            <textarea
+                                                required
+                                                name="message"
+                                                className="w-full bg-transparent border-0 border-b border-white/20 py-2 text-white focus:ring-0 focus:border-primary transition-colors placeholder:text-white/10 resize-none outline-none"
+                                                placeholder="Tell me about your project..."
+                                                rows={3}
+                                                value={formData.message}
+                                                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                                            ></textarea>
+                                        </div>
+                                        <button
+                                            disabled={status === 'sending' || status === 'success'}
+                                            className={`mt-4 w-full py-4 text-black rounded-full font-bold flex items-center justify-center gap-2 group transition-all ${status === 'success' ? 'bg-green-400' : 'bg-white hover:bg-primary'}`}
+                                            type="submit"
+                                        >
+                                            {status === 'sending' ? 'Sending...' : status === 'success' ? 'Message Sent!' : 'Send Message'}
+                                            <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">{status === 'success' ? 'check' : 'send'}</span>
+                                        </button>
+                                    </form>
                                 </div>
+
+                                <div className="mt-20 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4">
+                                    <div className="flex gap-6">
+                                        <a className="text-white/40 hover:text-primary transition-colors" href="https://www.linkedin.com/in/arpan-guria/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+                                    </div>
+                                    <p className="text-[10px] text-white/20 uppercase tracking-widest">© 2026 Arpan Guria</p>
+                                </div>
+                            </div>
+                        </section>
+                    </main>
+
+                    {/* Marquee Footer */}
+                    <div className="py-4 bg-primary text-black font-bold text-[10px] uppercase tracking-widest flex whitespace-nowrap overflow-hidden border-t border-black">
+                        <div className="flex gap-12 animate-marquee">
+                            {[1, 2, 3, 4].map((_, i) => (
+                                <Fragment key={i}>
+                                    <div className="flex items-center gap-2"><span className="material-symbols-outlined text-sm">star</span> PRODUCT STRATEGY</div>
+                                    <div className="flex items-center gap-2"><span className="material-symbols-outlined text-sm">star</span> UX DESIGN</div>
+                                    <div className="flex items-center gap-2"><span className="material-symbols-outlined text-sm">star</span> AGILE LEADERSHIP</div>
+                                    <div className="flex items-center gap-2"><span className="material-symbols-outlined text-sm">star</span> DATA ANALYTICS</div>
+                                </Fragment>
                             ))}
                         </div>
                     </div>
-                </section>
 
-                {/* Visual Highlights Section */}
-                <section className="px-6 md:px-12 py-24 bg-[#0F0F0F] relative overflow-hidden" id="visual-highlights">
-                    <div className="absolute top-1/2 right-0 w-64 h-64 bg-primary/5 rounded-full blur-[100px] pointer-events-none"></div>
-                    <div className="max-w-7xl mx-auto">
-                        <div className="mb-12">
-                            <h2 className="text-3xl md:text-5xl font-display font-bold leading-tight">
-                                Visual <span className="text-primary">Highlights</span>
-                            </h2>
-                            <p className="text-white/40 text-sm md:text-base mt-4 max-w-sm">Snapshots from recent workshops, certifications, and speaking engagements.</p>
-                        </div>
-                        {/* Grid for desktop, Scroll for mobile */}
-                        <div className="flex md:grid md:grid-cols-3 overflow-x-auto md:overflow-visible gap-6 pb-8 md:pb-0 snap-x snap-mandatory no-scrollbar items-stretch">
-                            {highlights.map((highlight) => (
-                                <div key={highlight._id} className="min-w-[75vw] md:min-w-0 snap-center flex flex-col">
-                                    <div className="relative aspect-[4/3] w-full rounded-2xl overflow-hidden group border border-white/10">
-                                        <img
-                                            alt={highlight.title}
-                                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-90"
-                                            src={highlight.url}
-                                        />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
-                                        {highlight.category && (
-                                            <div className="absolute top-3 right-3 bg-black/40 backdrop-blur-md px-2 py-1 rounded text-[10px] font-bold text-white/80 uppercase tracking-wider border border-white/10">
-                                                {highlight.category}
-                                            </div>
-                                        )}
-                                        <div className="absolute bottom-5 left-5 right-5">
-                                            <h4 className="text-white font-display font-bold text-lg leading-tight mb-1">{highlight.title}</h4>
-                                            {highlight.subtitle && (
-                                                <p className="text-white/50 text-xs">{highlight.subtitle}</p>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </section>
-
-                {/* Contact Me Section */}
-                <section className="px-6 md:px-12 py-20 lg:py-32 bg-background-dark border-t border-white/5" id="contact-me">
-                    <div className="max-w-md md:max-w-2xl lg:max-w-4xl mx-auto">
-                        <div className="grid md:grid-cols-2 gap-16 items-start">
-                            <div className="text-center md:text-left">
-                                <h2 className="text-4xl md:text-5xl font-display font-bold mb-4">Let's work <br /><span className="text-primary">together</span></h2>
-                                <p className="text-white/50 text-base mb-8">Have an idea? Let's build something amazing. I'm currently available for freelance projects and consultation.</p>
-
-                                <div className="hidden md:flex flex-col gap-4 text-left">
-                                    <div className="flex items-center gap-3 text-white/70">
-                                        <span className="material-symbols-outlined text-primary">mail</span>
-                                        <span>arpanguria68@gmail.com</span>
-                                    </div>
-                                    <div className="flex items-center gap-3 text-white/70">
-                                        <span className="material-symbols-outlined text-primary">call</span>
-                                        <span>+91 8092864293</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
-                                <div className="group">
-                                    <label className="text-xs uppercase tracking-wider font-bold text-white/40 mb-2 block group-focus-within:text-primary transition-colors">Name</label>
-                                    <input
-                                        required
-                                        name="name"
-                                        className="w-full bg-transparent border-0 border-b border-white/20 py-2 text-white focus:ring-0 focus:border-primary transition-colors placeholder:text-white/10 outline-none"
-                                        placeholder="John Doe"
-                                        type="text"
-                                        value={formData.name}
-                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    />
-                                </div>
-                                <div className="group">
-                                    <label className="text-xs uppercase tracking-wider font-bold text-white/40 mb-2 block group-focus-within:text-primary transition-colors">Email</label>
-                                    <input
-                                        required
-                                        name="email"
-                                        className="w-full bg-transparent border-0 border-b border-white/20 py-2 text-white focus:ring-0 focus:border-primary transition-colors placeholder:text-white/10 outline-none"
-                                        placeholder="john@example.com"
-                                        type="email"
-                                        value={formData.email}
-                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                    />
-                                </div>
-                                <div className="group">
-                                    <label className="text-xs uppercase tracking-wider font-bold text-white/40 mb-2 block group-focus-within:text-primary transition-colors">Message</label>
-                                    <textarea
-                                        required
-                                        name="message"
-                                        className="w-full bg-transparent border-0 border-b border-white/20 py-2 text-white focus:ring-0 focus:border-primary transition-colors placeholder:text-white/10 resize-none outline-none"
-                                        placeholder="Tell me about your project..."
-                                        rows={3}
-                                        value={formData.message}
-                                        onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                                    ></textarea>
-                                </div>
-                                <button
-                                    disabled={status === 'sending' || status === 'success'}
-                                    className={`mt-4 w-full py-4 text-black rounded-full font-bold flex items-center justify-center gap-2 group transition-all ${status === 'success' ? 'bg-green-400' : 'bg-white hover:bg-primary'}`}
-                                    type="submit"
-                                >
-                                    {status === 'sending' ? 'Sending...' : status === 'success' ? 'Message Sent!' : 'Send Message'}
-                                    <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">{status === 'success' ? 'check' : 'send'}</span>
-                                </button>
-                            </form>
-                        </div>
-
-                        <div className="mt-20 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4">
-                            <div className="flex gap-6">
-                                <a className="text-white/40 hover:text-primary transition-colors" href="https://www.linkedin.com/in/arpan-guria/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
-                            </div>
-                            <p className="text-[10px] text-white/20 uppercase tracking-widest">© 2026 Arpan Guria</p>
-                        </div>
-                    </div>
-                </section>
-            </main>
-
-            {/* Marquee Footer */}
-            <div className="py-4 bg-primary text-black font-bold text-[10px] uppercase tracking-widest flex whitespace-nowrap overflow-hidden border-t border-black">
-                <div className="flex gap-12 animate-marquee">
-                    {[1, 2, 3, 4].map((_, i) => (
-                        <Fragment key={i}>
-                            <div className="flex items-center gap-2"><span className="material-symbols-outlined text-sm">star</span> PRODUCT STRATEGY</div>
-                            <div className="flex items-center gap-2"><span className="material-symbols-outlined text-sm">star</span> UX DESIGN</div>
-                            <div className="flex items-center gap-2"><span className="material-symbols-outlined text-sm">star</span> AGILE LEADERSHIP</div>
-                            <div className="flex items-center gap-2"><span className="material-symbols-outlined text-sm">star</span> DATA ANALYTICS</div>
-                        </Fragment>
-                    ))}
+                    <MusicPlayer />
                 </div>
-            </div>
-
-            <MusicPlayer />
-        </div>
-    );
+                );
 };
 
-export default Home;
+                export default Home;

@@ -20,6 +20,8 @@ export const create = mutation({
         tags: v.array(v.string()),
         image: v.string(),
         link: v.optional(v.string()),
+        category: v.optional(v.string()),
+        creationDate: v.optional(v.number()),
         sections: v.optional(v.array(v.object({
             id: v.number(),
             type: v.string(),
@@ -39,6 +41,8 @@ export const create = mutation({
             tags: args.tags,
             image: args.image,
             link: args.link,
+            category: args.category,
+            creationDate: args.creationDate,
             sections: args.sections,
         });
         return projectId;
@@ -54,6 +58,8 @@ export const update = mutation({
         tags: v.optional(v.array(v.string())),
         image: v.optional(v.string()),
         link: v.optional(v.string()),
+        category: v.optional(v.string()),
+        creationDate: v.optional(v.number()),
         sections: v.optional(v.array(v.object({
             id: v.number(),
             type: v.string(),

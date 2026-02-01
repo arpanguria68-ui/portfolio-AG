@@ -1212,7 +1212,7 @@ const Admin = () => {
 
                                     {/* Filters Tab (Pills) */}
                                     <div className="flex gap-2 mb-8 overflow-x-auto no-scrollbar pb-2">
-                                        {['All', 'SaaS', 'Mobile', 'B2B', 'Fintech', 'Health'].map((filter) => (
+                                        {['All', 'SaaS', 'Mobile', 'B2B', 'Fintech', 'Health', 'Gen AI apps', 'mobile apps', 'blog'].map((filter) => (
                                             <button
                                                 key={filter}
                                                 onClick={() => setProjectFilter(filter)}
@@ -1229,7 +1229,7 @@ const Admin = () => {
                                     {/* Projects Grid */}
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-20">
                                         {projects
-                                            .filter(p => projectFilter === 'All' || (p.tags && p.tags.includes(projectFilter)))
+                                            .filter(p => projectFilter === 'All' || p.category === projectFilter || (!p.category && p.tags && p.tags.includes(projectFilter)))
                                             .map((project) => (
                                                 <article key={project._id} className="group flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-card-dark/50 hover:border-primary/50 transition-all duration-300">
                                                     <div className="relative aspect-[4/3] w-full overflow-hidden bg-black/50">
