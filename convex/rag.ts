@@ -1,6 +1,6 @@
 import { action, internalMutation, internalQuery } from "./_generated/server";
 import { v } from "convex/values";
-import { internal } from "./_generated/api";
+import { internal, api } from "./_generated/api";
 
 // Use the latest stable embedding model
 const EMBEDDING_MODEL = "models/text-embedding-004";
@@ -77,7 +77,7 @@ export const ingestContext = action({
         sourceId: v.optional(v.string())
     },
     handler: async (ctx, args) => {
-        const embedding = await ctx.runAction(internal.rag.generateEmbedding, { text: args.text });
+        const embedding = await ctx.runAction(api.rag.generateEmbedding, { text: args.text });
 
         await ctx.runMutation(internal.rag.addDocument, {
             title: args.title,
@@ -94,7 +94,7 @@ export const syncAllProjects = action({
     args: {},
     handler: async (ctx) => {
         // 1. Get all projects (internal query)
-        const projects = await ctx.runQuery(internal.projects.list);
+        const projects = await ctx.runQuery(api.projects.list);
 
         let count = 0;
         for (const project of projects) {
@@ -113,7 +113,7 @@ Details:
 ${sectionsText}
             `.trim();
 
-            await ctx.runAction(internal.rag.ingestContext, {
+            await ctx.runAction(api.rag.ingestContext, {
                 title: `Project: ${project.title}`,
                 text: textToEmbed,
                 type: 'project',
@@ -130,7 +130,7 @@ export const search = action({
     args: { query: v.string(), limit: v.optional(v.number()) },
     handler: async (ctx, args): Promise<any[]> => {
         // 1. Embed query (Explicitly typed)
-        const embedding: number[] = await ctx.runAction(internal.rag.generateEmbedding, { text: args.query });
+        const embedding: number[] = await ctx.runAction(api.rag.generateEmbedding, { text: args.query });
 
         // 2. Vector Search
         // Note: vectorSearch is a method on the query builder in Convex
