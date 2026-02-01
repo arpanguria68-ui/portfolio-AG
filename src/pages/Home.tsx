@@ -553,11 +553,11 @@ const Home = () => {
                                 <div className="hidden md:flex flex-col gap-4 text-left">
                                     <div className="flex items-center gap-3 text-white/70">
                                         <span className="material-symbols-outlined text-primary">mail</span>
-                                        <span>hello@portz.design</span>
+                                        <span>arpanguria68@gmail.com</span>
                                     </div>
                                     <div className="flex items-center gap-3 text-white/70">
-                                        <span className="material-symbols-outlined text-primary">location_on</span>
-                                        <span>Los Angeles, CA</span>
+                                        <span className="material-symbols-outlined text-primary">call</span>
+                                        <span>+91 8092864293</span>
                                     </div>
                                 </div>
                             </div>
@@ -612,9 +612,7 @@ const Home = () => {
 
                         <div className="mt-20 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4">
                             <div className="flex gap-6">
-                                <a className="text-white/40 hover:text-primary transition-colors" href="#">LinkedIn</a>
-                                <a className="text-white/40 hover:text-primary transition-colors" href="#">Dribbble</a>
-                                <a className="text-white/40 hover:text-primary transition-colors" href="#">Twitter</a>
+                                <a className="text-white/40 hover:text-primary transition-colors" href="https://www.linkedin.com/in/arpan-guria/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
                             </div>
                             <p className="text-[10px] text-white/20 uppercase tracking-widest">© 2026 Arpan Guria</p>
                         </div>
