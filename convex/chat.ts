@@ -116,7 +116,7 @@ export const sendToGemini = action({
         // 1. Retrieve RAG Context
         let contextText = "";
         try {
-            const searchResults = await ctx.runAction(internal.rag.search, { query: args.message, limit: 3 });
+            const searchResults = await ctx.runAction(api.rag.search, { query: args.message, limit: 3 });
             if (searchResults && searchResults.length > 0) {
                 contextText = searchResults.map((doc: any) => `--- ${doc.type.toUpperCase()}: ${doc.title} ---\n${doc.text}`).join("\n\n");
             }
