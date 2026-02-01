@@ -888,10 +888,52 @@ const Admin = () => {
                                 <div className="flex items-center justify-between mb-3">
                                     <label className="text-xs uppercase tracking-wider font-bold text-white/40">Bio / About Me</label>
                                 </div>
-                                <div className="glass rounded-2xl border border-white/10 overflow-hidden focus-within:border-primary/50 transition-all bg-card-dark/50">
+                                <div className="glass rounded-2xl border border-white/10 overflow-hidden focus-within:border-primary/50 transition-all bg-card-dark/50 flex flex-col">
+                                    <div className="flex items-center gap-2 p-2 border-b border-white/10 bg-white/5">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const textarea = document.getElementById('bio-textarea') as HTMLTextAreaElement;
+                                                if (!textarea) return;
+                                                const start = textarea.selectionStart;
+                                                const end = textarea.selectionEnd;
+                                                const text = bio;
+                                                const before = text.substring(0, start);
+                                                const selection = text.substring(start, end);
+                                                const after = text.substring(end);
+                                                const newText = before + `<b>${selection || 'bold'}</b>` + after;
+                                                setBio(newText);
+                                            }}
+                                            className="p-1 rounded hover:bg-white/10 text-white/70 hover:text-white transition-colors"
+                                            title="Bold"
+                                        >
+                                            <span className="material-symbols-outlined text-lg">format_bold</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const textarea = document.getElementById('bio-textarea') as HTMLTextAreaElement;
+                                                if (!textarea) return;
+                                                const start = textarea.selectionStart;
+                                                const end = textarea.selectionEnd;
+                                                const text = bio;
+                                                const before = text.substring(0, start);
+                                                const after = text.substring(end);
+                                                const newText = before + `<br/>` + after;
+                                                setBio(newText);
+                                                // Restore focus?
+                                            }}
+                                            className="p-1 rounded hover:bg-white/10 text-white/70 hover:text-white transition-colors"
+                                            title="Line Break"
+                                        >
+                                            <span className="material-symbols-outlined text-lg">keyboard_return</span>
+                                        </button>
+                                        <p className="text-[10px] text-white/30 ml-auto mr-2">Supports HTML</p>
+                                    </div>
                                     <textarea
-                                        className="w-full bg-transparent border-0 p-4 text-base text-white/80 leading-relaxed focus:outline-none h-48 resize-none placeholder:text-white/20"
-                                        placeholder="Tell your story..."
+                                        id="bio-textarea"
+                                        className="w-full bg-transparent border-0 p-4 text-base text-white/80 leading-relaxed focus:outline-none h-48 resize-none placeholder:text-white/20 font-mono"
+                                        placeholder="Tell your story... (Use buttons for formatting)"
                                         value={bio}
                                         onChange={(e) => setBio(e.target.value)}
                                     />

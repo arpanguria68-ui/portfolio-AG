@@ -61,7 +61,7 @@ const Home = () => {
     // Profile data with fallbacks
     const profileImage = convexProfile?.profileImage || "https://lh3.googleusercontent.com/aida-public/AB6AXuBmUw9mOGIBUUKTMjLGS3PuCvlZ6tOEkE7Pk4fTqTPRNbyAi8VcOwUJT_Tg7nKQJEJPQUfHhYixf-vDAK5kti7OjS5PBRpTcXy4CYgV5yqLq_8BD9a7D6poQMOIRzQwjPwPy0xUcU4theBgi44FCwTIHWKslp6S1l-DXQD8bGxXSPF7jUS7Jpf1Tx1yTiWGknjjykiWzFMhOmjljznoIL3K1-gKiPmbYu6R0ghqGG3mgw4aBRoYAihl0sZ7Rayj8fsM5dyG5Rpjaupp";
     const headline = convexProfile?.headline || "Bridging the gap between user needs and business goals.";
-    const bio = convexProfile?.bio || "I'm Arpan Guria, a Product Manager with a background in UI/UX Design. I specialize in translating complex data into intuitive, engaging products. My approach combines analytical rigor with creative problem-solving.";
+    const bio = convexProfile?.bio || "I'm <b>Arpan Guria</b>, a Product Manager with a background in UI/UX Design.<br/><br/>I specialize in translating complex data into intuitive, engaging products. My approach combines analytical rigor with creative problem-solving.";
 
     // Highlights: use Convex media or fallback, limit to 6
     const FALLBACK_HIGHLIGHTS = [
@@ -267,9 +267,7 @@ const Home = () => {
                                     </Fragment>
                                 ))}
                             </h2>
-                            <p className="text-white/60 leading-relaxed mb-8 text-base md:text-lg">
-                                {bio}
-                            </p>
+                            <p className="text-white/60 leading-relaxed mb-8 text-base md:text-lg" dangerouslySetInnerHTML={{ __html: bio }}></p>
                             <div className="flex gap-4 flex-wrap">
                                 {convexSocials && convexSocials.filter(s => s.visible).sort((a, b) => (a.order ?? 0) - (b.order ?? 0)).map((social) => (
                                     <a
