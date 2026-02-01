@@ -17,6 +17,8 @@ const ChatWidgetWrapper = () => {
   return shouldShow ? <AIChatWidget /> : null;
 };
 
+import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/clerk-react";
+
 function App() {
   return (
     <ErrorBoundary>
@@ -27,7 +29,16 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/gallery" element={<Gallery />} />
-          <Route path="/admin" element={<Admin />} />
+          <Route path="/admin" element={
+            <>
+              <SignedIn>
+                <Admin />
+              </SignedIn>
+              <SignedOut>
+                <RedirectToSignIn />
+              </SignedOut>
+            </>
+          } />
           <Route path="/login" element={<Login />} />
           <Route path="/project/:id" element={<CaseStudy />} />
         </Routes>
