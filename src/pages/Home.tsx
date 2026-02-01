@@ -221,7 +221,7 @@ const Home = () => {
                                 <span className="text-transparent stroke-white" style={{ WebkitTextStroke: '1px rgba(255,255,255,0.5)' }}>Portfolio</span>
                             </h1>
                             <p className="text-white/60 max-w-md leading-relaxed mt-4 text-lg">
-                                Orchestrating digital experiences in Los Angeles, CA.
+                                Leading Global Digital Transformation and Scalable Product Strategy
                             </p>
                             <div className="flex gap-4 mt-8">
                                 <a className="px-8 py-4 bg-primary text-black rounded-full font-bold flex items-center justify-center gap-2 group transition-all hover:scale-105" href="#contact-me">
