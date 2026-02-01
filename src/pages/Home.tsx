@@ -447,6 +447,7 @@ const Home = () => {
                                 ))}
                             </div>
                         </div>
+                    </div>
                 </section>
 
                 {/* My Journey Section */}
