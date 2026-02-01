@@ -2,6 +2,10 @@
 
 interface ImportMetaEnv {
     readonly VITE_CONVEX_URL: string
+    readonly VITE_CLERK_PUBLISHABLE_KEY: string
+    readonly VITE_CLOUDINARY_CLOUD_NAME: string
+    readonly VITE_CLOUDINARY_UPLOAD_PRESET: string
+    readonly VITE_CRISP_WEBSITE_ID: string
 }
 
 interface ImportMeta {
