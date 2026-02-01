@@ -153,7 +153,7 @@ const Home = () => {
             <header className="fixed top-0 left-0 w-full z-50 glass-strong px-6 md:px-12 py-4 flex items-center justify-between transition-all duration-300">
                 <div className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-black font-bold font-display text-sm">
-                        AP
+                        AG
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
