@@ -19,7 +19,7 @@ const Admin = () => {
 
     if (!isLoaded) return <div className="min-h-screen bg-black text-white flex items-center justify-center">Loading...</div>;
 
-    if (user?.primaryEmailAddress?.emailAddress !== adminEmail) {
+    if (user?.primaryEmailAddress?.emailAddress?.toLowerCase() !== adminEmail?.toLowerCase()) {
         return (
             <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center gap-6 p-4">
                 <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center text-red-500 mb-2">
