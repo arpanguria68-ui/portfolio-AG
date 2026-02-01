@@ -125,7 +125,7 @@ export const sendToGemini = action({
         }
 
         // System instruction for the AI (With Context)
-        const systemInstruction = `You are a helpful AI assistant for Alexander Portz's portfolio website. 
+        const systemInstruction = `You are a helpful AI assistant for Arpan Guria's portfolio website. 
 You help visitors learn about his work, skills, and projects.
 Be friendly, professional, and concise.
 

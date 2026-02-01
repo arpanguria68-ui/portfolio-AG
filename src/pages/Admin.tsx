@@ -566,7 +566,7 @@ const Admin = () => {
                         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <header className="mb-10 flex items-center justify-between">
                                 <div>
-                                    <h1 className="text-3xl md:text-3xl font-display font-bold mb-2">Welcome Back, <span className="text-primary">Alexander</span></h1>
+                                    <h1 className="text-3xl md:text-3xl font-display font-bold mb-2">Welcome Back, <span className="text-primary">Arpan Guria</span></h1>
                                     <p className="text-white/40">Here's what's happening with your portfolio today.</p>
                                 </div>
                                 <div className="bg-white/5 p-1 rounded-full border border-white/10">

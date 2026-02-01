@@ -61,7 +61,7 @@ const Home = () => {
     // Profile data with fallbacks
     const profileImage = convexProfile?.profileImage || "https://lh3.googleusercontent.com/aida-public/AB6AXuBmUw9mOGIBUUKTMjLGS3PuCvlZ6tOEkE7Pk4fTqTPRNbyAi8VcOwUJT_Tg7nKQJEJPQUfHhYixf-vDAK5kti7OjS5PBRpTcXy4CYgV5yqLq_8BD9a7D6poQMOIRzQwjPwPy0xUcU4theBgi44FCwTIHWKslp6S1l-DXQD8bGxXSPF7jUS7Jpf1Tx1yTiWGknjjykiWzFMhOmjljznoIL3K1-gKiPmbYu6R0ghqGG3mgw4aBRoYAihl0sZ7Rayj8fsM5dyG5Rpjaupp";
     const headline = convexProfile?.headline || "Bridging the gap between user needs and business goals.";
-    const bio = convexProfile?.bio || "I'm Alexander, a Product Manager with a background in UI/UX Design. I specialize in translating complex data into intuitive, engaging products. My approach combines analytical rigor with creative problem-solving.";
+    const bio = convexProfile?.bio || "I'm Arpan Guria, a Product Manager with a background in UI/UX Design. I specialize in translating complex data into intuitive, engaging products. My approach combines analytical rigor with creative problem-solving.";
 
     // Highlights: use Convex media or fallback, limit to 6
     const FALLBACK_HIGHLIGHTS = [
@@ -242,7 +242,7 @@ const Home = () => {
                                 className="grayscale contrast-125 group"
                             >
                                 <img
-                                    alt="Alexander Portz Portrait"
+                                    alt="Arpan Guria Portrait"
                                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                                     src={profileImage}
                                 />
@@ -616,7 +616,7 @@ const Home = () => {
                                 <a className="text-white/40 hover:text-primary transition-colors" href="#">Dribbble</a>
                                 <a className="text-white/40 hover:text-primary transition-colors" href="#">Twitter</a>
                             </div>
-                            <p className="text-[10px] text-white/20 uppercase tracking-widest">© 2024 Alexander Portz</p>
+                            <p className="text-[10px] text-white/20 uppercase tracking-widest">© 2024 Arpan Guria</p>
                         </div>
                     </div>
                 </section>
