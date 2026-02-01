@@ -13,6 +13,8 @@ import { ExperienceItem } from '../components/admin/ExperienceItem';
 import ChatHistoryCenter from '../components/admin/ChatHistoryCenter';
 import { UserButton, useUser } from "@clerk/clerk-react";
 
+import ToolIcon, { BRAND_ICONS } from "../components/ToolIcon";
+
 const Admin = () => {
     const { user, isLoaded } = useUser();
     const adminEmail = import.meta.env.VITE_ADMIN_EMAIL;
@@ -1631,6 +1633,7 @@ const Admin = () => {
                                     Icon (Material Symbol)
                                 </label>
                                 <div className="grid grid-cols-6 gap-2">
+                                    {/* Standard Material Icons */}
                                     {["code", "design_services", "view_kanban", "analytics", "cloud", "terminal", "description", "storage", "api", "psychology", "integration_instructions", "developer_mode"].map((icon) => (
                                         <button
                                             key={icon}
@@ -1638,6 +1641,18 @@ const Admin = () => {
                                             className={`aspect-square rounded-lg flex items-center justify-center transition-all ${newToolIcon === icon ? 'bg-primary text-black' : 'bg-white/5 text-white/60 hover:bg-white/10'}`}
                                         >
                                             <span className="material-symbols-outlined text-lg">{icon}</span>
+                                        </button>
+                                    ))}
+
+                                    {/* Brand Logos */}
+                                    {Object.keys(BRAND_ICONS).map((icon) => (
+                                        <button
+                                            key={icon}
+                                            onClick={() => setNewToolIcon(icon)}
+                                            className={`aspect-square rounded-lg flex items-center justify-center transition-all ${newToolIcon === icon ? 'bg-primary text-black' : 'bg-white/5 text-white/60 hover:bg-white/10'}`}
+                                            title={icon.replace('brand-', '').replace('-', ' ')}
+                                        >
+                                            <ToolIcon icon={icon} className="w-5 h-5" />
                                         </button>
                                     ))}
                                 </div>
@@ -1660,7 +1675,7 @@ const Admin = () => {
 
                             <div className="p-4 bg-black/20 rounded-xl flex items-center gap-4">
                                 <div className={`w-12 h-12 rounded-lg ${newToolColor} flex items-center justify-center text-white shadow-lg`}>
-                                    <span className="material-symbols-outlined text-2xl">{newToolIcon}</span>
+                                    <ToolIcon icon={newToolIcon} className="text-2xl" />
                                 </div>
                                 <div>
                                     <div className="text-xs text-white/40 uppercase tracking-wider">Preview</div>

@@ -366,7 +366,9 @@ const Home = () => {
                             ]).map((tool, i) => (
                                 <div key={tool._id || i} className="aspect-square glass rounded-2xl flex flex-col items-center justify-center gap-4 hover:bg-white/5 transition-colors group relative overflow-hidden">
                                     <div className={`absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity ${tool.bgColor || 'bg-white/5'}`}></div>
-                                    <span className="material-symbols-outlined text-4xl text-white/70 group-hover:text-white transition-colors relative z-10">{tool.icon}</span>
+                                    <div className="relative z-10 text-white/70 group-hover:text-white transition-colors">
+                                        <ToolIcon icon={tool.icon} className="text-4xl w-9 h-9" />
+                                    </div>
                                     <span className="text-xs opacity-50 uppercase tracking-widest relative z-10">{tool.name}</span>
                                 </div>
                             ))}
