@@ -1139,7 +1139,7 @@ const Admin = () => {
                                                         </div>
                                                         <div className="flex justify-between text-white/40 text-[10px] uppercase font-bold mt-1">
                                                             <span>2018</span>
-                                                            <span>2024</span>
+                                                            <span>2026</span>
                                                         </div>
                                                     </div>
                                                 </div>

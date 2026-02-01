@@ -616,7 +616,7 @@ const Home = () => {
                                 <a className="text-white/40 hover:text-primary transition-colors" href="#">Dribbble</a>
                                 <a className="text-white/40 hover:text-primary transition-colors" href="#">Twitter</a>
                             </div>
-                            <p className="text-[10px] text-white/20 uppercase tracking-widest">© 2024 Arpan Guria</p>
+                            <p className="text-[10px] text-white/20 uppercase tracking-widest">© 2026 Arpan Guria</p>
                         </div>
                     </div>
                 </section>
