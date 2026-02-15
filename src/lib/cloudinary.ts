@@ -246,7 +246,7 @@ export function uploadMultipleFiles(options?: {
                 // Allow common document formats + archives
                 clientAllowedFormats: ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'csv', 'zip', 'rar', '7z'],
                 folder: options?.folder || 'portfolio/documents',
-                resourceType: 'auto', // Auto-detect type
+                resourceType: 'raw', // Force raw for docs (PDF, DOCX, etc.)
                 styles: widgetStyles,
             },
             (error, result) => {
