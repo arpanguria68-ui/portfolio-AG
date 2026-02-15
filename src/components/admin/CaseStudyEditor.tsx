@@ -508,6 +508,7 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
                                                     <div className="flex items-center justify-between mb-2">
                                                         <div className="flex gap-1">
                                                             <button
+                                                                onMouseDown={(e) => e.preventDefault()}
                                                                 onClick={() => insertFormatting(section.id, 'bold')}
                                                                 className="p-1.5 rounded hover:bg-white/10 text-white/50 hover:text-white transition-colors"
                                                                 title="Add bold text"
@@ -515,6 +516,7 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
                                                                 <span className="material-symbols-outlined text-[16px]">format_bold</span>
                                                             </button>
                                                             <button
+                                                                onMouseDown={(e) => e.preventDefault()}
                                                                 onClick={() => insertFormatting(section.id, 'list')}
                                                                 className="p-1.5 rounded hover:bg-white/10 text-white/50 hover:text-white transition-colors"
                                                                 title="Add bullet list"
@@ -522,6 +524,7 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
                                                                 <span className="material-symbols-outlined text-[16px]">format_list_bulleted</span>
                                                             </button>
                                                             <button
+                                                                onMouseDown={(e) => e.preventDefault()}
                                                                 onClick={() => insertFormatting(section.id, 'link')}
                                                                 className="p-1.5 rounded hover:bg-white/10 text-white/50 hover:text-white transition-colors"
                                                                 title="Add link"
