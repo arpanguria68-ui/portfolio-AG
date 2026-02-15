@@ -468,6 +468,22 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
                                         <div className="p-3 pt-0 animate-in slide-in-from-top-1">
                                             <div className="h-px bg-white/5 w-full mb-3"></div>
 
+                                            {/* Title Editor */}
+                                            <div className="mb-4">
+                                                <label className="text-xs font-bold text-white/40 uppercase block mb-1">Section Title</label>
+                                                <input
+                                                    className="w-full rounded-lg bg-black/40 border border-white/10 p-2 text-sm text-white focus:border-primary focus:outline-none transition-all"
+                                                    value={section.title}
+                                                    onChange={(e) => {
+                                                        const newSections = [...sections];
+                                                        const idx = newSections.findIndex(s => s.id === section.id);
+                                                        newSections[idx].title = e.target.value;
+                                                        setSections(newSections);
+                                                    }}
+                                                    placeholder="Enter section title..."
+                                                />
+                                            </div>
+
                                             {/* Logic per type */}
                                             {['hero', 'problem', 'solution', 'results', 'text'].includes(section.type) && (
                                                 <>

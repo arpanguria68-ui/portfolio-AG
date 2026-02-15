@@ -16,6 +16,7 @@ import type * as media from "../media.js";
 import type * as messages from "../messages.js";
 import type * as profile from "../profile.js";
 import type * as projects from "../projects.js";
+import type * as rag from "../rag.js";
 import type * as resumes from "../resumes.js";
 import type * as settings from "../settings.js";
 import type * as skills from "../skills.js";
@@ -37,6 +38,7 @@ declare const fullApi: ApiFromModules<{
   messages: typeof messages;
   profile: typeof profile;
   projects: typeof projects;
+  rag: typeof rag;
   resumes: typeof resumes;
   settings: typeof settings;
   skills: typeof skills;
