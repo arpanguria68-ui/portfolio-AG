@@ -236,11 +236,13 @@ const CaseStudy = () => {
                                     />
                                 </div>
                             ) : (
-                                <div className="prose prose-lg prose-invert max-w-none text-xl leading-relaxed text-white/80">
-                                    <ReactMarkdown>
-                                        {section.content}
-                                    </ReactMarkdown>
-                                </div>
+                                !['document', 'external_link'].includes(section.type) && (
+                                    <div className="prose prose-lg prose-invert max-w-none text-xl leading-relaxed text-white/80">
+                                        <ReactMarkdown>
+                                            {section.content}
+                                        </ReactMarkdown>
+                                    </div>
+                                )
                             )
                         )}
 
