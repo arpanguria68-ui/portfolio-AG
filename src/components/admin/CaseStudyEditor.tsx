@@ -133,28 +133,45 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
 
         const start = textarea.selectionStart;
         const end = textarea.selectionEnd;
-        const selectedText = section.content.substring(start, end) || 'text';
+        const selectedText = section.content.substring(start, end);
 
         let formattedText = '';
+        let cursorOffset = 0;
+
         switch (format) {
             case 'bold':
-                formattedText = `**${selectedText}**`;
+                if (selectedText) {
+                    formattedText = `**${selectedText}**`;
+                } else {
+                    formattedText = `****`;
+                    cursorOffset = 2;
+                }
                 break;
             case 'list':
-                formattedText = `\n- ${selectedText}`;
+                if (selectedText) {
+                    formattedText = `\n- ${selectedText}`;
+                } else {
+                    formattedText = `\n- `;
+                    cursorOffset = 3;
+                }
                 break;
             case 'link':
-                formattedText = `[${selectedText}](url)`;
+                if (selectedText) {
+                    formattedText = `[${selectedText}](url)`;
+                } else {
+                    formattedText = `[](url)`;
+                    cursorOffset = 1;
+                }
                 break;
         }
 
         const newContent = section.content.substring(0, start) + formattedText + section.content.substring(end);
         setSections(sections.map(s => s.id === sectionId ? { ...s, content: newContent } : s));
 
-        // Focus back on textarea and set cursor after the inserted text
+        // Focus back on textarea and set cursor after the inserted text or inside markers
         setTimeout(() => {
             textarea.focus();
-            const newCursorPos = start + formattedText.length;
+            const newCursorPos = start + (selectedText ? formattedText.length : cursorOffset);
             textarea.setSelectionRange(newCursorPos, newCursorPos);
         }, 0);
     };

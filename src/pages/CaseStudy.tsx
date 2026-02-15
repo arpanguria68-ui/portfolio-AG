@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { getOptimizedImageUrl } from '../lib/cloudinary';
+import ReactMarkdown from 'react-markdown';
 
 // Fallback projects for when Convex is not connected
 const getEmbedUrl = (url: string, type: string) => {
@@ -235,10 +236,10 @@ const CaseStudy = () => {
                                     />
                                 </div>
                             ) : (
-                                <div className="prose prose-lg prose-invert max-w-none">
-                                    <p className="text-xl leading-relaxed text-white/80 whitespace-pre-wrap">
+                                <div className="prose prose-lg prose-invert max-w-none text-xl leading-relaxed text-white/80">
+                                    <ReactMarkdown>
                                         {section.content}
-                                    </p>
+                                    </ReactMarkdown>
                                 </div>
                             )
                         )}
@@ -306,11 +307,12 @@ const CaseStudy = () => {
                             </div>
                         )}
                     </div>
-                ))}
-            </div>
+                ))
+                }
+            </div >
 
             {/* Footer Navigation */}
-            <div className="border-t border-white/10 py-16">
+            < div className="border-t border-white/10 py-16" >
                 <div className="max-w-5xl mx-auto px-6 md:px-12">
                     <div className="flex flex-col md:flex-row justify-between items-center gap-8">
                         <Link to="/" className="flex items-center gap-3 text-white/60 hover:text-primary transition-colors group">
@@ -326,8 +328,8 @@ const CaseStudy = () => {
                         </a>
                     </div>
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 };
 

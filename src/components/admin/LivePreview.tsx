@@ -1,6 +1,7 @@
 
 
 import { getOptimizedImageUrl } from '../../lib/cloudinary';
+import ReactMarkdown from 'react-markdown';
 
 interface LivePreviewProps {
     data: any;
@@ -144,10 +145,10 @@ const LivePreview: React.FC<LivePreviewProps> = ({ data, template }) => {
                                     </div>
                                 </div>
                             ) : (
-                                <div className="prose dark:prose-invert max-w-none">
-                                    <p className="text-lg leading-relaxed opacity-90 whitespace-pre-wrap">
+                                <div className="prose dark:prose-invert max-w-none text-lg leading-relaxed opacity-90">
+                                    <ReactMarkdown>
                                         {section.content}
-                                    </p>
+                                    </ReactMarkdown>
                                 </div>
                             )
                         )}
@@ -219,14 +220,15 @@ const LivePreview: React.FC<LivePreviewProps> = ({ data, template }) => {
                             </div>
                         )}
                     </div>
-                ))}
-            </div>
+                ))
+                }
+            </div >
 
             {/* Footer Mock */}
-            <div className="p-8 border-t border-current/10 opacity-60 text-center text-sm">
+            < div className="p-8 border-t border-current/10 opacity-60 text-center text-sm" >
                 <p>Designed with ❤️ using Stitch Portfolio</p>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 };
 
