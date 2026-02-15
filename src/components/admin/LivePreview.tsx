@@ -77,151 +77,153 @@ const LivePreview: React.FC<LivePreviewProps> = ({ data, template }) => {
 
             {/* Sections Preview */}
             <div className="p-8 space-y-12">
-                {data.sections.map((section: any) => (
-                    <div key={section.id} className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-                        {/* Section Header */}
-                        <div className="flex items-center gap-4 mb-6">
-                            <div className={`h-px flex-1 ${template === 'ghibli' ? 'bg-[#4A4A4A]/20' : 'bg-current opacity-10'}`}></div>
-                            <h3 className={`text-xl font-bold uppercase tracking-widest ${template === 'ghibli' ? 'text-[#E67E22]' : 'text-primary'}`}>
-                                {section.title}
-                            </h3>
-                            <div className={`h-px flex-1 ${template === 'ghibli' ? 'bg-[#4A4A4A]/20' : 'bg-current opacity-10'}`}></div>
-                        </div>
+                {data.sections.map((section: any) => {
+                    if (section.isEnabled === false) return null;
+                    return (
+                        <div key={section.id} className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+                            {/* Section Header */}
+                            <div className="flex items-center gap-4 mb-6">
+                                <div className={`h-px flex-1 ${template === 'ghibli' ? 'bg-[#4A4A4A]/20' : 'bg-current opacity-10'}`}></div>
+                                <h3 className={`text-xl font-bold uppercase tracking-widest ${template === 'ghibli' ? 'text-[#E67E22]' : 'text-primary'}`}>
+                                    {section.title}
+                                </h3>
+                                <div className={`h-px flex-1 ${template === 'ghibli' ? 'bg-[#4A4A4A]/20' : 'bg-current opacity-10'}`}></div>
+                            </div>
 
-                        {/* Content Render */}
-                        {/* Content Render */}
-                        {['video', 'figma', 'miro'].includes(section.type) ? (
-                            <div className="w-full aspect-video rounded-xl overflow-hidden border border-white/10 bg-black/50">
-                                {section.content ? (
-                                    <iframe
-                                        src={getEmbedUrl(section.content, section.type)}
-                                        className="w-full h-full"
-                                        frameBorder="0"
-                                        allowFullScreen
-                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                    />
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-white/20">
-                                        <div className="text-center">
-                                            <span className="material-symbols-outlined text-4xl mb-2">
-                                                {section.type === 'video' ? 'play_circle' : section.type === 'figma' ? 'design_services' : 'board'}
-                                            </span>
-                                            <p className="text-sm">Enter {section.type} URL</p>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        ) : section.type === 'gallery' ? (
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                {(() => {
-                                    try {
-                                        const images = JSON.parse(section.content || '[]');
-                                        return images.map((img: string, i: number) => (
-                                            <div key={i} className="aspect-square rounded-xl overflow-hidden bg-white/5">
-                                                <img
-                                                    src={getOptimizedImageUrl(img, { width: 400, height: 400, crop: 'fill' })}
-                                                    alt=""
-                                                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-                                                />
-                                            </div>
-                                        ));
-                                    } catch (e) {
-                                        return <div className="col-span-full text-center text-white/40 py-8">No images in gallery</div>;
-                                    }
-                                })()}
-                            </div>
-                        ) : (
-                            section.type === 'text' && (section.content.trim().match(/^(https?:\/\/(?:www\.)?(?:figma\.com|youtube\.com|youtu\.be|miro\.com)\/.*)$/i)) ? (
+                            {/* Content Render */}
+                            {/* Content Render */}
+                            {['video', 'figma', 'miro'].includes(section.type) ? (
                                 <div className="w-full aspect-video rounded-xl overflow-hidden border border-white/10 bg-black/50">
-                                    <iframe
-                                        src={getEmbedUrl(section.content.trim(), section.content.includes('figma') ? 'figma' : section.content.includes('miro') ? 'miro' : 'video')}
-                                        className="w-full h-full"
-                                        frameBorder="0"
-                                        allowFullScreen
-                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                    />
-                                    <div className="absolute top-2 right-2 bg-black/80 text-white/50 text-[10px] px-2 py-1 rounded-full backdrop-blur pointer-events-none">
-                                        Auto-Embed
-                                    </div>
+                                    {section.content ? (
+                                        <iframe
+                                            src={getEmbedUrl(section.content, section.type)}
+                                            className="w-full h-full"
+                                            frameBorder="0"
+                                            allowFullScreen
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-white/20">
+                                            <div className="text-center">
+                                                <span className="material-symbols-outlined text-4xl mb-2">
+                                                    {section.type === 'video' ? 'play_circle' : section.type === 'figma' ? 'design_services' : 'board'}
+                                                </span>
+                                                <p className="text-sm">Enter {section.type} URL</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            ) : section.type === 'gallery' ? (
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                    {(() => {
+                                        try {
+                                            const images = JSON.parse(section.content || '[]');
+                                            return images.map((img: string, i: number) => (
+                                                <div key={i} className="aspect-square rounded-xl overflow-hidden bg-white/5">
+                                                    <img
+                                                        src={getOptimizedImageUrl(img, { width: 400, height: 400, crop: 'fill' })}
+                                                        alt=""
+                                                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                                                    />
+                                                </div>
+                                            ));
+                                        } catch (e) {
+                                            return <div className="col-span-full text-center text-white/40 py-8">No images in gallery</div>;
+                                        }
+                                    })()}
                                 </div>
                             ) : (
-                                <div className="prose dark:prose-invert max-w-none text-lg leading-relaxed opacity-90">
-                                    <ReactMarkdown>
-                                        {section.content}
-                                    </ReactMarkdown>
-                                </div>
-                            )
-                        )}
+                                section.type === 'text' && (section.content.trim().match(/^(https?:\/\/(?:www\.)?(?:figma\.com|youtube\.com|youtu\.be|miro\.com)\/.*)$/i)) ? (
+                                    <div className="w-full aspect-video rounded-xl overflow-hidden border border-white/10 bg-black/50">
+                                        <iframe
+                                            src={getEmbedUrl(section.content.trim(), section.content.includes('figma') ? 'figma' : section.content.includes('miro') ? 'miro' : 'video')}
+                                            className="w-full h-full"
+                                            frameBorder="0"
+                                            allowFullScreen
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                        />
+                                        <div className="absolute top-2 right-2 bg-black/80 text-white/50 text-[10px] px-2 py-1 rounded-full backdrop-blur pointer-events-none">
+                                            Auto-Embed
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="prose dark:prose-invert max-w-none text-lg leading-relaxed opacity-90">
+                                        <ReactMarkdown>
+                                            {section.content}
+                                        </ReactMarkdown>
+                                    </div>
+                                )
+                            )}
 
-                        {/* Document Render */}
-                        {section.type === 'document' && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                {(() => {
-                                    try {
-                                        const files = JSON.parse(section.content || '[]');
-                                        return files.map((file: any, i: number) => (
-                                            <a
-                                                key={i}
-                                                href={file.url}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all group"
-                                            >
-                                                <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center text-white/60 group-hover:text-primary group-hover:scale-110 transition-all">
-                                                    <span className="material-symbols-outlined">description</span>
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-sm font-bold text-white truncate">{file.name}</p>
-                                                    <p className="text-xs text-white/40 uppercase tracking-wider">{file.format} • {(file.size / 1024).toFixed(1)} KB</p>
-                                                </div>
-                                                <span className="material-symbols-outlined text-white/20 group-hover:text-white transition-colors">download</span>
-                                            </a>
-                                        ));
-                                    } catch (e) {
-                                        return <div className="col-span-full border border-dashed border-white/10 rounded-lg p-8 flex flex-col items-center justify-center text-center text-white/40">
-                                            <span className="material-symbols-outlined text-3xl mb-2">upload_file</span>
-                                            <p className="text-sm">No files uploaded</p>
-                                        </div>;
-                                    }
-                                })()}
-                            </div>
-                        )}
+                            {/* Document Render */}
+                            {section.type === 'document' && (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    {(() => {
+                                        try {
+                                            const files = JSON.parse(section.content || '[]');
+                                            return files.map((file: any, i: number) => (
+                                                <a
+                                                    key={i}
+                                                    href={file.url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all group"
+                                                >
+                                                    <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center text-white/60 group-hover:text-primary group-hover:scale-110 transition-all">
+                                                        <span className="material-symbols-outlined">description</span>
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-sm font-bold text-white truncate">{file.name}</p>
+                                                        <p className="text-xs text-white/40 uppercase tracking-wider">{file.format} • {(file.size / 1024).toFixed(1)} KB</p>
+                                                    </div>
+                                                    <span className="material-symbols-outlined text-white/20 group-hover:text-white transition-colors">download</span>
+                                                </a>
+                                            ));
+                                        } catch (e) {
+                                            return <div className="col-span-full border border-dashed border-white/10 rounded-lg p-8 flex flex-col items-center justify-center text-center text-white/40">
+                                                <span className="material-symbols-outlined text-3xl mb-2">upload_file</span>
+                                                <p className="text-sm">No files uploaded</p>
+                                            </div>;
+                                        }
+                                    })()}
+                                </div>
+                            )}
 
-                        {/* External Link Render */}
-                        {section.type === 'external_link' && (
-                            <a
-                                href={section.content}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all group my-4"
-                            >
-                                <div className="w-12 h-12 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500 group-hover:scale-110 transition-all">
-                                    <span className="material-symbols-outlined">link</span>
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-bold text-white truncate">Open External Resource</p>
-                                    <p className="text-xs text-white/40 truncate">{section.content || 'No URL provided'}</p>
-                                </div>
-                                <span className="material-symbols-outlined text-white/20 group-hover:text-white transition-colors">open_in_new</span>
-                            </a>
-                        )}
+                            {/* External Link Render */}
+                            {section.type === 'external_link' && (
+                                <a
+                                    href={section.content}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all group my-4"
+                                >
+                                    <div className="w-12 h-12 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500 group-hover:scale-110 transition-all">
+                                        <span className="material-symbols-outlined">link</span>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-bold text-white truncate">Open External Resource</p>
+                                        <p className="text-xs text-white/40 truncate">{section.content || 'No URL provided'}</p>
+                                    </div>
+                                    <span className="material-symbols-outlined text-white/20 group-hover:text-white transition-colors">open_in_new</span>
+                                </a>
+                            )}
 
-                        {/* Optional Visual Render */}
-                        {['problem', 'solution', 'results'].includes(section.type) && section.image && (
-                            <div className={`mt-8 rounded-xl overflow-hidden aspect-video relative group ${template === 'ghibli' ? 'border-4 border-white shadow-[8px_8px_0_rgba(0,0,0,0.1)]' : 'bg-white/5 border border-white/10'}`}>
-                                <img
-                                    src={getOptimizedImageUrl(section.image, { width: 800, quality: 'auto' })}
-                                    alt={section.title}
-                                    className="w-full h-full object-cover"
-                                />
-                                <div className="absolute bottom-4 left-4 bg-black/60 backdrop-blur-sm px-3 py-1 rounded-lg text-xs text-white font-mono">
-                                    {section.title} Visual
+                            {/* Optional Visual Render */}
+                            {['problem', 'solution', 'results'].includes(section.type) && section.image && (
+                                <div className={`mt-8 rounded-xl overflow-hidden aspect-video relative group ${template === 'ghibli' ? 'border-4 border-white shadow-[8px_8px_0_rgba(0,0,0,0.1)]' : 'bg-white/5 border border-white/10'}`}>
+                                    <img
+                                        src={getOptimizedImageUrl(section.image, { width: 800, quality: 'auto' })}
+                                        alt={section.title}
+                                        className="w-full h-full object-cover"
+                                    />
+                                    <div className="absolute bottom-4 left-4 bg-black/60 backdrop-blur-sm px-3 py-1 rounded-lg text-xs text-white font-mono">
+                                        {section.title} Visual
+                                    </div>
                                 </div>
-                            </div>
-                        )}
-                    </div>
-                ))
-                }
+                            )}
+                        </div>
+                    );
+                })}
             </div >
 
             {/* Footer Mock */}

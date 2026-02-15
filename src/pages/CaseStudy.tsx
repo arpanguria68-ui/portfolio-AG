@@ -155,162 +155,164 @@ const CaseStudy = () => {
 
             {/* Sections - Matching LivePreview Layout */}
             <div className="max-w-5xl mx-auto px-6 md:px-12 py-20 space-y-24">
-                {sections.map((section: any, index: number) => (
-                    <div key={section.id || index} className="animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ animationDelay: `${index * 100}ms` }}>
-                        {/* Section Header - Matches LivePreview */}
-                        <div className="flex items-center gap-6 mb-10">
-                            <div className="h-px flex-1 bg-white/10"></div>
-                            <div className="flex items-center gap-3">
-                                <span className={`w-10 h-10 rounded-xl flex items-center justify-center ${section.type === 'hero' ? 'bg-primary/20 text-primary' :
-                                    section.type === 'problem' ? 'bg-red-500/20 text-red-400' :
-                                        section.type === 'solution' ? 'bg-blue-500/20 text-blue-400' :
-                                            section.type === 'results' ? 'bg-green-500/20 text-green-400' :
-                                                'bg-white/10 text-white/60'
-                                    }`}>
-                                    <span className="material-symbols-outlined">
-                                        {section.type === 'hero' ? 'web_asset' :
-                                            section.type === 'problem' ? 'error' :
-                                                section.type === 'solution' ? 'lightbulb' :
-                                                    section.type === 'results' ? 'trending_up' :
-                                                        'article'}
+                {sections.map((section: any, index: number) => {
+                    if (section.isEnabled === false) return null;
+                    return (
+                        <div key={section.id || index} className="animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ animationDelay: `${index * 100}ms` }}>
+                            {/* Section Header - Matches LivePreview */}
+                            <div className="flex items-center gap-6 mb-10">
+                                <div className="h-px flex-1 bg-white/10"></div>
+                                <div className="flex items-center gap-3">
+                                    <span className={`w-10 h-10 rounded-xl flex items-center justify-center ${section.type === 'hero' ? 'bg-primary/20 text-primary' :
+                                        section.type === 'problem' ? 'bg-red-500/20 text-red-400' :
+                                            section.type === 'solution' ? 'bg-blue-500/20 text-blue-400' :
+                                                section.type === 'results' ? 'bg-green-500/20 text-green-400' :
+                                                    'bg-white/10 text-white/60'
+                                        }`}>
+                                        <span className="material-symbols-outlined">
+                                            {section.type === 'hero' ? 'web_asset' :
+                                                section.type === 'problem' ? 'error' :
+                                                    section.type === 'solution' ? 'lightbulb' :
+                                                        section.type === 'results' ? 'trending_up' :
+                                                            'article'}
+                                        </span>
                                     </span>
-                                </span>
-                                <h2 className="text-2xl font-display font-bold uppercase tracking-widest text-primary">
-                                    {section.title}
-                                </h2>
+                                    <h2 className="text-2xl font-display font-bold uppercase tracking-widest text-primary">
+                                        {section.title}
+                                    </h2>
+                                </div>
+                                <div className="h-px flex-1 bg-white/10"></div>
                             </div>
-                            <div className="h-px flex-1 bg-white/10"></div>
-                        </div>
 
-                        {/* Content */}
-                        {/* Content Render */}
-                        {['video', 'figma', 'miro'].includes(section.type) ? (
-                            <div className="w-full aspect-video rounded-xl overflow-hidden border border-white/10 bg-black/50">
-                                {section.content ? (
-                                    <iframe
-                                        src={getEmbedUrl(section.content, section.type)}
-                                        className="w-full h-full"
-                                        frameBorder="0"
-                                        allowFullScreen
-                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                    />
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-white/20">
-                                        <div className="text-center">
-                                            <span className="material-symbols-outlined text-4xl mb-2">
-                                                {section.type === 'video' ? 'play_circle' : section.type === 'figma' ? 'design_services' : 'board'}
-                                            </span>
-                                            <p className="text-sm">Enter {section.type} URL</p>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        ) : section.type === 'gallery' ? (
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                {(() => {
-                                    try {
-                                        const images = JSON.parse(section.content || '[]');
-                                        return images.map((img: string, i: number) => (
-                                            <div key={i} className="aspect-square rounded-xl overflow-hidden bg-white/5">
-                                                <img
-                                                    src={getOptimizedImageUrl(img, { width: 800, height: 800, crop: 'fill' })}
-                                                    alt=""
-                                                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-                                                />
+                            {/* Content */}
+                            {/* Content Render */}
+                            {['video', 'figma', 'miro'].includes(section.type) ? (
+                                <div className="w-full aspect-video rounded-xl overflow-hidden border border-white/10 bg-black/50">
+                                    {section.content ? (
+                                        <iframe
+                                            src={getEmbedUrl(section.content, section.type)}
+                                            className="w-full h-full"
+                                            frameBorder="0"
+                                            allowFullScreen
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-white/20">
+                                            <div className="text-center">
+                                                <span className="material-symbols-outlined text-4xl mb-2">
+                                                    {section.type === 'video' ? 'play_circle' : section.type === 'figma' ? 'design_services' : 'board'}
+                                                </span>
+                                                <p className="text-sm">Enter {section.type} URL</p>
                                             </div>
-                                        ));
-                                    } catch (e) {
-                                        return <div className="col-span-full text-center text-white/40 py-8">No images in gallery</div>;
-                                    }
-                                })()}
-                            </div>
-                        ) : (
-                            section.type === 'text' && (section.content.trim().match(/^(https?:\/\/(?:www\.)?(?:figma\.com|youtube\.com|youtu\.be|miro\.com)\/.*)$/i)) ? (
-                                <div className="w-full aspect-video rounded-xl overflow-hidden border border-white/10 bg-black/50 my-8">
-                                    <iframe
-                                        src={getEmbedUrl(section.content.trim(), section.content.includes('figma') ? 'figma' : section.content.includes('miro') ? 'miro' : 'video')}
-                                        className="w-full h-full"
-                                        frameBorder="0"
-                                        allowFullScreen
-                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                    />
+                                        </div>
+                                    )}
+                                </div>
+                            ) : section.type === 'gallery' ? (
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                    {(() => {
+                                        try {
+                                            const images = JSON.parse(section.content || '[]');
+                                            return images.map((img: string, i: number) => (
+                                                <div key={i} className="aspect-square rounded-xl overflow-hidden bg-white/5">
+                                                    <img
+                                                        src={getOptimizedImageUrl(img, { width: 800, height: 800, crop: 'fill' })}
+                                                        alt=""
+                                                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                                                    />
+                                                </div>
+                                            ));
+                                        } catch (e) {
+                                            return <div className="col-span-full text-center text-white/40 py-8">No images in gallery</div>;
+                                        }
+                                    })()}
                                 </div>
                             ) : (
-                                !['document', 'external_link'].includes(section.type) && (
-                                    <div className="prose prose-lg prose-invert max-w-none text-xl leading-relaxed text-white/80">
-                                        <ReactMarkdown>
-                                            {section.content}
-                                        </ReactMarkdown>
+                                section.type === 'text' && (section.content.trim().match(/^(https?:\/\/(?:www\.)?(?:figma\.com|youtube\.com|youtu\.be|miro\.com)\/.*)$/i)) ? (
+                                    <div className="w-full aspect-video rounded-xl overflow-hidden border border-white/10 bg-black/50 my-8">
+                                        <iframe
+                                            src={getEmbedUrl(section.content.trim(), section.content.includes('figma') ? 'figma' : section.content.includes('miro') ? 'miro' : 'video')}
+                                            className="w-full h-full"
+                                            frameBorder="0"
+                                            allowFullScreen
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                        />
                                     </div>
+                                ) : (
+                                    !['document', 'external_link'].includes(section.type) && (
+                                        <div className="prose prose-lg prose-invert max-w-none text-xl leading-relaxed text-white/80">
+                                            <ReactMarkdown>
+                                                {section.content}
+                                            </ReactMarkdown>
+                                        </div>
+                                    )
                                 )
-                            )
-                        )}
+                            )}
 
-                        {/* Document Render */}
-                        {section.type === 'document' && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {(() => {
-                                    try {
-                                        const files = JSON.parse(section.content || '[]');
-                                        return files.map((file: any, i: number) => (
-                                            <a
-                                                key={i}
-                                                href={file.url}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="flex items-center gap-4 p-5 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all group"
-                                            >
-                                                <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-all">
-                                                    <span className="material-symbols-outlined text-2xl">description</span>
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-base font-bold text-white truncate group-hover:text-primary transition-colors">{file.name}</p>
-                                                    <p className="text-xs text-white/40 uppercase tracking-wider mt-1">{file.format} • {(file.size / 1024).toFixed(1)} KB</p>
-                                                </div>
-                                                <span className="material-symbols-outlined text-white/20 group-hover:text-white transition-colors">download</span>
-                                            </a>
-                                        ));
-                                    } catch (e) { return null; }
-                                })()}
-                            </div>
-                        )}
+                            {/* Document Render */}
+                            {section.type === 'document' && (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {(() => {
+                                        try {
+                                            const files = JSON.parse(section.content || '[]');
+                                            return files.map((file: any, i: number) => (
+                                                <a
+                                                    key={i}
+                                                    href={file.url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="flex items-center gap-4 p-5 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all group"
+                                                >
+                                                    <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-all">
+                                                        <span className="material-symbols-outlined text-2xl">description</span>
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-base font-bold text-white truncate group-hover:text-primary transition-colors">{file.name}</p>
+                                                        <p className="text-xs text-white/40 uppercase tracking-wider mt-1">{file.format} • {(file.size / 1024).toFixed(1)} KB</p>
+                                                    </div>
+                                                    <span className="material-symbols-outlined text-white/20 group-hover:text-white transition-colors">download</span>
+                                                </a>
+                                            ));
+                                        } catch (e) { return null; }
+                                    })()}
+                                </div>
+                            )}
 
-                        {/* External Link Render */}
-                        {section.type === 'external_link' && (
-                            <a
-                                href={section.content}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-4 p-5 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all group my-6"
-                            >
-                                <div className="w-14 h-14 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 group-hover:scale-110 transition-all">
-                                    <span className="material-symbols-outlined text-2xl">link</span>
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-lg font-bold text-white truncate group-hover:text-blue-400 transition-colors">Open External Resource</p>
-                                    <p className="text-sm text-white/40 truncate mt-0.5">{section.content || 'No URL provided'}</p>
-                                </div>
-                                <span className="material-symbols-outlined text-white/20 group-hover:text-white transition-colors text-2xl">open_in_new</span>
-                            </a>
-                        )}
+                            {/* External Link Render */}
+                            {section.type === 'external_link' && (
+                                <a
+                                    href={section.content}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-4 p-5 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all group my-6"
+                                >
+                                    <div className="w-14 h-14 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 group-hover:scale-110 transition-all">
+                                        <span className="material-symbols-outlined text-2xl">link</span>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-lg font-bold text-white truncate group-hover:text-blue-400 transition-colors">Open External Resource</p>
+                                        <p className="text-sm text-white/40 truncate mt-0.5">{section.content || 'No URL provided'}</p>
+                                    </div>
+                                    <span className="material-symbols-outlined text-white/20 group-hover:text-white transition-colors text-2xl">open_in_new</span>
+                                </a>
+                            )}
 
-                        {/* Optional Visual Render */}
-                        {['problem', 'solution', 'results'].includes(section.type) && section.image && (
-                            <div className="mt-12 rounded-2xl overflow-hidden aspect-video relative group bg-gradient-to-br from-white/5 to-white/0 border border-white/10">
-                                <img
-                                    src={getOptimizedImageUrl(section.image, { width: 1200, quality: 'auto' })}
-                                    alt={section.title}
-                                    className="w-full h-full object-cover"
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60"></div>
-                                <div className="absolute bottom-6 left-6">
-                                    <p className="text-sm text-white/50 font-medium font-mono uppercase tracking-wider">{section.title} Visual</p>
+                            {/* Optional Visual Render */}
+                            {['problem', 'solution', 'results'].includes(section.type) && section.image && (
+                                <div className="mt-12 rounded-2xl overflow-hidden aspect-video relative group bg-gradient-to-br from-white/5 to-white/0 border border-white/10">
+                                    <img
+                                        src={getOptimizedImageUrl(section.image, { width: 1200, quality: 'auto' })}
+                                        alt={section.title}
+                                        className="w-full h-full object-cover"
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60"></div>
+                                    <div className="absolute bottom-6 left-6">
+                                        <p className="text-sm text-white/50 font-medium font-mono uppercase tracking-wider">{section.title} Visual</p>
+                                    </div>
                                 </div>
-                            </div>
-                        )}
-                    </div>
-                ))
-                }
+                            )}
+                        </div>
+                    );
+                })}
             </div >
 
             {/* Footer Navigation */}
