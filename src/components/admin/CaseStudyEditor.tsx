@@ -23,7 +23,7 @@ interface CaseStudyEditorProps {
 const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }) => {
     const [title, setTitle] = useState(initialData?.title || "");
     const [slug, setSlug] = useState(initialData?.slug || "");
-    // const [description, setDescription] = useState(initialData?.description || "");
+    const [description, setDescription] = useState(initialData?.description || "");
     const [year, setYear] = useState(initialData?.year || new Date().getFullYear().toString());
     const [tags, setTags] = useState<string[]>(initialData?.tags || []);
     const [image, setImage] = useState(initialData?.image || "");
@@ -227,7 +227,7 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
         try {
             const projectData = {
                 title,
-                description: sections.filter(s => s.isEnabled).map(s => s.content).join('\n\n'),
+                description: description || sections.find(s => s.type === 'hero')?.content || "No description provided.",
                 year,
                 tags: tags.length > 0 ? tags : ['Case Study', template],
                 image,
@@ -321,11 +321,21 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
                                 className="w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm text-white font-mono focus:border-primary focus:outline-none transition-all"
                                 value={slug}
                                 onChange={(e) => setSlug(e.target.value)}
-                                placeholder="project-slug"
+                                placeholder="project-slug-url"
                             />
                         </label>
                     </div>
 
+                    {/* Short Description */}
+                    <label className="flex flex-col gap-2">
+                        <span className="text-white text-xs font-bold ml-1 uppercase tracking-wider opacity-60">Short Description (Hero)</span>
+                        <textarea
+                            className="w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm text-white focus:border-primary focus:outline-none transition-all min-h-[80px]"
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            placeholder="Enter a short summary for the hero section (1-2 sentences)..."
+                        />
+                    </label>
 
 
                     {/* Category & Year */}

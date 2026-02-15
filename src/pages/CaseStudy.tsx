@@ -134,7 +134,7 @@ const CaseStudy = () => {
                     <h1 className="text-5xl md:text-7xl font-display font-bold mb-6 leading-tight">
                         {project.title}
                     </h1>
-                    <p className="text-xl text-white/70 max-w-2xl mb-8">
+                    <p className="text-lg leading-relaxed text-white/80 max-w-3xl mb-8 line-clamp-6">
                         {project.description}
                     </p>
                     <div className="flex flex-wrap items-center gap-6 text-sm">
