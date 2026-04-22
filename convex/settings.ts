@@ -2,6 +2,13 @@ import { internal } from "./_generated/api";
 import { mutation, query, internalQuery, action } from "./_generated/server";
 import { v } from "convex/values";
 
+async function requireAuthenticatedUser(ctx: { auth: { getUserIdentity: () => Promise<unknown> } }) {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+        throw new Error("Unauthorized");
+    }
+}
+
 // Set a setting (Protected mutation - in real app add auth check)
 export const set = mutation({
     args: {
@@ -9,6 +16,8 @@ export const set = mutation({
         value: v.string(),
     },
     handler: async (ctx, args) => {
+        await requireAuthenticatedUser(ctx);
+
         const existing = await ctx.db
             .query("settings")
             .withIndex("by_key", (q) => q.eq("key", args.key))
@@ -29,6 +38,8 @@ export const set = mutation({
 export const isSet = query({
     args: { key: v.string() },
     handler: async (ctx, args) => {
+        await requireAuthenticatedUser(ctx);
+
         const setting = await ctx.db
             .query("settings")
             .withIndex("by_key", (q) => q.eq("key", args.key))
@@ -72,6 +83,8 @@ export const get = query({
 export const testGeminiConnection = action({
     args: { model: v.optional(v.string()) },
     handler: async (ctx, args): Promise<{ success: boolean; message: string }> => {
+        await requireAuthenticatedUser(ctx);
+
         // Securely fetch API key using internal query
         const apiKey: string | null = await ctx.runQuery(internal.settings.getSecret, { key: "gemini_api_key" });
 

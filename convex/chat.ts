@@ -79,7 +79,13 @@ export const sendToGemini = action({
         const GEMINI_MODEL = await ctx.runQuery(internal.settings.getSecret, { key: "gemini_model" });
 
         // Fallback to Env var if not in DB (for backward compat)
-        const apiKey = GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+        const envApiKey =
+            typeof globalThis === "object" && "process" in globalThis
+                ? (globalThis as typeof globalThis & {
+                    process?: { env?: Record<string, string | undefined> };
+                }).process?.env?.GEMINI_API_KEY
+                : undefined;
+        const apiKey = GEMINI_API_KEY || envApiKey;
         // Default model if not set
         const model = GEMINI_MODEL || "gemini-1.5-flash";
 
@@ -102,16 +108,25 @@ export const sendToGemini = action({
         });
 
         // Build conversation context (map role correctly for Gemini)
-        const conversationHistory = history.slice(-10).map((msg: any) => ({
+        const recentHistory = history.slice(-10);
+        const conversationHistory = recentHistory.map((msg: any) => ({
             role: msg.role === "assistant" ? "model" : "user",
             parts: [{ text: msg.content }],
         }));
 
-        // Add the new user message
-        conversationHistory.push({
-            role: "user",
-            parts: [{ text: args.message }],
-        });
+        // The widget stores the latest user message before invoking this action.
+        // Only append it if the current call path didn't already persist it.
+        const latestStoredMessage = recentHistory[recentHistory.length - 1];
+        const hasLatestMessage =
+            latestStoredMessage?.role === "user" &&
+            latestStoredMessage.content === args.message;
+
+        if (!hasLatestMessage) {
+            conversationHistory.push({
+                role: "user",
+                parts: [{ text: args.message }],
+            });
+        }
 
         // 1. Retrieve RAG Context
         let contextText = "";

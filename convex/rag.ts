@@ -5,6 +5,13 @@ import { internal, api } from "./_generated/api";
 // Use the latest stable embedding model
 const EMBEDDING_MODEL = "models/text-embedding-004";
 
+async function requireAuthenticatedUser(ctx: { auth: { getUserIdentity: () => Promise<unknown> } }) {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+        throw new Error("Unauthorized");
+    }
+}
+
 export const generateEmbedding = action({
     args: { text: v.string() },
     handler: async (ctx, args): Promise<number[]> => {
@@ -77,6 +84,8 @@ export const ingestContext = action({
         sourceId: v.optional(v.string())
     },
     handler: async (ctx, args) => {
+        await requireAuthenticatedUser(ctx);
+
         const embedding = await ctx.runAction(api.rag.generateEmbedding, { text: args.text });
 
         await ctx.runMutation(internal.rag.addDocument, {
@@ -93,6 +102,8 @@ export const ingestContext = action({
 export const syncAllProjects = action({
     args: {},
     handler: async (ctx) => {
+        await requireAuthenticatedUser(ctx);
+
         // 1. Get all projects (internal query)
         const projects = await ctx.runQuery(api.projects.list);
 
