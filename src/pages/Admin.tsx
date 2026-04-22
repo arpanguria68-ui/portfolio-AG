@@ -167,9 +167,10 @@ const Admin = () => {
         try {
             const res = await syncProjects();
             alert(res);
-        } catch (e) {
+        } catch (e: unknown) {
             console.error(e);
-            alert("Failed to sync projects.");
+            const message = e instanceof Error ? e.message : String(e);
+            alert(`Failed to sync projects: ${message}`);
         } finally {
             setIsIndexing(false);
         }

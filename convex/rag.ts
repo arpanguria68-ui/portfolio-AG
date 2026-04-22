@@ -96,32 +96,53 @@ export const syncAllProjects = action({
         // 1. Get all projects (internal query)
         const projects = await ctx.runQuery(api.projects.list);
 
-        let count = 0;
-        for (const project of projects) {
-            const sectionsText = project.sections
-                ?.filter((s: any) => s.isEnabled)
-                .map((s: any) => `${s.title}: ${s.content}`)
-                .join("\n") || "";
+        let successCount = 0;
+        const errors: string[] = [];
 
-            // Combine fields for rich context
-            const textToEmbed = `
+        for (const project of projects) {
+            try {
+                const sectionsText = project.sections
+                    ?.filter((s: any) => s.isEnabled)
+                    .map((s: any) => `${s.title}: ${s.content}`)
+                    .join("\n") || "";
+
+                // Combine fields for rich context
+                const textToEmbed = `
 Project Title: ${project.title}
 Year: ${project.year}
 Tags: ${project.tags?.join(", ")}
 Description: ${project.description}
 Details:
 ${sectionsText}
-            `.trim();
+                `.trim();
 
-            await ctx.runAction(api.rag.ingestContext, {
-                title: `Project: ${project.title}`,
-                text: textToEmbed,
-                type: 'project',
-                sourceId: project._id,
-            });
-            count++;
+                const embedding = await ctx.runAction(api.rag.generateEmbedding, { text: textToEmbed });
+
+                await ctx.runMutation(internal.rag.addDocument, {
+                    title: `Project: ${project.title}`,
+                    text: textToEmbed,
+                    type: 'project',
+                    sourceId: project._id,
+                    embedding,
+                });
+
+                successCount++;
+            } catch (e: unknown) {
+                const msg = e instanceof Error ? e.message : String(e);
+                errors.push(`"${project.title}": ${msg}`);
+                console.error(`Failed to index project "${project.title}":`, e);
+            }
         }
-        return `Successfully indexed ${count} projects.`;
+
+        if (errors.length > 0) {
+            const errorSummary = errors.join("; ");
+            if (successCount === 0) {
+                throw new Error(`All ${projects.length} projects failed to index. Errors: ${errorSummary}`);
+            }
+            return `Indexed ${successCount}/${projects.length} projects. ${errors.length} failed: ${errorSummary}`;
+        }
+
+        return `Successfully indexed ${successCount} projects.`;
     }
 });
 
