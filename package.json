@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npx convex deploy && vite build",
+    "build": "vite build",
+    "deploy:convex": "npx convex deploy",
+    "build:production": "npm run deploy:convex && npm run build",
     "typecheck": "tsc -p tsconfig.app.json --noEmit",
     "lint": "eslint .",
     "preview": "vite preview"

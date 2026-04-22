@@ -35,7 +35,7 @@ git push origin main
 
 ### 2. Deploy Convex to Production
 ```bash
-npx convex deploy
+npm run deploy:convex
 ```
 This will give you a production Convex URL.
 
@@ -44,6 +44,12 @@ This will give you a production Convex URL.
 2. Add Environment Variable:
    - `VITE_CONVEX_URL` = Your production Convex URL
 3. Deploy!
+
+## 🏗 Build Commands
+
+- `npm run build` — builds the Vite frontend only
+- `npm run deploy:convex` — deploys Convex separately
+- `npm run build:production` — deploys Convex first, then builds the frontend
 
 ## 🏗 Project Structure
 
