@@ -5,6 +5,8 @@ import type { Doc } from "./_generated/dataModel";
 
 // Use the latest stable embedding model
 const EMBEDDING_MODEL = "models/text-embedding-004";
+// Keep payloads comfortably below Gemini embedding limits while still indexing
+// the most relevant project context for search.
 const MAX_EMBED_TEXT_LENGTH = 12000;
 
 type ProjectDocument = Doc<"projects">;
