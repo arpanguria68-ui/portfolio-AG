@@ -35,15 +35,29 @@ git push origin main
 
 ### 2. Deploy Convex to Production
 ```bash
-npx convex deploy
+npm run deploy:convex
 ```
 This will give you a production Convex URL.
 
 ### 3. Configure Vercel
 1. Import your GitHub repo on [vercel.com](https://vercel.com)
-2. Add Environment Variable:
+2. Confirm the build settings:
+   - Build Command: `npm run build`
+   - Output Directory: `dist`
+3. Add these environment variables in Vercel Project Settings:
    - `VITE_CONVEX_URL` = Your production Convex URL
-3. Deploy!
+   - `VITE_CLERK_PUBLISHABLE_KEY` = Your Clerk frontend publishable key
+   - `VITE_ADMIN_EMAIL` = Email address allowed into the admin area
+   - `VITE_CLOUDINARY_CLOUD_NAME` = Optional Cloudinary override
+   - `VITE_CLOUDINARY_UPLOAD_PRESET` = Optional Cloudinary override
+   - `VITE_CRISP_WEBSITE_ID` = Optional Crisp chat widget ID
+4. Deploy!
+
+## 🏗 Build Commands
+
+- `npm run build` — builds the Vite frontend only
+- `npm run deploy:convex` — deploys Convex separately
+- `npm run build:production` — deploys Convex first, then builds the frontend
 
 ## 🏗 Project Structure
 
@@ -74,6 +88,11 @@ This will give you a production Convex URL.
 | Variable | Description |
 |----------|-------------|
 | `VITE_CONVEX_URL` | Convex deployment URL (from `npx convex dev`) |
+| `VITE_CLERK_PUBLISHABLE_KEY` | Clerk frontend publishable key required by the auth provider |
+| `VITE_ADMIN_EMAIL` | Email address allowed to access the admin panel |
+| `VITE_CLOUDINARY_CLOUD_NAME` | Optional Cloudinary cloud name override |
+| `VITE_CLOUDINARY_UPLOAD_PRESET` | Optional Cloudinary upload preset override |
+| `VITE_CRISP_WEBSITE_ID` | Optional Crisp website ID |
 
 ---
 
