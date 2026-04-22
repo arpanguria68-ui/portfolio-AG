@@ -25,9 +25,9 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
     const [slug, setSlug] = useState(initialData?.slug || "");
     const [description, setDescription] = useState(initialData?.description || "");
     const [year, setYear] = useState(initialData?.year || new Date().getFullYear().toString());
-    const [tags, setTags] = useState<string[]>(initialData?.tags || []);
+    const [tags] = useState<string[]>(initialData?.tags || []);
     const [image, setImage] = useState(initialData?.image || "");
-    const [link, setLink] = useState(initialData?.link || "");
+    const [link] = useState(initialData?.link || "");
     const [category, setCategory] = useState(initialData?.category || "SaaS");
     const [creationDate, setCreationDate] = useState(initialData?.creationDate || Date.now());
 
