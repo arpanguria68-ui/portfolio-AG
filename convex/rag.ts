@@ -1,9 +1,51 @@
 import { action, internalMutation, internalQuery } from "./_generated/server";
 import { v } from "convex/values";
 import { internal, api } from "./_generated/api";
+import type { Doc } from "./_generated/dataModel";
 
 // Use the latest stable embedding model
 const EMBEDDING_MODEL = "models/text-embedding-004";
+const MAX_EMBED_TEXT_LENGTH = 12000;
+
+type ProjectDocument = Doc<"projects">;
+
+function truncateForEmbedding(text: string) {
+    if (text.length <= MAX_EMBED_TEXT_LENGTH) {
+        return text;
+    }
+
+    return `${text.slice(0, MAX_EMBED_TEXT_LENGTH).trimEnd()}\n\n[Content truncated for embedding]`;
+}
+
+function getErrorMessage(error: unknown) {
+    if (error instanceof Error) {
+        return error.message;
+    }
+
+    return "Unknown error";
+}
+
+function buildProjectKnowledgeText(project: ProjectDocument) {
+    const sectionsText = (project.sections ?? [])
+        .filter((section) => section.isEnabled)
+        .map((section) => [section.title.trim(), section.content.trim()].filter(Boolean).join(": "))
+        .filter(Boolean)
+        .join("\n");
+
+    const projectText = [
+        `Project Title: ${project.title}`,
+        `Year: ${project.year}`,
+        project.tags.length ? `Tags: ${project.tags.join(", ")}` : null,
+        project.category?.trim() ? `Category: ${project.category.trim()}` : null,
+        project.description.trim() ? `Description: ${project.description.trim()}` : null,
+        project.link?.trim() ? `Link: ${project.link.trim()}` : null,
+        sectionsText ? `Details:\n${sectionsText}` : null,
+    ]
+        .filter((line): line is string => Boolean(line))
+        .join("\n");
+
+    return truncateForEmbedding(projectText.trim());
+}
 
 async function requireAuthenticatedUser(ctx: { auth: { getUserIdentity: () => Promise<unknown> } }) {
     const identity = await ctx.auth.getUserIdentity();
@@ -108,31 +150,42 @@ export const syncAllProjects = action({
         const projects = await ctx.runQuery(api.projects.list);
 
         let count = 0;
+        const failures: string[] = [];
         for (const project of projects) {
-            const sectionsText = project.sections
-                ?.filter((s: any) => s.isEnabled)
-                .map((s: any) => `${s.title}: ${s.content}`)
-                .join("\n") || "";
+            try {
+                const textToEmbed = buildProjectKnowledgeText(project);
 
-            // Combine fields for rich context
-            const textToEmbed = `
-Project Title: ${project.title}
-Year: ${project.year}
-Tags: ${project.tags?.join(", ")}
-Description: ${project.description}
-Details:
-${sectionsText}
-            `.trim();
+                if (!textToEmbed) {
+                    failures.push(`${project.title}: empty project content`);
+                    continue;
+                }
 
-            await ctx.runAction(api.rag.ingestContext, {
-                title: `Project: ${project.title}`,
-                text: textToEmbed,
-                type: 'project',
-                sourceId: project._id,
-            });
-            count++;
+                const embedding = await ctx.runAction(api.rag.generateEmbedding, { text: textToEmbed });
+
+                await ctx.runMutation(internal.rag.addDocument, {
+                    title: `Project: ${project.title}`,
+                    text: textToEmbed,
+                    type: "project",
+                    sourceId: project._id.toString(),
+                    embedding,
+                });
+                count++;
+            } catch (error) {
+                console.error(`Failed to index project ${project._id}`, error);
+                failures.push(`${project.title}: ${getErrorMessage(error)}`);
+            }
         }
-        return `Successfully indexed ${count} projects.`;
+
+        if (failures.length === 0) {
+            return `Successfully indexed ${count} projects.`;
+        }
+
+        const failureSummary = failures.slice(0, 3).join(" | ");
+        if (count === 0) {
+            throw new Error(`Failed to sync all projects. ${failureSummary}`);
+        }
+
+        return `Indexed ${count} projects. ${failures.length} failed: ${failureSummary}`;
     }
 });
 

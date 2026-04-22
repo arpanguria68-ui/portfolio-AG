@@ -18,6 +18,8 @@ import ToolIcon, { BRAND_ICONS } from "../components/ToolIcon";
 const Admin = () => {
     const { user, isLoaded } = useUser();
     const adminEmail = import.meta.env.VITE_ADMIN_EMAIL;
+    const getActionErrorMessage = (error: unknown, fallback: string) =>
+        error instanceof Error && error.message ? error.message : fallback;
     const [activeTab, setActiveTab] = useState('dashboard');
     const stats = useQuery(api.analytics.getDashboardStats);
 
@@ -169,7 +171,7 @@ const Admin = () => {
             alert(res);
         } catch (e) {
             console.error(e);
-            alert("Failed to sync projects.");
+            alert(getActionErrorMessage(e, "Failed to sync projects."));
         } finally {
             setIsIndexing(false);
         }
