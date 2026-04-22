@@ -66,6 +66,13 @@ interface GeminiResponse {
     }>;
 }
 
+const getEnvVar = (key: string) => {
+    const env = (globalThis as typeof globalThis & {
+        process?: { env?: Record<string, string | undefined> };
+    }).process?.env;
+    return env?.[key];
+};
+
 // Action to call Gemini API
 export const sendToGemini = action({
     args: {
@@ -79,13 +86,7 @@ export const sendToGemini = action({
         const GEMINI_MODEL = await ctx.runQuery(internal.settings.getSecret, { key: "gemini_model" });
 
         // Fallback to Env var if not in DB (for backward compat)
-        const envApiKey =
-            typeof globalThis === "object" && "process" in globalThis
-                ? (globalThis as typeof globalThis & {
-                    process?: { env?: Record<string, string | undefined> };
-                }).process?.env?.GEMINI_API_KEY
-                : undefined;
-        const apiKey = GEMINI_API_KEY || envApiKey;
+        const apiKey = GEMINI_API_KEY || getEnvVar("GEMINI_API_KEY");
         // Default model if not set
         const model = GEMINI_MODEL || "gemini-1.5-flash";
 
