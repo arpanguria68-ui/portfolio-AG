@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { useMutation, useAction } from 'convex/react';
+import { Reorder } from 'framer-motion';
 import { api } from '../../../convex/_generated/api';
 import LivePreview from './LivePreview';
 import { uploadImage, uploadMultipleImages, uploadMultipleFiles } from '../../lib/cloudinary';
@@ -20,14 +21,30 @@ interface CaseStudyEditorProps {
     initialData?: any;
 }
 
+const normalizeSlug = (value: string) => value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+const getInitialSlug = (project: any) => {
+    if (project?.slug) return project.slug;
+    if (typeof project?.link === 'string' && project.link.startsWith('/project/')) {
+        return project.link.replace('/project/', '');
+    }
+    if (typeof project?.title === 'string') {
+        return normalizeSlug(project.title);
+    }
+    return '';
+};
+
 const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }) => {
     const [title, setTitle] = useState(initialData?.title || "");
-    const [slug, setSlug] = useState(initialData?.slug || "");
+    const [slug, setSlug] = useState(getInitialSlug(initialData));
     const [description, setDescription] = useState(initialData?.description || "");
     const [year, setYear] = useState(initialData?.year || new Date().getFullYear().toString());
     const [tags, setTags] = useState<string[]>(initialData?.tags || []);
     const [image, setImage] = useState(initialData?.image || "");
-    const [link, setLink] = useState(initialData?.link || "");
     const [category, setCategory] = useState(initialData?.category || "SaaS");
     const [creationDate, setCreationDate] = useState(initialData?.creationDate || Date.now());
 
@@ -95,30 +112,17 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
 
     const toggleSection = (id: number) => {
         if (isReorderMode) return; // Don't toggle while reordering
-        setSections(sections.map(s => s.id === id ? { ...s, collapsed: !s.collapsed } : s));
+        setSections((currentSections) => currentSections.map(s => s.id === id ? { ...s, collapsed: !s.collapsed } : s));
     };
 
     const toggleEnable = (id: number, e: React.MouseEvent) => {
         e.stopPropagation();
-        setSections(sections.map(s => s.id === id ? { ...s, isEnabled: !s.isEnabled } : s));
-    };
-
-    // Section reorder handlers
-    const moveSection = (id: number, direction: 'up' | 'down') => {
-        const currentIndex = sections.findIndex(s => s.id === id);
-        if (currentIndex === -1) return;
-
-        const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
-        if (newIndex < 0 || newIndex >= sections.length) return;
-
-        const newSections = [...sections];
-        [newSections[currentIndex], newSections[newIndex]] = [newSections[newIndex], newSections[currentIndex]];
-        setSections(newSections);
+        setSections((currentSections) => currentSections.map(s => s.id === id ? { ...s, isEnabled: !s.isEnabled } : s));
     };
 
     const deleteSection = (id: number) => {
         if (confirm('Are you sure you want to delete this section?')) {
-            setSections(sections.filter(s => s.id !== id));
+            setSections((currentSections) => currentSections.filter(s => s.id !== id));
         }
     };
 
@@ -225,13 +229,14 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
 
         setIsSaving(true);
         try {
+            const normalizedSlug = normalizeSlug(slug || title);
             const projectData = {
                 title,
                 description: description || sections.find(s => s.type === 'hero')?.content || "No description provided.",
                 year,
                 tags: tags.length > 0 ? tags : ['Case Study', template],
                 image,
-                link: link || `/project/${slug || title.toLowerCase().replace(/\s+/g, '-')}`,
+                link: `/project/${normalizedSlug}`,
                 category,
                 creationDate,
                 sections: sections.map(s => ({
@@ -320,11 +325,21 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
                             <input
                                 className="w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm text-white font-mono focus:border-primary focus:outline-none transition-all"
                                 value={slug}
-                                onChange={(e) => setSlug(e.target.value)}
+                                onChange={(e) => setSlug(normalizeSlug(e.target.value))}
                                 placeholder="project-slug-url"
                             />
                         </label>
                     </div>
+
+                    <label className="flex flex-col gap-2">
+                        <span className="text-white text-xs font-bold ml-1 uppercase tracking-wider opacity-60">Tags</span>
+                        <input
+                            className="w-full rounded-xl border border-white/10 bg-black/20 p-3 text-sm text-white focus:border-primary focus:outline-none transition-all"
+                            value={tags.join(', ')}
+                            onChange={(e) => setTags(e.target.value.split(',').map((tag) => tag.trim()).filter(Boolean))}
+                            placeholder="Case Study, SaaS, Mobile"
+                        />
+                    </label>
 
                     {/* Short Description */}
                     <label className="flex flex-col gap-2">
@@ -434,9 +449,19 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
                             </button>
                         </div>
 
-                        <div className="flex flex-col gap-3">
+                        {isReorderMode && (
+                            <p className="mb-3 text-xs text-white/40">Drag sections vertically to rearrange the story flow.</p>
+                        )}
+
+                        <Reorder.Group axis="y" values={sections} onReorder={setSections} className="flex flex-col gap-3">
                             {sections.map((section) => (
-                                <div key={section.id} className={`group relative flex flex-col rounded-xl bg-[#141414] border transition-all duration-300 ${!section.collapsed ? 'border-primary/30 ring-1 ring-primary/20' : 'border-white/5 hover:border-white/10'} ${!section.isEnabled ? 'opacity-50' : ''}`}>
+                                <Reorder.Item
+                                    key={section.id}
+                                    value={section}
+                                    drag={isReorderMode ? 'y' : false}
+                                    className="list-none"
+                                >
+                                <div className={`group relative flex flex-col rounded-xl bg-[#141414] border transition-all duration-300 ${isReorderMode ? 'cursor-grab active:cursor-grabbing border-primary/20' : ''} ${!section.collapsed ? 'border-primary/30 ring-1 ring-primary/20' : 'border-white/5 hover:border-white/10'} ${!section.isEnabled ? 'opacity-50' : ''}`}>
                                     {/* Header */}
                                     <div
                                         className="flex items-center gap-3 p-3 cursor-pointer select-none"
@@ -455,22 +480,7 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
                                         {/* Reorder Mode Controls or Enable Toggle */}
                                         {isReorderMode ? (
                                             <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                                                <button
-                                                    onClick={() => moveSection(section.id, 'up')}
-                                                    disabled={sections.findIndex(s => s.id === section.id) === 0}
-                                                    className="p-1 rounded hover:bg-white/10 text-white/40 hover:text-primary disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-white/40 transition-colors"
-                                                    title="Move up"
-                                                >
-                                                    <span className="material-symbols-outlined text-lg">arrow_upward</span>
-                                                </button>
-                                                <button
-                                                    onClick={() => moveSection(section.id, 'down')}
-                                                    disabled={sections.findIndex(s => s.id === section.id) === sections.length - 1}
-                                                    className="p-1 rounded hover:bg-white/10 text-white/40 hover:text-primary disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-white/40 transition-colors"
-                                                    title="Move down"
-                                                >
-                                                    <span className="material-symbols-outlined text-lg">arrow_downward</span>
-                                                </button>
+                                                <span className="material-symbols-outlined text-white/20">drag_indicator</span>
                                                 <button
                                                     onClick={() => deleteSection(section.id)}
                                                     className="p-1 rounded hover:bg-red-500/20 text-white/40 hover:text-red-400 transition-colors ml-1"
@@ -875,8 +885,9 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
                                         </div>
                                     )}
                                 </div>
+                                </Reorder.Item>
                             ))}
-                        </div>
+                        </Reorder.Group>
 
                         <div className="relative mt-4">
                             {!showAddMenu ? (

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useAction } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import type { Id, Doc } from '../../convex/_generated/dataModel';
@@ -78,6 +78,7 @@ const Admin = () => {
     const createTool = useMutation(api.tools.create);
     const removeToolMutation = useMutation(api.tools.remove);
     const deleteProject = useMutation(api.projects.remove);
+    const reorderProjects = useMutation(api.projects.reorder);
 
     // Resumes (CVs)
     const convexResumes = useQuery(api.resumes.list);
@@ -97,6 +98,7 @@ const Admin = () => {
     const [localSkills, setLocalSkills] = useState<Doc<"skills">[]>([]);
     const [localSocials, setLocalSocials] = useState<Doc<"socialLinks">[]>([]);
     const [localExperiences, setLocalExperiences] = useState<Doc<"experiences">[]>([]);
+    const [localProjects, setLocalProjects] = useState<Doc<"projects">[]>([]);
     const [profileSaved, setProfileSaved] = useState(false);
     const [profileImage, setProfileImage] = useState("");
     const [isUploading, setIsUploading] = useState(false);
@@ -236,8 +238,13 @@ const Admin = () => {
     }, [convexProfile]);
 
     // Derived data with fallbacks
-    const projects = convexProjects ?? [];
     const skills = convexSkills ?? [];
+
+    useEffect(() => {
+        if (convexProjects) {
+            setLocalProjects(convexProjects);
+        }
+    }, [convexProjects]);
 
     useEffect(() => {
         if (convexSkills) {
@@ -284,6 +291,15 @@ const Admin = () => {
             order: index
         }));
         reorderExperiences({ items: updates });
+    };
+
+    const handleReorderProjects = (newOrder: Doc<"projects">[]) => {
+        setLocalProjects(newOrder);
+        const updates = newOrder.map((project, index) => ({
+            id: project._id,
+            order: index
+        }));
+        reorderProjects({ items: updates });
     };
 
     const addExperience = async () => {
@@ -492,8 +508,114 @@ const Admin = () => {
 
     // Project Editor State
     const [projectFilter, setProjectFilter] = useState('All');
+    const [projectSearch, setProjectSearch] = useState('');
+    const [isProjectReorderMode, setIsProjectReorderMode] = useState(false);
     const [viewMode, setViewMode] = useState<'grid' | 'editor'>('grid');
     const [editingProject, setEditingProject] = useState<any>(null);
+    const canReorderProjects = projectFilter === 'All' && projectSearch.trim() === '';
+
+    useEffect(() => {
+        if (!canReorderProjects && isProjectReorderMode) {
+            setIsProjectReorderMode(false);
+        }
+    }, [canReorderProjects, isProjectReorderMode]);
+
+    const filteredProjects = useMemo(() => {
+        const searchTerm = projectSearch.trim().toLowerCase();
+
+        return localProjects.filter((project) => {
+            const matchesFilter = projectFilter === 'All'
+                || project.category === projectFilter
+                || (!project.category && project.tags?.includes(projectFilter));
+
+            if (!matchesFilter) {
+                return false;
+            }
+
+            if (!searchTerm) {
+                return true;
+            }
+
+            const searchableText = [
+                project.title,
+                project.description,
+                project.category,
+                project.year,
+                ...(project.tags ?? []),
+            ]
+                .filter(Boolean)
+                .join(' ')
+                .toLowerCase();
+
+            return searchableText.includes(searchTerm);
+        });
+    }, [localProjects, projectFilter, projectSearch]);
+
+    const renderProjectCard = (project: Doc<"projects">, isReordering = false) => (
+        <article
+            key={project._id}
+            className={`group flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-card-dark/50 transition-all duration-300 ${isReordering
+                ? 'cursor-grab active:cursor-grabbing border-primary/30 ring-1 ring-primary/10'
+                : 'hover:border-primary/50'
+                }`}
+        >
+            <div className="relative aspect-[4/3] w-full overflow-hidden bg-black/50">
+                <div
+                    className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
+                    style={{ backgroundImage: `url('${project.image}')` }}
+                ></div>
+                <div className="absolute top-3 left-3">
+                    <span className="inline-flex items-center rounded-lg bg-black/60 backdrop-blur-md px-2 py-1 text-[10px] uppercase tracking-wider font-bold text-primary border border-white/10">
+                        {project.tags?.[0] || 'Project'}
+                    </span>
+                </div>
+
+                {isReordering ? (
+                    <div className="absolute inset-0 bg-black/55 opacity-100 flex flex-col items-center justify-center gap-2 backdrop-blur-sm text-white/80">
+                        <span className="material-symbols-outlined text-3xl text-primary">drag_indicator</span>
+                        <span className="text-xs font-bold uppercase tracking-[0.2em]">Drag to reorder</span>
+                    </div>
+                ) : (
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 backdrop-blur-sm">
+                        <button
+                            onClick={() => {
+                                setEditingProject(project);
+                                setViewMode('editor');
+                            }}
+                            className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center hover:scale-110 transition-transform"
+                            title="Edit"
+                        >
+                            <span className="material-symbols-outlined">edit</span>
+                        </button>
+                        <button
+                            onClick={(e) => handleDeleteProject(project._id, e)}
+                            className="w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors"
+                            title="Delete"
+                        >
+                            <span className="material-symbols-outlined">delete</span>
+                        </button>
+                    </div>
+                )}
+            </div>
+            <div className="flex flex-col gap-1.5 p-4">
+                <div className="flex items-start justify-between gap-3">
+                    <div>
+                        <h3 className="text-base font-bold leading-snug text-white line-clamp-1">{project.title}</h3>
+                        <div className="flex items-center gap-2 text-xs text-white/40 font-medium mt-1">
+                            <span>{project.tags?.[0] || 'Project'}</span>
+                            <span className="h-1 w-1 rounded-full bg-white/20"></span>
+                            <span>{project.year}</span>
+                        </div>
+                    </div>
+                    {isReordering && (
+                        <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-primary/80">
+                            #{(project.order ?? 0) + 1}
+                        </span>
+                    )}
+                </div>
+            </div>
+        </article>
+    );
 
     return (
         <div className="bg-background-dark text-white font-sans antialiased min-h-screen flex flex-col md:flex-row relative overflow-hidden">
@@ -1084,6 +1206,8 @@ const Admin = () => {
                                                 <input
                                                     type="text"
                                                     placeholder="Search projects..."
+                                                    value={projectSearch}
+                                                    onChange={(e) => setProjectSearch(e.target.value)}
                                                     className="bg-white/5 border border-white/10 rounded-full py-2 pl-9 pr-4 text-sm text-white focus:outline-none focus:border-primary/50 hidden md:block"
                                                 />
                                                 <button
@@ -1093,6 +1217,20 @@ const Admin = () => {
                                                     <span className="material-symbols-outlined text-base">tune</span>
                                                 </button>
                                             </div>
+                                            <button
+                                                onClick={() => setIsProjectReorderMode((current) => !current)}
+                                                disabled={!canReorderProjects}
+                                                className={`hidden md:flex h-12 px-5 rounded-full border text-sm font-bold items-center justify-center gap-2 transition-all ${isProjectReorderMode
+                                                    ? 'border-primary bg-primary text-black'
+                                                    : canReorderProjects
+                                                        ? 'border-white/10 bg-white/5 text-white hover:border-primary/50 hover:text-primary'
+                                                        : 'border-white/5 bg-white/[0.03] text-white/30 cursor-not-allowed'
+                                                    }`}
+                                                title={canReorderProjects ? 'Drag cards to change project order' : 'Clear filters and search to reorder projects'}
+                                            >
+                                                <span className="material-symbols-outlined text-lg">drag_indicator</span>
+                                                {isProjectReorderMode ? 'Done' : 'Reorder'}
+                                            </button>
                                             <button
                                                 onClick={() => {
                                                     setEditingProject(null);
@@ -1228,57 +1366,50 @@ const Admin = () => {
                                         ))}
                                     </div>
 
+                                    <div className="flex items-center justify-between gap-3 mb-6">
+                                        <p className="text-sm text-white/40">
+                                            {filteredProjects.length} project{filteredProjects.length === 1 ? '' : 's'}
+                                            {projectSearch.trim() && <> matching “{projectSearch.trim()}”</>}
+                                        </p>
+                                        {!canReorderProjects && (
+                                            <p className="hidden md:block text-xs text-white/30">
+                                                Clear search and category filters to reorder cards.
+                                            </p>
+                                        )}
+                                    </div>
+
                                     {/* Projects Grid */}
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-20">
-                                        {projects
-                                            .filter(p => projectFilter === 'All' || p.category === projectFilter || (!p.category && p.tags && p.tags.includes(projectFilter)))
-                                            .map((project) => (
-                                                <article key={project._id} className="group flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-card-dark/50 hover:border-primary/50 transition-all duration-300">
-                                                    <div className="relative aspect-[4/3] w-full overflow-hidden bg-black/50">
-                                                        <div
-                                                            className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
-                                                            style={{ backgroundImage: `url('${project.image}')` }}
-                                                        ></div>
-                                                        <div className="absolute top-3 left-3">
-                                                            <span className="inline-flex items-center rounded-lg bg-black/60 backdrop-blur-md px-2 py-1 text-[10px] uppercase tracking-wider font-bold text-primary border border-white/10">
-                                                                {project.tags?.[0] || 'Project'}
-                                                            </span>
-                                                        </div>
-
-                                                        {/* Overlay Actions */}
-                                                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 backdrop-blur-sm">
-                                                            <button
-                                                                onClick={() => {
-                                                                    setEditingProject(project);
-                                                                    setViewMode('editor');
-                                                                }}
-                                                                className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center hover:scale-110 transition-transform"
-                                                                title="Edit"
-                                                            >
-                                                                <span className="material-symbols-outlined">edit</span>
-                                                            </button>
-                                                            <button
-                                                                onClick={(e) => handleDeleteProject(project._id, e)}
-                                                                className="w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors"
-                                                                title="Delete"
-                                                            >
-                                                                <span className="material-symbols-outlined">delete</span>
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex flex-col gap-1.5 p-4">
-                                                        <h3 className="text-base font-bold leading-snug text-white line-clamp-1">{project.title}</h3>
-                                                        <div className="flex items-center gap-2 text-xs text-white/40 font-medium">
-                                                            <span>{project.tags?.[0] || 'Project'}</span>
-                                                            <span className="h-1 w-1 rounded-full bg-white/20"></span>
-                                                            <span>{project.year}</span>
-                                                        </div>
-                                                    </div>
-                                                </article>
+                                    {isProjectReorderMode ? (
+                                        <Reorder.Group
+                                            axis="y"
+                                            values={localProjects}
+                                            onReorder={handleReorderProjects}
+                                            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-20"
+                                        >
+                                            {localProjects.map((project) => (
+                                                <Reorder.Item
+                                                    key={project._id}
+                                                    value={project}
+                                                    className="list-none"
+                                                >
+                                                    {renderProjectCard(project, true)}
+                                                </Reorder.Item>
                                             ))}
+                                        </Reorder.Group>
+                                    ) : (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-20">
+                                            {filteredProjects.map((project) => renderProjectCard(project))}
 
-                                        {/* Add New Placeholder Card (visible if filtering All) */}
-                                        {projectFilter === 'All' && (
+                                            {filteredProjects.length === 0 && (
+                                                <div className="md:col-span-2 lg:col-span-3 rounded-2xl border border-dashed border-white/10 bg-white/[0.02] p-10 text-center">
+                                                    <span className="material-symbols-outlined text-3xl text-white/20">search_off</span>
+                                                    <p className="mt-3 text-base font-bold text-white">No projects found</p>
+                                                    <p className="mt-1 text-sm text-white/40">Try a different search term or category filter.</p>
+                                                </div>
+                                            )}
+
+                                            {/* Add New Placeholder Card (visible if filtering All) */}
+                                            {projectFilter === 'All' && !projectSearch.trim() && (
                                             <button
                                                 onClick={() => {
                                                     setEditingProject(null);
@@ -1294,8 +1425,9 @@ const Admin = () => {
                                                     <p className="text-xs text-white/20 mt-1">SaaS, Mobile, Web...</p>
                                                 </div>
                                             </button>
-                                        )}
-                                    </div>
+                                            )}
+                                        </div>
+                                    )}
                                 </>
                             )}
                         </div>

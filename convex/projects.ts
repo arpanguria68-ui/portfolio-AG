@@ -6,9 +6,21 @@ export const list = query({
     handler: async (ctx) => {
         const projects = await ctx.db
             .query("projects")
-            .order("desc")
             .collect();
-        return projects;
+        return projects.sort((a, b) => {
+            const aHasOrder = a.order !== undefined;
+            const bHasOrder = b.order !== undefined;
+
+            if (aHasOrder && bHasOrder) {
+                return (a.order ?? 0) - (b.order ?? 0);
+            }
+
+            if (aHasOrder !== bHasOrder) {
+                return aHasOrder ? -1 : 1;
+            }
+
+            return (b.creationDate ?? b._creationTime) - (a.creationDate ?? a._creationTime);
+        });
     },
 });
 
@@ -22,6 +34,7 @@ export const create = mutation({
         link: v.optional(v.string()),
         category: v.optional(v.string()),
         creationDate: v.optional(v.number()),
+        order: v.optional(v.number()),
         sections: v.optional(v.array(v.object({
             id: v.number(),
             type: v.string(),
@@ -34,6 +47,12 @@ export const create = mutation({
         }))),
     },
     handler: async (ctx, args) => {
+        const projects = await ctx.db.query("projects").collect();
+        const maxOrder = projects.reduce(
+            (highest, project) => Math.max(highest, project.order ?? -1),
+            projects.length - 1
+        );
+
         const projectId = await ctx.db.insert("projects", {
             title: args.title,
             description: args.description,
@@ -43,6 +62,7 @@ export const create = mutation({
             link: args.link,
             category: args.category,
             creationDate: args.creationDate,
+            order: args.order ?? maxOrder + 1,
             sections: args.sections,
         });
         return projectId;
@@ -60,6 +80,7 @@ export const update = mutation({
         link: v.optional(v.string()),
         category: v.optional(v.string()),
         creationDate: v.optional(v.number()),
+        order: v.optional(v.number()),
         sections: v.optional(v.array(v.object({
             id: v.number(),
             type: v.string(),
@@ -85,5 +106,16 @@ export const remove = mutation({
     args: { id: v.id("projects") },
     handler: async (ctx, args) => {
         await ctx.db.delete(args.id);
+    },
+});
+
+export const reorder = mutation({
+    args: {
+        items: v.array(v.object({ id: v.id("projects"), order: v.number() })),
+    },
+    handler: async (ctx, args) => {
+        for (const item of args.items) {
+            await ctx.db.patch(item.id, { order: item.order });
+        }
     },
 });

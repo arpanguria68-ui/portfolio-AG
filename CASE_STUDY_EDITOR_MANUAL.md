@@ -20,7 +20,7 @@ The editor features a real-time preview on the right side.
 
 ### 3. Section Controls
 - **Toggle Visibility**: Use the toggle switch on any section header to Hide/Show it without deleting the content. This is useful for drafting.
-- **Reorder**: (Coming Soon) Drag and drop sections to rearrange the story flow.
+- **Reorder**: Use the reorder mode to drag and drop sections and rearrange the story flow.
 - **Collapse/Expand**: Click the section header to collapse it, keeping your workspace tidy.
 
 ### 4. AI Helper (Simulated)
