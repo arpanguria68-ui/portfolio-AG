@@ -114,6 +114,8 @@ const Admin = () => {
     const [newToolName, setNewToolName] = useState("");
     const [newToolIcon, setNewToolIcon] = useState("code");
     const [newToolColor, setNewToolColor] = useState("bg-blue-500");
+    const [newToolCategory, setNewToolCategory] = useState("");
+    const [newToolDescription, setNewToolDescription] = useState("");
 
     // Media edit modal state
     const [editingMedia, setEditingMedia] = useState<{
@@ -354,10 +356,14 @@ const Admin = () => {
             name: newToolName.trim(),
             icon: newToolIcon,
             bgColor: newToolColor,
+            category: newToolCategory || undefined,
+            description: newToolDescription || undefined,
         });
         setNewToolName("");
         setNewToolIcon("code");
         setNewToolColor("bg-blue-500");
+        setNewToolCategory("");
+        setNewToolDescription("");
         setShowAddToolModal(false);
     };
 
@@ -1677,6 +1683,41 @@ const Admin = () => {
                                         />
                                     ))}
                                 </div>
+                            </div>
+
+                            <div>
+                                <label className="text-xs uppercase tracking-wider font-bold text-white/40 mb-2 block">
+                                    Category (Optional)
+                                </label>
+                                <select
+                                    value={newToolCategory}
+                                    onChange={(e) => setNewToolCategory(e.target.value)}
+                                    className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary/50"
+                                >
+                                    <option value="">Select a category...</option>
+                                    <option value="Languages">Languages</option>
+                                    <option value="Frameworks & Libraries">Frameworks & Libraries</option>
+                                    <option value="Cloud & Hosting">Cloud & Hosting</option>
+                                    <option value="Databases">Databases</option>
+                                    <option value="DevOps & CI/CD">DevOps & CI/CD</option>
+                                    <option value="Design Tools">Design Tools</option>
+                                    <option value="Developer Tools">Developer Tools</option>
+                                    <option value="Testing">Testing</option>
+                                    <option value="Package Managers">Package Managers</option>
+                                    <option value="CMS & Static">CMS & Static</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="text-xs uppercase tracking-wider font-bold text-white/40 mb-2 block">
+                                    Description (Optional)
+                                </label>
+                                <textarea
+                                    value={newToolDescription}
+                                    onChange={(e) => setNewToolDescription(e.target.value)}
+                                    placeholder="e.g. Figma is a web-based design and prototyping tool..."
+                                    className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-primary/50 resize-none h-20"
+                                />
                             </div>
 
                             <div className="p-4 bg-black/20 rounded-xl flex items-center gap-4">
