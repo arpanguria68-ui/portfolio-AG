@@ -23,6 +23,7 @@ export default defineSchema({
         link: v.optional(v.string()),
         category: v.optional(v.string()),
         creationDate: v.optional(v.number()),
+        order: v.optional(v.number()),
         sections: v.optional(v.array(v.object({
             id: v.number(),
             type: v.string(),
