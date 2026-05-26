@@ -81,9 +81,11 @@ export default defineSchema({
 
     tools: defineTable({
         name: v.string(),
-        icon: v.string(), // Material Symbols icon name
+        icon: v.string(), // developer-icon name or brand-* or Material Symbol
         bgColor: v.string(), // Tailwind bg class
         order: v.number(),
+        category: v.optional(v.string()), // Category for grouping/filtering
+        description: v.optional(v.string()), // Tooltip description
     }),
 
     media: defineTable({

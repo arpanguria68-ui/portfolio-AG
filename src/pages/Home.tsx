@@ -357,19 +357,26 @@ const Home = () => {
                                 )}
                             </div>
                         </div>
-                        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                             {(convexTools && convexTools.length > 0 ? convexTools : [
-                                { icon: "design_services", name: "Figma", bgColor: "bg-blue-600", _id: "f1" },
-                                { icon: "view_kanban", name: "Jira", bgColor: "bg-blue-500", _id: "f2" },
-                                { icon: "analytics", name: "Mixpanel", bgColor: "bg-purple-600", _id: "f3" },
-                                { icon: "code", name: "Python", bgColor: "bg-yellow-500", _id: "f4" }
+                                { icon: "Figma", name: "Figma", bgColor: "bg-blue-600", _id: "f1", category: "Design" },
+                                { icon: "React", name: "React", bgColor: "bg-cyan-500", _id: "f2", category: "Frameworks" },
+                                { icon: "Python", name: "Python", bgColor: "bg-yellow-500", _id: "f3", category: "Languages" },
+                                { icon: "Docker", name: "Docker", bgColor: "bg-blue-500", _id: "f4", category: "DevOps" }
                             ]).map((tool, i) => (
-                                <div key={tool._id || i} className="aspect-square glass rounded-2xl flex flex-col items-center justify-center gap-4 hover:bg-white/5 transition-colors group relative overflow-hidden">
-                                    <div className={`absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity ${tool.bgColor || 'bg-white/5'}`}></div>
-                                    <div className="relative z-10 text-white/70 group-hover:text-white transition-colors">
-                                        <ToolIcon icon={tool.icon} className="text-4xl w-9 h-9" />
+                                <div key={tool._id || i} className="group relative">
+                                    <div className="aspect-square glass rounded-2xl flex flex-col items-center justify-center gap-2 hover:bg-white/10 transition-all duration-300 hover:scale-105 cursor-pointer">
+                                        <div className={`absolute inset-0 opacity-0 group-hover:opacity-30 transition-opacity duration-300 rounded-2xl ${tool.bgColor || 'bg-white/5'}`}></div>
+                                        <div className="relative z-10 text-white/70 group-hover:text-white transition-colors duration-300">
+                                            <ToolIcon icon={tool.icon} className="w-8 h-8" />
+                                        </div>
+                                        <span className="text-xs font-semibold opacity-60 uppercase tracking-widest relative z-10 text-center px-1 group-hover:opacity-100 transition-opacity duration-300">{tool.name}</span>
                                     </div>
-                                    <span className="text-xs opacity-50 uppercase tracking-widest relative z-10">{tool.name}</span>
+                                    {tool.category && (
+                                        <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 bg-black/80 backdrop-blur-sm px-2 py-1 rounded text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-50">
+                                            {tool.category}
+                                        </div>
+                                    )}
                                 </div>
                             ))}
                         </div>
