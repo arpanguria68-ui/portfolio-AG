@@ -729,6 +729,7 @@ const Admin = () => {
                                     </button>
                                 </div>
                                 <Reorder.Group axis="y" values={localTools} onReorder={handleReorderTools} className="space-y-3">
+                                    {/* Grid display with vertical reordering - items are reordered by data order, displayed in grid layout */}
                                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
                                         {localTools.map((tool) => (
                                             <Reorder.Item key={tool._id} value={tool} className="cursor-grab active:cursor-grabbing">

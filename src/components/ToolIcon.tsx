@@ -47,7 +47,7 @@ const ToolIcon: React.FC<ToolIconProps> = ({ icon, className }) => {
     if (icon in DeveloperIcons) {
         const IconComponent = (DeveloperIcons as any)[icon];
         return (
-            <Suspense fallback={<span className={className}>⚙️</span>}>
+            <Suspense fallback={<span className={className} aria-label="Loading icon">⚙️</span>}>
                 <IconComponent className={className} />
             </Suspense>
         );
