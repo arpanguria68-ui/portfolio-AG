@@ -112,17 +112,17 @@ const Home = () => {
     const filteredProjects = projects.filter(p => {
         if (projectFilter === 'All') return true;
         // Fallback for legacy projects without category: check tags or allow if category not set
-        return p.category === projectFilter || (!p.category && p.tags.includes(projectFilter));
+        return (p as any).category === projectFilter || (!(p as any).category && (p as any).tags?.includes(projectFilter));
     }).sort((a, b) => {
         if (projectSort === 'Newest') {
-            return parseInt(b.year) - parseInt(a.year);
+            return parseInt((b as any).year) - parseInt((a as any).year);
         }
         if (projectSort === 'Newest (Date)') {
             // Defaults to 0 if creationDate is undefined
-            return (b.creationDate || 0) - (a.creationDate || 0);
+            return ((b as any).creationDate || 0) - ((a as any).creationDate || 0);
         }
-        if (projectSort === 'Oldest') return parseInt(a.year) - parseInt(b.year);
-        if (projectSort === 'A-Z') return a.title.localeCompare(b.title);
+        if (projectSort === 'Oldest') return parseInt((a as any).year) - parseInt((b as any).year);
+        if (projectSort === 'A-Z') return (a as any).title.localeCompare((b as any).title);
         return 0;
     });
 
@@ -468,7 +468,7 @@ const Home = () => {
                             </div>
 
                             {/* Dynamic Timeline Items */}
-                            {convexExperiences && convexExperiences.filter(e => e.visible).sort((a, b) => (a.order ?? 0) - (b.order ?? 0)).map((experience, index) => (
+                            {convexExperiences && convexExperiences.filter(e => e.visible).sort((a, b) => (a.order ?? 0) - (b.order ?? 0)).map((experience) => (
                                 <div key={experience._id} className="flex flex-col md:flex-row gap-0 md:gap-12 group mb-12 relative items-start md:items-center justify-between">
                                     {/* Date (Left on Desktop) */}
                                     <div className="w-[100px] md:w-1/2 pr-6 md:pr-0 md:text-right flex flex-col md:block items-end pt-1 flex-shrink-0">

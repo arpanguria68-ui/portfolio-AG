@@ -10,7 +10,8 @@
     ],
     "module": "ESNext",
     "types": [
-      "vite/client"
+      "vite/client",
+      "node"
     ],
     "skipLibCheck": true,
     /* Bundler mode */
@@ -33,6 +34,7 @@
   ],
   "exclude": [
     "convex",
+    "convex/**/*",
     "node_modules"
   ]
 }
