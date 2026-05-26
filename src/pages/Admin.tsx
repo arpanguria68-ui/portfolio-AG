@@ -21,25 +21,6 @@ const Admin = () => {
     const [activeTab, setActiveTab] = useState('dashboard');
     const stats = useQuery(api.analytics.getDashboardStats);
 
-    if (!isLoaded) return <div className="min-h-screen bg-black text-white flex items-center justify-center">Loading...</div>;
-
-    if (user?.primaryEmailAddress?.emailAddress?.toLowerCase() !== adminEmail?.toLowerCase()) {
-        return (
-            <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center gap-6 p-4">
-                <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center text-red-500 mb-2">
-                    <span className="material-symbols-outlined text-4xl">lock</span>
-                </div>
-                <h1 className="text-3xl font-display font-bold">Access Restricted</h1>
-                <p className="text-white/40 text-center max-w-md">
-                    This account ({user?.primaryEmailAddress?.emailAddress}) is not authorized to access the admin panel.
-                </p>
-                <div className="bg-white/5 p-2 rounded-xl border border-white/10">
-                    <UserButton afterSignOutUrl="/" />
-                </div>
-            </div>
-        );
-    }
-
     // Project Filter Modal State
     const [showFilterModal, setShowFilterModal] = useState(false);
     const [selectedExpertise, setSelectedExpertise] = useState(['UX Design']);
@@ -511,7 +492,7 @@ const Admin = () => {
     const [projectSearch, setProjectSearch] = useState('');
     const [isProjectReorderMode, setIsProjectReorderMode] = useState(false);
     const [viewMode, setViewMode] = useState<'grid' | 'editor'>('grid');
-    const [editingProject, setEditingProject] = useState<any>(null);
+    const [editingProject, setEditingProject] = useState<Doc<"projects"> | null>(null);
     const canReorderProjects = projectFilter === 'All' && projectSearch.trim() === '';
 
     useEffect(() => {
@@ -616,6 +597,25 @@ const Admin = () => {
             </div>
         </article>
     );
+
+    if (!isLoaded) return <div className="min-h-screen bg-black text-white flex items-center justify-center">Loading...</div>;
+
+    if (user?.primaryEmailAddress?.emailAddress?.toLowerCase() !== adminEmail?.toLowerCase()) {
+        return (
+            <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center gap-6 p-4">
+                <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center text-red-500 mb-2">
+                    <span className="material-symbols-outlined text-4xl">lock</span>
+                </div>
+                <h1 className="text-3xl font-display font-bold">Access Restricted</h1>
+                <p className="text-white/40 text-center max-w-md">
+                    This account ({user?.primaryEmailAddress?.emailAddress}) is not authorized to access the admin panel.
+                </p>
+                <div className="bg-white/5 p-2 rounded-xl border border-white/10">
+                    <UserButton afterSignOutUrl="/" />
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="bg-background-dark text-white font-sans antialiased min-h-screen flex flex-col md:flex-row relative overflow-hidden">

@@ -33,13 +33,18 @@ git commit -m "Convex integration complete"
 git push origin main
 ```
 
-### 2. Deploy Convex to Production
+### 2. Build the Frontend
 ```bash
-npx convex deploy
+npm run build
+```
+
+### 3. Deploy Convex to Production
+```bash
+npm run deploy
 ```
 This will give you a production Convex URL.
 
-### 3. Configure Vercel
+### 4. Configure Vercel
 1. Import your GitHub repo on [vercel.com](https://vercel.com)
 2. Add Environment Variable:
    - `VITE_CONVEX_URL` = Your production Convex URL

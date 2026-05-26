@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { useMutation, useAction } from 'convex/react';
 import { Reorder } from 'framer-motion';
 import { api } from '../../../convex/_generated/api';
+import type { Doc } from '../../../convex/_generated/dataModel';
 import LivePreview from './LivePreview';
 import { uploadImage, uploadMultipleImages, uploadMultipleFiles } from '../../lib/cloudinary';
 
@@ -16,9 +17,27 @@ interface Section {
     isEnabled: boolean;
 }
 
+type EnhanceMode = 'rewrite' | 'grammar' | 'expand' | 'shorten';
+
+interface SectionFile {
+    name: string;
+    url: string;
+    size: number;
+    format: string;
+}
+
+type EditableProject = Doc<"projects"> & { slug?: string };
+
+const ENHANCE_OPTIONS: Array<{ id: EnhanceMode; label: string; icon: string }> = [
+    { id: 'rewrite', label: 'Rewrite', icon: 'edit' },
+    { id: 'grammar', label: 'Fix Grammar', icon: 'spellcheck' },
+    { id: 'expand', label: 'Expand', icon: 'open_in_full' },
+    { id: 'shorten', label: 'Shorten', icon: 'close_fullscreen' }
+];
+
 interface CaseStudyEditorProps {
     onBack: () => void;
-    initialData?: any;
+    initialData?: EditableProject | null;
 }
 
 const normalizeSlug = (value: string) => value
@@ -27,7 +46,7 @@ const normalizeSlug = (value: string) => value
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
 
-const getInitialSlug = (project: any) => {
+const getInitialSlug = (project?: EditableProject | null) => {
     if (project?.slug) return project.slug;
     if (typeof project?.link === 'string' && project.link.startsWith('/project/')) {
         return project.link.replace('/project/', '');
@@ -83,7 +102,7 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
     const [isEnhancing, setIsEnhancing] = useState<number | null>(null);
     const enhanceTextAction = useAction(api.ai.enhanceText);
 
-    const handleEnhance = async (sectionId: number, mode: 'rewrite' | 'grammar' | 'expand' | 'shorten') => {
+    const handleEnhance = async (sectionId: number, mode: EnhanceMode) => {
         const section = sections.find(s => s.id === sectionId);
         if (!section || !section.content) return;
 
@@ -289,7 +308,7 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
                     <div className="flex items-center gap-2">
                         <select
                             value={template}
-                            onChange={(e) => setTemplate(e.target.value as any)}
+                            onChange={(e) => setTemplate(e.target.value as 'default' | 'ghibli' | 'glass')}
                             className="bg-black/40 border border-white/10 text-xs text-white rounded-lg px-3 py-1.5 focus:outline-none focus:border-primary/50"
                         >
                             <option value="default">Default Theme</option>
@@ -591,15 +610,10 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
                                                                         </select>
                                                                     </div>
                                                                     <div className="p-1">
-                                                                        {[
-                                                                            { id: 'rewrite', label: 'Rewrite', icon: 'edit' },
-                                                                            { id: 'grammar', label: 'Fix Grammar', icon: 'spellcheck' },
-                                                                            { id: 'expand', label: 'Expand', icon: 'open_in_full' },
-                                                                            { id: 'shorten', label: 'Shorten', icon: 'close_fullscreen' }
-                                                                        ].map((opt) => (
+                                                                        {ENHANCE_OPTIONS.map((opt) => (
                                                                             <button
                                                                                 key={opt.id}
-                                                                                onClick={() => handleEnhance(section.id, opt.id as any)}
+                                                                                onClick={() => handleEnhance(section.id, opt.id)}
                                                                                 className="w-full flex items-center gap-2 px-3 py-2 text-xs text-white/80 hover:text-white hover:bg-purple-500/10 rounded-lg transition-colors text-left"
                                                                             >
                                                                                 <span className="material-symbols-outlined text-[14px] text-purple-400">{opt.icon}</span>
@@ -727,7 +741,7 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
                                                                             </button>
                                                                         </div>
                                                                     ));
-                                                                } catch (e) { return null; }
+                                                                } catch { return null; }
                                                             })()}
                                                             <button
                                                                 onClick={async (e) => {
@@ -793,7 +807,7 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
                                                             {(() => {
                                                                 try {
                                                                     const files = JSON.parse(section.content);
-                                                                    return files.map((file: any, i: number) => (
+                                                                    return files.map((file: SectionFile, i: number) => (
                                                                         <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-black/40 border border-white/10 group">
                                                                             <div className="flex items-center gap-3 overflow-hidden">
                                                                                 <span className="material-symbols-outlined text-white/40">description</span>
@@ -804,7 +818,7 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
                                                                             </div>
                                                                             <button
                                                                                 onClick={() => {
-                                                                                    const newFiles = files.filter((_: any, idx: number) => idx !== i);
+                                                                                    const newFiles = files.filter((_: SectionFile, idx: number) => idx !== i);
                                                                                     const newSections = [...sections];
                                                                                     const idx = newSections.findIndex(s => s.id === section.id);
                                                                                     newSections[idx].content = JSON.stringify(newFiles);
@@ -816,7 +830,7 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
                                                                             </button>
                                                                         </div>
                                                                     ));
-                                                                } catch (e) { return null; }
+                                                                } catch { return null; }
                                                             })()}
                                                             <button
                                                                 onClick={async (e) => {
