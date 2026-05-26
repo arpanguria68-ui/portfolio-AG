@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { Suspense } from 'react';
+import * as DeveloperIcons from 'developer-icons';
 
 // Brand SVG Paths & Images
 export const BRAND_ICONS: Record<string, React.ReactNode> = {
@@ -26,16 +27,33 @@ export const BRAND_ICONS: Record<string, React.ReactNode> = {
     'brand-bolt': <svg viewBox="0 0 24 24" fill="currentColor"><path d="M11 21L13 14H19L9 3V10H3L11 21Z" /></svg>,
 };
 
+// Get all available developer-icons
+export const DEVELOPER_ICON_NAMES = Object.keys(DeveloperIcons).filter(
+    (key) => key[0] === key[0].toUpperCase() && key !== 'default'
+);
+
 interface ToolIconProps {
     icon: string;
     className?: string;
 }
 
 const ToolIcon: React.FC<ToolIconProps> = ({ icon, className }) => {
+    // Check BRAND_ICONS first
     if (icon.startsWith('brand-') && BRAND_ICONS[icon]) {
         return <div className={className}>{BRAND_ICONS[icon]}</div>;
     }
 
+    // Check developer-icons
+    if (icon in DeveloperIcons) {
+        const IconComponent = (DeveloperIcons as any)[icon];
+        return (
+            <Suspense fallback={<span className={className}>⚙️</span>}>
+                <IconComponent className={className} />
+            </Suspense>
+        );
+    }
+
+    // Fall back to Material Symbols
     return <span className={`material-symbols-outlined ${className}`}>{icon}</span>;
 };
 

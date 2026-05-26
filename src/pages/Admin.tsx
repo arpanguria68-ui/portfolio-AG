@@ -12,8 +12,9 @@ import { SocialItem } from '../components/admin/SocialItem';
 import { ExperienceItem } from '../components/admin/ExperienceItem';
 import ChatHistoryCenter from '../components/admin/ChatHistoryCenter';
 import { UserButton, useUser } from "@clerk/clerk-react";
+import IconCatalog from '../components/IconCatalog';
 
-import ToolIcon, { BRAND_ICONS } from "../components/ToolIcon";
+import ToolIcon from "../components/ToolIcon";
 
 const Admin = () => {
     const { user, isLoaded } = useUser();
@@ -88,6 +89,7 @@ const Admin = () => {
     const reorderSkills = useMutation(api.skills.reorder);
     const reorderSocials = useMutation(api.socials.reorder);
     const reorderExperiences = useMutation(api.experiences.reorder);
+    const reorderTools = useMutation(api.tools.reorder);
 
     // ===== LOCAL STATE FOR EDITING =====
     const [headline, setHeadline] = useState("");
@@ -97,6 +99,7 @@ const Admin = () => {
     const [localSkills, setLocalSkills] = useState<Doc<"skills">[]>([]);
     const [localSocials, setLocalSocials] = useState<Doc<"socialLinks">[]>([]);
     const [localExperiences, setLocalExperiences] = useState<Doc<"experiences">[]>([]);
+    const [localTools, setLocalTools] = useState<Doc<"tools">[]>([]);
     const [profileSaved, setProfileSaved] = useState(false);
     const [profileImage, setProfileImage] = useState("");
     const [isUploading, setIsUploading] = useState(false);
@@ -286,6 +289,21 @@ const Admin = () => {
         reorderExperiences({ items: updates });
     };
 
+    useEffect(() => {
+        if (convexTools) {
+            setLocalTools(convexTools);
+        }
+    }, [convexTools]);
+
+    const handleReorderTools = (newOrder: Doc<"tools">[]) => {
+        setLocalTools(newOrder);
+        const updates = newOrder.map((tool, index) => ({
+            id: tool._id,
+            order: index
+        }));
+        reorderTools({ items: updates });
+    };
+
     const addExperience = async () => {
         await createExperience({
             title: "New Role",
@@ -298,7 +316,6 @@ const Admin = () => {
     };
 
     const mediaItems = convexMedia ?? [];
-    const tools = convexTools ?? [];
 
     const addSkill = async () => {
         if (!newSkillName.trim()) return;
@@ -695,7 +712,7 @@ const Admin = () => {
                                     <h3 className="text-xl font-bold flex items-center gap-2">
                                         <span className="material-symbols-outlined text-primary">terminal</span>
                                         Software Stack
-                                        <span className="text-sm font-normal text-white/40">({tools.length} tools)</span>
+                                        <span className="text-sm font-normal text-white/40">({localTools.length} tools)</span>
                                     </h3>
                                     <button
                                         onClick={() => setShowAddToolModal(true)}
@@ -705,29 +722,36 @@ const Admin = () => {
                                         Add Tool
                                     </button>
                                 </div>
-                                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                                    {tools.map((tool) => (
-                                        <div key={tool._id} className="aspect-square bg-black/20 border border-white/10 rounded-2xl flex flex-col items-center justify-center gap-3 hover:bg-white/5 hover:border-primary/50 cursor-pointer group transition-all relative">
-                                            <button
-                                                onClick={() => removeTool(tool._id)}
-                                                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-white/40 hover:text-red-400 transition-all"
-                                            >
-                                                <span className="material-symbols-outlined text-lg">close</span>
-                                            </button>
-                                            <div className={`w-10 h-10 rounded-lg ${tool.bgColor} flex items-center justify-center text-white shadow-lg`}>
-                                                <span className="material-symbols-outlined text-xl">{tool.icon}</span>
-                                            </div>
-                                            <span className="text-xs font-bold text-white/60 group-hover:text-white">{tool.name}</span>
-                                        </div>
-                                    ))}
+                                <Reorder.Group axis="y" values={localTools} onReorder={handleReorderTools} className="space-y-3">
+                                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                                        {localTools.map((tool) => (
+                                            <Reorder.Item key={tool._id} value={tool} className="cursor-grab active:cursor-grabbing">
+                                                <div className="aspect-square bg-black/20 border border-white/10 rounded-2xl flex flex-col items-center justify-center gap-3 hover:bg-white/5 hover:border-primary/50 group transition-all relative">
+                                                    <button
+                                                        onClick={() => removeTool(tool._id)}
+                                                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-white/40 hover:text-red-400 transition-all"
+                                                    >
+                                                        <span className="material-symbols-outlined text-lg">close</span>
+                                                    </button>
+                                                    <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 text-white/40 transition-all cursor-grab">
+                                                        <span className="material-symbols-outlined text-lg">drag_handle</span>
+                                                    </div>
+                                                    <div className={`w-10 h-10 rounded-lg ${tool.bgColor} flex items-center justify-center text-white shadow-lg`}>
+                                                        <ToolIcon icon={tool.icon} className="w-6 h-6" />
+                                                    </div>
+                                                    <span className="text-xs font-bold text-white/60 group-hover:text-white text-center px-1">{tool.name}</span>
+                                                </div>
+                                            </Reorder.Item>
+                                        ))}
+                                    </div>
+                                </Reorder.Group>
 
-                                    {tools.length === 0 && (
-                                        <div className="col-span-full text-center py-8 text-white/40">
-                                            <span className="material-symbols-outlined text-4xl mb-2 block">terminal</span>
-                                            No tools added yet. Click "Add Tool" to add your software stack.
-                                        </div>
-                                    )}
-                                </div>
+                                {localTools.length === 0 && (
+                                    <div className="col-span-full text-center py-8 text-white/40">
+                                        <span className="material-symbols-outlined text-4xl mb-2 block">terminal</span>
+                                        No tools added yet. Click "Add Tool" to add your software stack.
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}
@@ -1630,31 +1654,13 @@ const Admin = () => {
 
                             <div>
                                 <label className="text-xs uppercase tracking-wider font-bold text-white/40 mb-2 block">
-                                    Icon (Material Symbol)
+                                    Icon Selection
                                 </label>
-                                <div className="grid grid-cols-6 gap-2">
-                                    {/* Standard Material Icons */}
-                                    {["code", "design_services", "view_kanban", "analytics", "cloud", "terminal", "description", "storage", "api", "psychology", "integration_instructions", "developer_mode"].map((icon) => (
-                                        <button
-                                            key={icon}
-                                            onClick={() => setNewToolIcon(icon)}
-                                            className={`aspect-square rounded-lg flex items-center justify-center transition-all ${newToolIcon === icon ? 'bg-primary text-black' : 'bg-white/5 text-white/60 hover:bg-white/10'}`}
-                                        >
-                                            <span className="material-symbols-outlined text-lg">{icon}</span>
-                                        </button>
-                                    ))}
-
-                                    {/* Brand Logos */}
-                                    {Object.keys(BRAND_ICONS).map((icon) => (
-                                        <button
-                                            key={icon}
-                                            onClick={() => setNewToolIcon(icon)}
-                                            className={`aspect-square rounded-lg flex items-center justify-center transition-all ${newToolIcon === icon ? 'bg-primary text-black' : 'bg-white/5 text-white/60 hover:bg-white/10'}`}
-                                            title={icon.replace('brand-', '').replace('-', ' ')}
-                                        >
-                                            <ToolIcon icon={icon} className="w-5 h-5" />
-                                        </button>
-                                    ))}
+                                <div className="max-h-96 overflow-y-auto">
+                                    <IconCatalog 
+                                        selectedIcon={newToolIcon}
+                                        onSelectIcon={setNewToolIcon}
+                                    />
                                 </div>
                             </div>
 

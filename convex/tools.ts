@@ -56,3 +56,14 @@ export const remove = mutation({
         await ctx.db.delete(args.id);
     },
 });
+
+export const reorder = mutation({
+    args: {
+        items: v.array(v.object({ id: v.id("tools"), order: v.number() })),
+    },
+    handler: async (ctx, args) => {
+        for (const item of args.items) {
+            await ctx.db.patch(item.id, { order: item.order });
+        }
+    },
+});

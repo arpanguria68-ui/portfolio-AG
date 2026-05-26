@@ -14,6 +14,7 @@
     "@clerk/clerk-react": "^5.60.0",
     "clsx": "^2.1.1",
     "convex": "^1.31.6",
+    "developer-icons": "^7.0.0",
     "framer-motion": "^12.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
