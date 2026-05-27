@@ -112,17 +112,17 @@ const Home = () => {
     const filteredProjects = projects.filter(p => {
         if (projectFilter === 'All') return true;
         // Fallback for legacy projects without category: check tags or allow if category not set
-        return p.category === projectFilter || (!p.category && p.tags.includes(projectFilter));
+        return (p as any).category === projectFilter || (!(p as any).category && (p as any).tags?.includes(projectFilter));
     }).sort((a, b) => {
         if (projectSort === 'Newest') {
-            return parseInt(b.year) - parseInt(a.year);
+            return parseInt((b as any).year) - parseInt((a as any).year);
         }
         if (projectSort === 'Newest (Date)') {
             // Defaults to 0 if creationDate is undefined
-            return (b.creationDate || 0) - (a.creationDate || 0);
+            return ((b as any).creationDate || 0) - ((a as any).creationDate || 0);
         }
-        if (projectSort === 'Oldest') return parseInt(a.year) - parseInt(b.year);
-        if (projectSort === 'A-Z') return a.title.localeCompare(b.title);
+        if (projectSort === 'Oldest') return parseInt((a as any).year) - parseInt((b as any).year);
+        if (projectSort === 'A-Z') return (a as any).title.localeCompare((b as any).title);
         return 0;
     });
 
@@ -357,19 +357,26 @@ const Home = () => {
                                 )}
                             </div>
                         </div>
-                        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                             {(convexTools && convexTools.length > 0 ? convexTools : [
-                                { icon: "design_services", name: "Figma", bgColor: "bg-blue-600", _id: "f1" },
-                                { icon: "view_kanban", name: "Jira", bgColor: "bg-blue-500", _id: "f2" },
-                                { icon: "analytics", name: "Mixpanel", bgColor: "bg-purple-600", _id: "f3" },
-                                { icon: "code", name: "Python", bgColor: "bg-yellow-500", _id: "f4" }
+                                { icon: "Figma", name: "Figma", bgColor: "bg-blue-600", _id: "f1", category: "Design" },
+                                { icon: "React", name: "React", bgColor: "bg-cyan-500", _id: "f2", category: "Frameworks" },
+                                { icon: "Python", name: "Python", bgColor: "bg-yellow-500", _id: "f3", category: "Languages" },
+                                { icon: "Docker", name: "Docker", bgColor: "bg-blue-500", _id: "f4", category: "DevOps" }
                             ]).map((tool, i) => (
-                                <div key={tool._id || i} className="aspect-square glass rounded-2xl flex flex-col items-center justify-center gap-4 hover:bg-white/5 transition-colors group relative overflow-hidden">
-                                    <div className={`absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity ${tool.bgColor || 'bg-white/5'}`}></div>
-                                    <div className="relative z-10 text-white/70 group-hover:text-white transition-colors">
-                                        <ToolIcon icon={tool.icon} className="text-4xl w-9 h-9" />
+                                <div key={tool._id || i} className="group relative">
+                                    <div className="aspect-square glass rounded-2xl flex flex-col items-center justify-center gap-2 hover:bg-white/10 transition-all duration-300 hover:scale-105 cursor-pointer">
+                                        <div className={`absolute inset-0 opacity-0 group-hover:opacity-30 transition-opacity duration-300 rounded-2xl ${tool.bgColor || 'bg-white/5'}`}></div>
+                                        <div className="relative z-10 text-white/70 group-hover:text-white transition-colors duration-300">
+                                            <ToolIcon icon={tool.icon} className="w-8 h-8" />
+                                        </div>
+                                        <span className="text-xs font-semibold opacity-60 uppercase tracking-widest relative z-10 text-center px-1 group-hover:opacity-100 transition-opacity duration-300">{tool.name}</span>
                                     </div>
-                                    <span className="text-xs opacity-50 uppercase tracking-widest relative z-10">{tool.name}</span>
+                                    {tool.category && (
+                                        <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 bg-black/80 backdrop-blur-sm px-2 py-1 rounded text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-50">
+                                            {tool.category}
+                                        </div>
+                                    )}
                                 </div>
                             ))}
                         </div>
@@ -461,7 +468,7 @@ const Home = () => {
                             </div>
 
                             {/* Dynamic Timeline Items */}
-                            {convexExperiences && convexExperiences.filter(e => e.visible).sort((a, b) => (a.order ?? 0) - (b.order ?? 0)).map((experience, index) => (
+                            {convexExperiences && convexExperiences.filter(e => e.visible).sort((a, b) => (a.order ?? 0) - (b.order ?? 0)).map((experience) => (
                                 <div key={experience._id} className="flex flex-col md:flex-row gap-0 md:gap-12 group mb-12 relative items-start md:items-center justify-between">
                                     {/* Date (Left on Desktop) */}
                                     <div className="w-[100px] md:w-1/2 pr-6 md:pr-0 md:text-right flex flex-col md:block items-end pt-1 flex-shrink-0">

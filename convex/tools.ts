@@ -16,6 +16,8 @@ export const create = mutation({
         name: v.string(),
         icon: v.string(),
         bgColor: v.string(),
+        category: v.optional(v.string()),
+        description: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
         const tools = await ctx.db.query("tools").collect();
@@ -27,6 +29,8 @@ export const create = mutation({
             name: args.name,
             icon: args.icon,
             bgColor: args.bgColor,
+            category: args.category,
+            description: args.description,
             order: maxOrder + 1,
         });
         return id;
@@ -54,5 +58,16 @@ export const remove = mutation({
     args: { id: v.id("tools") },
     handler: async (ctx, args) => {
         await ctx.db.delete(args.id);
+    },
+});
+
+export const reorder = mutation({
+    args: {
+        items: v.array(v.object({ id: v.id("tools"), order: v.number() })),
+    },
+    handler: async (ctx, args) => {
+        for (const item of args.items) {
+            await ctx.db.patch(item.id, { order: item.order });
+        }
     },
 });
