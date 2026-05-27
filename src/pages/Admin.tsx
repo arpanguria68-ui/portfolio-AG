@@ -728,9 +728,8 @@ const Admin = () => {
                                         Add Tool
                                     </button>
                                 </div>
-                                <Reorder.Group axis="y" values={localTools} onReorder={handleReorderTools} className="space-y-3">
-                                    {/* Grid display with vertical reordering - items are reordered by data order, displayed in grid layout */}
-                                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                                    <Reorder.Group axis="y" values={localTools} onReorder={handleReorderTools} className="contents">
                                         {localTools.map((tool) => (
                                             <Reorder.Item key={tool._id} value={tool} className="cursor-grab active:cursor-grabbing">
                                                 <div className="aspect-square bg-black/20 border border-white/10 rounded-2xl flex flex-col items-center justify-center gap-3 hover:bg-white/5 hover:border-primary/50 group transition-all relative">
@@ -750,8 +749,8 @@ const Admin = () => {
                                                 </div>
                                             </Reorder.Item>
                                         ))}
-                                    </div>
-                                </Reorder.Group>
+                                    </Reorder.Group>
+                                </div>
 
                                 {localTools.length === 0 && (
                                     <div className="col-span-full text-center py-8 text-white/40">
