@@ -1,5 +1,6 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { requireAdmin } from "./authHelpers";
 
 export const get = query({
     args: {},
@@ -19,6 +20,7 @@ export const upsert = mutation({
         profileImage: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
+        await requireAdmin(ctx);
         const existing = await ctx.db
             .query("profile")
             .filter((q) => q.eq(q.field("key"), "main"))

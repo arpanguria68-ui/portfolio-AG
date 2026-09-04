@@ -1,5 +1,6 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { requireAdmin } from "./authHelpers";
 
 export const list = query({
     args: {},
@@ -34,6 +35,7 @@ export const create = mutation({
         }))),
     },
     handler: async (ctx, args) => {
+        await requireAdmin(ctx);
         const projectId = await ctx.db.insert("projects", {
             title: args.title,
             description: args.description,
@@ -72,6 +74,7 @@ export const update = mutation({
         }))),
     },
     handler: async (ctx, args) => {
+        await requireAdmin(ctx);
         const { id, ...updates } = args;
         // Filter out undefined values
         const filteredUpdates = Object.fromEntries(
@@ -84,6 +87,7 @@ export const update = mutation({
 export const remove = mutation({
     args: { id: v.id("projects") },
     handler: async (ctx, args) => {
+        await requireAdmin(ctx);
         await ctx.db.delete(args.id);
     },
 });
