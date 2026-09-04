@@ -16,9 +16,9 @@ const ChatHistoryCenter = () => {
     };
 
     return (
-        <div className="flex h-full gap-6 animate-in fade-in duration-500">
+        <div className="flex flex-col md:flex-row h-full min-h-[calc(100dvh-11rem)] md:min-h-[calc(100vh-6rem)] gap-4 md:gap-6 animate-in fade-in duration-500">
             {/* List Panel */}
-            <div className={`${selectedSessionId ? 'hidden md:flex' : 'flex'} w-full md:w-1/3 flex-col bg-card-dark border border-white/10 rounded-2xl overflow-hidden`}>
+            <div className={`${selectedSessionId ? 'hidden md:flex' : 'flex'} w-full md:w-1/3 min-h-0 flex-col bg-card-dark border border-white/10 rounded-2xl overflow-hidden`}>
                 <div className="p-4 border-b border-white/10 flex justify-between items-center bg-white/5">
                     <h2 className="font-bold text-white">Chat Sessions</h2>
                     <span className="text-xs font-bold px-2 py-1 rounded bg-primary text-black">
@@ -50,7 +50,7 @@ const ChatHistoryCenter = () => {
             </div>
 
             {/* Transcript Panel */}
-            <div className={`${selectedSessionId ? 'flex' : 'hidden md:flex'} w-full md:w-2/3 flex-col bg-black/20 border border-white/10 rounded-2xl overflow-hidden relative`}>
+            <div className={`${selectedSessionId ? 'flex' : 'hidden md:flex'} w-full md:w-2/3 min-h-0 flex-col bg-black/20 border border-white/10 rounded-2xl overflow-hidden relative`}>
                 {selectedSessionId ? (
                     <>
                         <div className="absolute top-4 right-4 md:hidden">

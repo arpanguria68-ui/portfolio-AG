@@ -16,6 +16,20 @@ import IconCatalog from '../components/IconCatalog';
 
 import ToolIcon from "../components/ToolIcon";
 
+const ADMIN_TABS = [
+    { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
+    { id: 'messages', label: 'Messages', icon: 'mail' },
+    { id: 'ai-history', label: 'AI History', icon: 'smart_toy' },
+    { id: 'projects', label: 'Projects', icon: 'work' },
+    { id: 'story', label: 'Story', icon: 'person' },
+    { id: 'toolbox', label: 'Toolbox', icon: 'construction' },
+    { id: 'highlights', label: 'Media', icon: 'image' },
+    { id: 'settings', label: 'Settings', icon: 'settings' },
+] as const;
+
+const activeTabLabel = (tabId: string) =>
+    ADMIN_TABS.find((tab) => tab.id === tabId)?.label ?? 'Admin';
+
 const Admin = () => {
     const { user, isLoaded } = useUser();
     const adminEmail = import.meta.env.VITE_ADMIN_EMAIL;
@@ -519,12 +533,12 @@ const Admin = () => {
     const [editingProject, setEditingProject] = useState<any>(null);
 
     return (
-        <div className="bg-background-dark text-white font-sans antialiased min-h-screen flex flex-col md:flex-row relative overflow-hidden">
+        <div className="bg-background-dark text-white font-sans antialiased min-h-screen min-h-[100dvh] flex flex-col md:flex-row relative overflow-hidden">
             {/* Background Effects */}
             <div className="fixed top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] pointer-events-none"></div>
 
             {/* Desktop Sidebar */}
-            <aside className="hidden md:flex w-64 flex-col border-r border-white/10 bg-card-dark/50 backdrop-blur-xl h-screen sticky top-0 z-40">
+            <aside className="hidden md:flex w-64 shrink-0 flex-col border-r border-white/10 bg-card-dark/50 backdrop-blur-xl h-screen sticky top-0 z-40">
                 {/* ... (sidebar content remains same) ... */}
                 <div className="p-6">
                     <div className="flex items-center gap-3 mb-8">
@@ -538,25 +552,14 @@ const Admin = () => {
                     </div>
 
                     <nav className="flex flex-col gap-2">
-                        {['dashboard', 'messages', 'ai-history', 'projects', 'story', 'toolbox', 'highlights', 'settings'].map((tab) => (
+                        {ADMIN_TABS.map((tab) => (
                             <button
-                                key={tab}
-                                onClick={() => setActiveTab(tab)}
-                                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${activeTab === tab ? 'bg-primary text-black font-bold' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${activeTab === tab.id ? 'bg-primary text-black font-bold' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
                             >
-                                <span className="material-symbols-outlined text-[20px]">
-                                    {tab === 'dashboard' ? 'dashboard' :
-                                        tab === 'messages' ? 'mail' :
-                                            tab === 'ai-history' ? 'smart_toy' :
-                                                tab === 'projects' ? 'work' :
-                                                    tab === 'story' ? 'person' :
-                                                        tab === 'toolbox' ? 'construction' :
-                                                            tab === 'settings' ? 'settings' : 'image'}
-                                </span>
-                                <span className="capitalize">
-                                    {tab === 'highlights' ? 'Media Library' :
-                                        tab === 'ai-history' ? 'AI History' : tab}
-                                </span>
+                                <span className="material-symbols-outlined text-[20px]">{tab.icon}</span>
+                                <span>{tab.label}</span>
                             </button>
                         ))}
                     </nav>
@@ -570,37 +573,42 @@ const Admin = () => {
             </aside>
 
             {/* Main Content Area */}
-            <main className="flex-1 overflow-y-auto h-screen no-scrollbar relative z-10 pb-24 md:pb-0">
+            <main className="flex-1 min-h-0 overflow-y-auto h-[100dvh] md:h-screen no-scrollbar relative z-10 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0">
                 {/* Mobile Header */}
-                <header className="md:hidden sticky top-0 z-30 bg-background-dark/95 backdrop-blur-md border-b border-white/10 p-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <Link to="/" className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/60 hover:text-primary hover:bg-primary/10 transition-all">
+                <header className="md:hidden sticky top-0 z-30 bg-background-dark/95 backdrop-blur-md border-b border-white/10 px-4 py-3 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                        <Link to="/" className="w-8 h-8 shrink-0 rounded-full bg-white/10 flex items-center justify-center text-white/60 hover:text-primary hover:bg-primary/10 transition-all">
                             <span className="material-symbols-outlined text-[18px]">arrow_back</span>
                         </Link>
-                        <h2 className="font-display font-bold text-lg">Admin</h2>
+                        <div className="min-w-0">
+                            <h2 className="font-display font-bold text-lg leading-tight truncate">{activeTabLabel(activeTab)}</h2>
+                            <p className="text-[10px] text-white/40 uppercase tracking-wider">Admin Panel</p>
+                        </div>
                     </div>
-                    <Link to="/" className="text-xs font-bold text-white/40 hover:text-primary transition-colors flex items-center gap-1">
-                        <span>View Site</span>
-                        <span className="material-symbols-outlined text-[14px]">open_in_new</span>
-                    </Link>
+                    <div className="flex items-center gap-2 shrink-0">
+                        <UserButton afterSignOutUrl="/" />
+                        <Link to="/" className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white/60 hover:text-primary hover:bg-primary/10 transition-all" title="View site">
+                            <span className="material-symbols-outlined text-[16px]">open_in_new</span>
+                        </Link>
+                    </div>
                 </header>
 
-                <div className="p-6 md:p-12 max-w-7xl mx-auto">
+                <div className="px-4 py-4 sm:px-6 sm:py-6 md:p-12 max-w-7xl mx-auto w-full">
                     {/* Dashboard View */}
                     {activeTab === 'dashboard' && (
                         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <header className="mb-10 flex items-center justify-between">
-                                <div>
-                                    <h1 className="text-3xl md:text-3xl font-display font-bold mb-2">Welcome Back, <span className="text-primary">Arpan Guria</span></h1>
-                                    <p className="text-white/40">Here's what's happening with your portfolio today.</p>
+                            <header className="mb-8 sm:mb-10 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                                <div className="min-w-0">
+                                    <h1 className="text-2xl sm:text-3xl font-display font-bold mb-2">Welcome Back, <span className="text-primary">Arpan Guria</span></h1>
+                                    <p className="text-white/40 text-sm sm:text-base">Here's what's happening with your portfolio today.</p>
                                 </div>
-                                <div className="bg-white/5 p-1 rounded-full border border-white/10">
+                                <div className="bg-white/5 p-1 rounded-full border border-white/10 self-start">
                                     <UserButton afterSignOutUrl="/" />
                                 </div>
                             </header>
 
                             {/* Stats Grid */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8 sm:mb-12">
                                 <div className="glass p-6 rounded-3xl border border-white/10 relative overflow-hidden group hover:border-primary/50 transition-colors">
                                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                                         <span className="material-symbols-outlined text-6xl text-primary">visibility</span>
@@ -650,14 +658,14 @@ const Admin = () => {
 
                     {/* Message Center View */}
                     {activeTab === 'messages' && (
-                        <div className="h-[calc(100vh-100px)] animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="min-h-[calc(100dvh-11rem)] md:min-h-[calc(100vh-6rem)] animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <MessageCenter />
                         </div>
                     )}
 
                     {/* AI History View */}
                     {activeTab === 'ai-history' && (
-                        <div className="h-[calc(100vh-100px)] animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="min-h-[calc(100dvh-11rem)] md:min-h-[calc(100vh-6rem)] animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <ChatHistoryCenter />
                         </div>
                     )}
@@ -666,20 +674,20 @@ const Admin = () => {
                     {activeTab === 'toolbox' && (
                         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-4xl mx-auto">
                             {/* ... toolbox code ... */}
-                            <div className="flex items-center justify-between mb-8">
-                                <div>
-                                    <h2 className="text-3xl font-display font-bold mb-2">Magic <span className="text-primary">Toolbox</span></h2>
-                                    <p className="text-white/40">Manage your skills and software stack.</p>
+                            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-8">
+                                <div className="min-w-0">
+                                    <h2 className="text-2xl sm:text-3xl font-display font-bold mb-2">Magic <span className="text-primary">Toolbox</span></h2>
+                                    <p className="text-white/40 text-sm sm:text-base">Manage your skills and software stack.</p>
                                 </div>
-                                <button className="px-6 py-2 bg-primary text-black font-bold rounded-full hover:shadow-[0_0_20px_rgba(212,255,63,0.4)] transition-all flex items-center gap-2">
+                                <button className="px-5 py-2 bg-primary text-black font-bold rounded-full hover:shadow-[0_0_20px_rgba(212,255,63,0.4)] transition-all flex items-center justify-center gap-2 self-start sm:self-auto text-sm">
                                     <span className="material-symbols-outlined">save</span>
                                     <span>Save Changes</span>
                                 </button>
                             </div>
 
-                            <div className="bg-card-dark/50 border border-white/10 rounded-3xl p-8 mb-8">
-                                <div className="flex items-center justify-between mb-6">
-                                    <h3 className="text-xl font-bold flex items-center gap-2">
+                            <div className="bg-card-dark/50 border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 mb-6 sm:mb-8">
+                                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
+                                    <h3 className="text-lg sm:text-xl font-bold flex flex-wrap items-center gap-2">
                                         <span className="material-symbols-outlined text-primary">psychology</span>
                                         Professional Skills
                                         <span className="text-sm font-normal text-white/40">({skills.length} skills)</span>
@@ -713,9 +721,9 @@ const Admin = () => {
                                 </div>
                             </div>
 
-                            <div className="bg-card-dark/50 border border-white/10 rounded-3xl p-8">
-                                <div className="flex items-center justify-between mb-6">
-                                    <h3 className="text-xl font-bold flex items-center gap-2">
+                            <div className="bg-card-dark/50 border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8">
+                                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
+                                    <h3 className="text-lg sm:text-xl font-bold flex flex-wrap items-center gap-2">
                                         <span className="material-symbols-outlined text-primary">terminal</span>
                                         Software Stack
                                         <span className="text-sm font-normal text-white/40">({localTools.length} tools)</span>
@@ -728,7 +736,7 @@ const Admin = () => {
                                         Add Tool
                                     </button>
                                 </div>
-                                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
                                     <Reorder.Group axis="y" values={localTools} onReorder={handleReorderTools} className="contents">
                                         {localTools.map((tool) => (
                                             <Reorder.Item key={tool._id} value={tool} className="cursor-grab active:cursor-grabbing">
@@ -766,19 +774,19 @@ const Admin = () => {
                     {activeTab === 'highlights' && (
                         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-5xl mx-auto">
                             {/* ... media library content ... */}
-                            <div className="flex items-center justify-between mb-8">
-                                <div>
-                                    <h2 className="text-3xl font-display font-bold mb-2">Media <span className="text-primary">Library</span></h2>
-                                    <p className="text-white/40">Manager your project images and highlights.</p>
+                            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-6 sm:mb-8">
+                                <div className="min-w-0">
+                                    <h2 className="text-2xl sm:text-3xl font-display font-bold mb-2">Media <span className="text-primary">Library</span></h2>
+                                    <p className="text-white/40 text-sm sm:text-base">Manage your project images and highlights.</p>
                                 </div>
-                                <button onClick={handleUploadMedia} className="h-12 w-12 rounded-full bg-primary text-black flex items-center justify-center shadow-lg hover:scale-105 transition-transform">
+                                <button onClick={handleUploadMedia} className="h-11 w-11 sm:h-12 sm:w-12 rounded-full bg-primary text-black flex items-center justify-center shadow-lg hover:scale-105 transition-transform self-start">
                                     <span className="material-symbols-outlined text-2xl">add</span>
                                 </button>
                             </div>
 
                             <div
                                 onClick={handleUploadMedia}
-                                className="mb-8 p-8 border-2 border-dashed border-white/10 rounded-3xl bg-white/5 hover:bg-white/10 hover:border-primary/50 transition-all cursor-pointer flex flex-col items-center justify-center gap-4 group"
+                                className="mb-6 sm:mb-8 p-5 sm:p-8 border-2 border-dashed border-white/10 rounded-2xl sm:rounded-3xl bg-white/5 hover:bg-white/10 hover:border-primary/50 transition-all cursor-pointer flex flex-col items-center justify-center gap-4 group"
                             >
                                 <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
                                     {isUploading ? (
@@ -793,7 +801,7 @@ const Admin = () => {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
                                 {mediaItems.map((item) => (
                                     <div key={item._id} className="group relative bg-card-dark/50 rounded-2xl p-2 border border-white/10 hover:border-primary/50 transition-all flex flex-col gap-3">
                                         <div className="relative aspect-square rounded-xl overflow-hidden bg-black/50">
@@ -835,12 +843,12 @@ const Admin = () => {
                     {activeTab === 'story' && (
                         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-2xl mx-auto">
                             {/* ... story editor content ... */}
-                            <div className="flex items-center justify-between mb-8">
-                                <div>
-                                    <h2 className="text-3xl font-display font-bold mb-2">My <span className="text-primary">Story</span></h2>
-                                    <p className="text-white/40">Edit your profile, bio, and social links.</p>
+                            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-6 sm:mb-8">
+                                <div className="min-w-0">
+                                    <h2 className="text-2xl sm:text-3xl font-display font-bold mb-2">My <span className="text-primary">Story</span></h2>
+                                    <p className="text-white/40 text-sm sm:text-base">Edit your profile, bio, and social links.</p>
                                 </div>
-                                <div className="flex gap-2">
+                                <div className="flex flex-wrap gap-2 self-start">
                                     <button
                                         onClick={() => window.open('/', '_blank')}
                                         className="px-6 py-2 border border-white/10 hover:bg-white/5 rounded-full font-bold text-sm transition-all flex items-center gap-2"
@@ -871,8 +879,8 @@ const Admin = () => {
                                     <label className="text-xs uppercase tracking-wider font-bold text-white/40">Profile Image</label>
                                     <span className="text-[10px] text-primary bg-primary/10 px-2 py-1 rounded border border-primary/20">{profileSaved ? 'Saved' : ''}</span>
                                 </div>
-                                <div className="glass p-8 rounded-3xl border border-white/10 flex flex-col items-center justify-center bg-card-dark/30">
-                                    <div className="relative group cursor-pointer w-[180px]" onClick={handleUploadProfileImage}>
+                                <div className="glass p-5 sm:p-8 rounded-2xl sm:rounded-3xl border border-white/10 flex flex-col items-center justify-center bg-card-dark/30">
+                                    <div className="relative group cursor-pointer w-full max-w-[180px]" onClick={handleUploadProfileImage}>
                                         <div className="aspect-[4/5] rounded-2xl overflow-hidden relative border-2 border-white/10 group-hover:border-primary/50 transition-colors shadow-2xl">
                                             <img
                                                 alt="Profile Preview"
@@ -1101,24 +1109,25 @@ const Admin = () => {
                                 />
                             ) : (
                                 <>
-                                    <div className="flex items-center justify-between mb-6">
-                                        <div>
-                                            <h2 className="text-3xl font-display font-bold mb-2">My <span className="text-primary">Projects</span></h2>
-                                            <p className="text-white/40">Manage your portfolio showcase.</p>
+                                    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-6">
+                                        <div className="min-w-0">
+                                            <h2 className="text-2xl sm:text-3xl font-display font-bold mb-2">My <span className="text-primary">Projects</span></h2>
+                                            <p className="text-white/40 text-sm sm:text-base">Manage your portfolio showcase.</p>
                                         </div>
-                                        <div className="flex items-center gap-3">
-                                            <div className="relative">
+                                        <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                                            <div className="relative flex-1 sm:flex-none sm:min-w-[220px]">
                                                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30">
                                                     <span className="material-symbols-outlined text-lg">search</span>
                                                 </span>
                                                 <input
                                                     type="text"
                                                     placeholder="Search projects..."
-                                                    className="bg-white/5 border border-white/10 rounded-full py-2 pl-9 pr-4 text-sm text-white focus:outline-none focus:border-primary/50 hidden md:block"
+                                                    className="w-full bg-white/5 border border-white/10 rounded-full py-2 pl-9 pr-11 text-sm text-white focus:outline-none focus:border-primary/50"
                                                 />
                                                 <button
                                                     onClick={() => setShowFilterModal(true)}
                                                     className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white/5 text-white/60 flex items-center justify-center hover:bg-white/10 hover:text-primary transition-colors"
+                                                    aria-label="Filter projects"
                                                 >
                                                     <span className="material-symbols-outlined text-base">tune</span>
                                                 </button>
@@ -1128,10 +1137,10 @@ const Admin = () => {
                                                     setEditingProject(null);
                                                     setViewMode('editor');
                                                 }}
-                                                className="h-12 w-12 md:w-auto md:px-6 md:py-2 md:rounded-full rounded-full bg-primary text-black font-bold flex items-center justify-center gap-2 hover:shadow-[0_0_20px_rgba(212,255,63,0.3)] transition-all"
+                                                className="h-11 w-11 sm:h-12 sm:w-auto sm:px-6 sm:py-2 shrink-0 rounded-full bg-primary text-black font-bold flex items-center justify-center gap-2 hover:shadow-[0_0_20px_rgba(212,255,63,0.3)] transition-all"
                                             >
-                                                <span className="material-symbols-outlined text-2xl md:text-xl">add</span>
-                                                <span className="hidden md:inline">Add Project</span>
+                                                <span className="material-symbols-outlined text-2xl sm:text-xl">add</span>
+                                                <span className="hidden sm:inline">Add Project</span>
                                             </button>
                                         </div>
                                     </div>
@@ -1335,12 +1344,12 @@ const Admin = () => {
                     {activeTab === 'settings' && (
                         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-2xl mx-auto">
                             {/* Audio Configuration */}
-                            <div className="bg-card-dark/50 border border-white/10 rounded-3xl p-8 mb-8">
-                                <div className="flex items-center gap-3 mb-6">
-                                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                            <div className="bg-card-dark/50 border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 mb-6 sm:mb-8">
+                                <div className="flex flex-col gap-3 sm:flex-row sm:items-center gap-4 mb-6">
+                                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
                                         <span className="material-symbols-outlined">music_note</span>
                                     </div>
-                                    <h3 className="text-xl font-bold">Background Music</h3>
+                                    <h3 className="text-lg sm:text-xl font-bold">Background Music</h3>
                                 </div>
 
                                 <div className="space-y-6">
@@ -1386,16 +1395,16 @@ const Admin = () => {
                             </div>
 
                             {/* AI Configuration Section */}
-                            <div className="bg-card-dark/50 border border-white/10 rounded-3xl p-8 mb-8">
-                                <div className="flex items-center gap-4 mb-6">
-                                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white shadow-lg">
+                            <div className="bg-card-dark/50 border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 mb-6 sm:mb-8">
+                                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-4 mb-6">
+                                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white shadow-lg shrink-0">
                                         <span className="material-symbols-outlined text-2xl">auto_awesome</span>
                                     </div>
-                                    <div>
-                                        <h3 className="text-xl font-bold">Gemini API Connection</h3>
+                                    <div className="min-w-0 flex-1">
+                                        <h3 className="text-lg sm:text-xl font-bold">Gemini API Connection</h3>
                                         <p className="text-sm text-white/40">Powered by Google Generative AI</p>
                                     </div>
-                                    <div className={`ml-auto px-3 py-1 rounded-full text-xs font-bold border ${isGeminiKeySet ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-red-500/10 text-red-500 border-red-500/20'}`}>
+                                    <div className={`self-start px-3 py-1 rounded-full text-xs font-bold border shrink-0 ${isGeminiKeySet ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-red-500/10 text-red-500 border-red-500/20'}`}>
                                         {isGeminiKeySet ? 'CONNECTED' : 'NOT CONFIGURED'}
                                     </div>
                                 </div>
@@ -1408,7 +1417,7 @@ const Admin = () => {
                                 {/* Test Connection Feature */}
                                 <div className="mb-6 p-4 rounded-xl bg-white/5 border border-white/10">
                                     <h4 className="text-sm font-bold text-white mb-2">Connection Status</h4>
-                                    <div className="flex items-center gap-4">
+                                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
                                         <button
                                             onClick={async () => {
                                                 try {
@@ -1543,28 +1552,25 @@ const Admin = () => {
             </main>
 
             {/* Mobile Bottom Nav */}
-            <nav className="md:hidden fixed bottom-0 w-full bg-background-dark/95 backdrop-blur-md border-t border-white/10 z-50 px-6 py-4 flex justify-between items-center text-xs font-medium">
-                {['dashboard', 'projects', 'story', 'highlights', 'settings'].map((tab) => (
-                    <button
-                        key={tab}
-                        onClick={() => setActiveTab(tab)}
-                        className={`flex flex-col items-center gap-1 ${activeTab === tab ? 'text-primary' : 'text-white/40'}`}
-                    >
-                        <span className="material-symbols-outlined text-xl">
-                            {tab === 'dashboard' ? 'dashboard' :
-                                tab === 'projects' ? 'work' :
-                                    tab === 'story' ? 'person' :
-                                        tab === 'highlights' ? 'image' : 'settings'}
-                        </span>
-                        <span className="capitalize">{tab === 'highlights' ? 'Media' : tab}</span>
-                    </button>
-                ))}
+            <nav className="md:hidden fixed bottom-0 inset-x-0 z-50 border-t border-white/10 bg-background-dark/95 backdrop-blur-md pb-[env(safe-area-inset-bottom)]">
+                <div className="flex gap-1 overflow-x-auto no-scrollbar px-2 py-2">
+                    {ADMIN_TABS.map((tab) => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id)}
+                            className={`flex min-w-[4.5rem] shrink-0 flex-col items-center gap-1 rounded-xl px-2 py-2 text-[10px] font-semibold transition-colors ${activeTab === tab.id ? 'bg-primary/15 text-primary' : 'text-white/45 hover:text-white hover:bg-white/5'}`}
+                        >
+                            <span className="material-symbols-outlined text-[22px]">{tab.icon}</span>
+                            <span className="truncate max-w-[4.5rem]">{tab.label}</span>
+                        </button>
+                    ))}
+                </div>
             </nav>
 
             {/* Add Skill Modal */}
             {showAddSkillModal && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm">
-                    <div className="bg-card-dark border border-white/10 rounded-3xl p-8 w-full max-w-md mx-4 animate-in fade-in zoom-in-95 duration-300">
+                <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm p-0 sm:p-4">
+                    <div className="bg-card-dark border border-white/10 rounded-t-3xl sm:rounded-3xl p-4 sm:p-8 w-full max-w-md max-h-[92dvh] overflow-y-auto sm:mx-4 animate-in fade-in zoom-in-95 duration-300">
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-xl font-bold flex items-center gap-2">
                                 <span className="material-symbols-outlined text-primary">psychology</span>
@@ -1628,8 +1634,8 @@ const Admin = () => {
 
             {/* Add Tool Modal */}
             {showAddToolModal && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm">
-                    <div className="bg-card-dark border border-white/10 rounded-3xl p-8 w-full max-w-md mx-4 animate-in fade-in zoom-in-95 duration-300">
+                <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm p-0 sm:p-4">
+                    <div className="bg-card-dark border border-white/10 rounded-t-3xl sm:rounded-3xl p-4 sm:p-8 w-full max-w-md max-h-[92dvh] overflow-y-auto sm:mx-4 animate-in fade-in zoom-in-95 duration-300">
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-xl font-bold flex items-center gap-2">
                                 <span className="material-symbols-outlined text-primary">terminal</span>
@@ -1745,8 +1751,8 @@ const Admin = () => {
 
             {/* Media Edit Modal */}
             {editingMedia && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm">
-                    <div className="bg-card-dark border border-white/10 rounded-3xl p-8 w-full max-w-md mx-4 animate-in fade-in zoom-in-95 duration-300">
+                <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm p-0 sm:p-4">
+                    <div className="bg-card-dark border border-white/10 rounded-t-3xl sm:rounded-3xl p-4 sm:p-8 w-full max-w-md max-h-[92dvh] overflow-y-auto sm:mx-4 animate-in fade-in zoom-in-95 duration-300">
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-xl font-bold flex items-center gap-2">
                                 <span className="material-symbols-outlined text-primary">image</span>
@@ -1791,7 +1797,7 @@ const Admin = () => {
                                 <label className="text-xs uppercase tracking-wider font-bold text-white/40 mb-2 block">
                                     Category
                                 </label>
-                                <div className="grid grid-cols-3 gap-2">
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                                     {["Workshop", "Certification", "Keynote", "Conference", "Award", "Other"].map((cat) => (
                                         <button
                                             key={cat}

@@ -48,9 +48,9 @@ const MessageCenter = () => {
     };
 
     return (
-        <div className="flex h-full gap-6 animate-in fade-in duration-500">
+        <div className="flex flex-col md:flex-row h-full min-h-[calc(100dvh-11rem)] md:min-h-[calc(100vh-6rem)] gap-4 md:gap-6 animate-in fade-in duration-500">
             {/* List Panel */}
-            <div className={`${selectedMessage ? 'hidden md:flex' : 'flex'} w-full md:w-1/3 flex-col bg-card-dark border border-white/10 rounded-2xl overflow-hidden`}>
+            <div className={`${selectedMessage ? 'hidden md:flex' : 'flex'} w-full md:w-1/3 min-h-0 flex-col bg-card-dark border border-white/10 rounded-2xl overflow-hidden`}>
                 <div className="p-4 border-b border-white/10 flex justify-between items-center bg-white/5">
                     <h2 className="font-bold text-white">Inbox</h2>
                     <span className="text-xs font-bold px-2 py-1 rounded bg-primary text-black">
@@ -90,7 +90,7 @@ const MessageCenter = () => {
             </div>
 
             {/* Detail Panel */}
-            <div className={`${selectedMessage ? 'flex' : 'hidden md:flex'} w-full md:w-2/3 flex-col bg-black/20 border border-white/10 rounded-2xl overflow-hidden relative`}>
+            <div className={`${selectedMessage ? 'flex' : 'hidden md:flex'} w-full md:w-2/3 min-h-0 flex-col bg-black/20 border border-white/10 rounded-2xl overflow-hidden relative`}>
                 {selectedMessage ? (
                     <>
                         <div className="absolute top-4 right-4 flex gap-2">
@@ -102,14 +102,14 @@ const MessageCenter = () => {
                             </button>
                         </div>
 
-                        <div className="p-8 border-b border-white/5 bg-white/5">
-                            <div className="flex items-center gap-4 mb-6">
+                        <div className="p-4 sm:p-8 border-b border-white/5 bg-white/5">
+                            <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6 pr-16 sm:pr-0">
                                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-green-600 flex items-center justify-center text-black font-bold text-xl">
                                     {selectedMessage.name.charAt(0)}
                                 </div>
                                 <div>
-                                    <h2 className="text-2xl font-display font-bold text-white">{selectedMessage.name}</h2>
-                                    <p className="text-primary text-sm">{selectedMessage.email}</p>
+                                    <h2 className="text-xl sm:text-2xl font-display font-bold text-white break-words">{selectedMessage.name}</h2>
+                                    <p className="text-primary text-sm break-all">{selectedMessage.email}</p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-2 text-xs text-white/40">
@@ -118,7 +118,7 @@ const MessageCenter = () => {
                             </div>
                         </div>
 
-                        <div className="flex-1 p-8 overflow-y-auto">
+                        <div className="flex-1 p-4 sm:p-8 overflow-y-auto">
                             <p className="text-lg text-white/80 leading-relaxed whitespace-pre-wrap font-serif">
                                 {selectedMessage.message}
                             </p>
