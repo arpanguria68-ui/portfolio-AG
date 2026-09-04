@@ -324,12 +324,14 @@ const Home = () => {
                                 { icon: "Docker", name: "Docker", bgColor: "bg-blue-500", _id: "f4", category: "DevOps" }
                             ]).map((tool, i) => (
                                 <div key={tool._id || i} className="group relative">
-                                    <div className="aspect-square glass rounded-2xl flex flex-col items-center justify-center gap-2 hover:bg-white/10 transition-all duration-300 hover:scale-105 cursor-pointer">
-                                        <div className={`absolute inset-0 opacity-0 group-hover:opacity-30 transition-opacity duration-300 rounded-2xl ${tool.bgColor || 'bg-white/5'}`}></div>
-                                        <div className="relative z-10 text-white/70 group-hover:text-white transition-colors duration-300">
-                                            <ToolIcon icon={tool.icon} className="w-8 h-8" />
+                                    <div className="aspect-square glass rounded-2xl flex flex-col items-center justify-center gap-3 px-2 py-4 hover:bg-white/10 transition-all duration-300 hover:scale-105 cursor-pointer border border-white/5">
+                                        <div className={`absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-300 rounded-2xl ${tool.bgColor || 'bg-white/5'}`}></div>
+                                        <div className="relative z-10 flex h-11 w-11 items-center justify-center text-white/80 group-hover:text-white transition-colors duration-300">
+                                            <ToolIcon icon={tool.icon} />
                                         </div>
-                                        <span className="text-xs font-semibold opacity-60 uppercase tracking-widest relative z-10 text-center px-1 group-hover:opacity-100 transition-opacity duration-300">{tool.name}</span>
+                                        <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/55 group-hover:text-white/90 transition-opacity duration-300 text-center leading-tight px-1 line-clamp-2">
+                                            {tool.name}
+                                        </span>
                                     </div>
                                     {tool.category && (
                                         <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 bg-black/80 backdrop-blur-sm px-2 py-1 rounded text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-50">
