@@ -12,7 +12,7 @@ export default defineSchema({
         email: v.string(),
         message: v.string(),
         read: v.boolean(),
-    }),
+    }).index("by_email", ["email"]),
 
     projects: defineTable({
         title: v.string(),

@@ -6,6 +6,7 @@ import { api } from '../../convex/_generated/api';
 import { GlowBorderCard } from '../components/ui/glow-border-card';
 import { FlipFadeText } from '../components/ui/flip-fade-text';
 import ToolIcon from '../components/ToolIcon';
+import SiteHeader from '../components/SiteHeader';
 
 const FALLBACK_PROJECTS = [
     {
@@ -53,10 +54,8 @@ const Home = () => {
     const convexSkills = useQuery(api.skills.list);
     const convexTools = useQuery(api.tools.list);
     const convexMedia = useQuery(api.media.list);
-    const convexResumes = useQuery(api.resumes.list);
     const convexSocials = useQuery(api.socials.list);
     const convexExperiences = useQuery(api.experiences.list);
-    const [showCvMenu, setShowCvMenu] = useState(false);
 
     // Profile data with fallbacks
     const profileImage = convexProfile?.profileImage || "https://lh3.googleusercontent.com/aida-public/AB6AXuBmUw9mOGIBUUKTMjLGS3PuCvlZ6tOEkE7Pk4fTqTPRNbyAi8VcOwUJT_Tg7nKQJEJPQUfHhYixf-vDAK5kti7OjS5PBRpTcXy4CYgV5yqLq_8BD9a7D6poQMOIRzQwjPwPy0xUcU4theBgi44FCwTIHWKslp6S1l-DXQD8bGxXSPF7jUS7Jpf1Tx1yTiWGknjjykiWzFMhOmjljznoIL3K1-gKiPmbYu6R0ghqGG3mgw4aBRoYAihl0sZ7Rayj8fsM5dyG5Rpjaupp";
@@ -129,74 +128,34 @@ const Home = () => {
     const CATEGORIES = ['All', 'SaaS', 'Mobile', 'B2B', 'Fintech', 'Health', 'Gen AI apps', 'mobile apps', 'blog'];
     // const uniqueTags = ['All', ...Array.from(new Set(projects.flatMap(p => p.tags)))];
 
-    const [formData, setFormData] = useState({ name: '', email: '', message: '' });
-    const [status, setStatus] = useState<'idle' | 'sending' | 'success'>('idle');
+    const [formData, setFormData] = useState({ name: '', email: '', message: '', website: '' });
+    const [status, setStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
+    const [errorMessage, setErrorMessage] = useState('');
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setStatus('sending');
+        setErrorMessage('');
 
         try {
             await createMessage(formData);
             setStatus('success');
-            setFormData({ name: '', email: '', message: '' });
+            setFormData({ name: '', email: '', message: '', website: '' });
             setTimeout(() => setStatus('idle'), 3000);
         } catch (error) {
             console.error(error);
-            setStatus('idle');
+            const message =
+                error instanceof Error
+                    ? error.message
+                    : 'Failed to send message. Please try again.';
+            setErrorMessage(message);
+            setStatus('error');
         }
     };
 
     return (
         <div className="bg-background-dark text-white font-sans antialiased selection:bg-primary selection:text-black min-h-screen">
-            {/* Header */}
-            <header className="fixed top-0 left-0 w-full z-50 glass-strong px-6 md:px-12 py-4 flex items-center justify-between transition-all duration-300">
-                <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-black font-bold font-display text-sm">
-                        AG
-                    </div>
-                </div>
-                <div className="flex items-center gap-3">
-                    {/* CV Dropdown */}
-                    {convexResumes && convexResumes.filter(r => r.visible).length > 0 && (
-                        <div className="relative">
-                            <button
-                                onClick={() => setShowCvMenu(!showCvMenu)}
-                                className="px-4 py-2 rounded-full border border-white/10 text-xs font-medium uppercase tracking-wider hover:bg-white hover:text-black transition-all flex items-center gap-2"
-                            >
-                                <span>Download CV</span>
-                                <span className="material-symbols-outlined text-[16px]">expand_more</span>
-                            </button>
-
-                            {showCvMenu && (
-                                <div className="absolute top-full right-0 mt-2 w-48 bg-card-dark border border-white/10 rounded-xl shadow-xl overflow-hidden py-1 z-50">
-                                    {convexResumes.filter(r => r.visible).sort((a, b) => a.order - b.order).map(cv => (
-                                        <a
-                                            key={cv._id}
-                                            href={cv.url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="block px-4 py-3 text-sm text-white/70 hover:bg-primary hover:text-black transition-colors flex items-center gap-2"
-                                            onClick={() => setShowCvMenu(false)}
-                                        >
-                                            <span className="material-symbols-outlined text-xs">open_in_new</span>
-                                            {cv.label}
-                                        </a>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    <button className="w-10 h-10 rounded-full flex items-center justify-center text-white/70 hover:text-primary transition-colors hover:bg-white/5">
-                        <span className="material-symbols-outlined text-[20px]">light_mode</span>
-                    </button>
-                    <Link to="/login" className="px-4 py-2 rounded-full border border-white/10 text-xs font-medium uppercase tracking-wider hover:bg-white hover:text-black transition-all flex items-center gap-2">
-                        <span>Login</span>
-                        <span className="material-symbols-outlined text-[16px]">lock</span>
-                    </Link>
-                </div>
-            </header>
+            <SiteHeader />
 
             <main className="relative">
                 {/* Hero Section */}
@@ -580,6 +539,16 @@ const Home = () => {
                             </div>
 
                             <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
+                                <input
+                                    type="text"
+                                    name="website"
+                                    value={formData.website}
+                                    onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                                    className="hidden"
+                                    tabIndex={-1}
+                                    autoComplete="off"
+                                    aria-hidden="true"
+                                />
                                 <div className="group">
                                     <label className="text-xs uppercase tracking-wider font-bold text-white/40 mb-2 block group-focus-within:text-primary transition-colors">Name</label>
                                     <input
@@ -618,12 +587,15 @@ const Home = () => {
                                 </div>
                                 <button
                                     disabled={status === 'sending' || status === 'success'}
-                                    className={`mt-4 w-full py-4 text-black rounded-full font-bold flex items-center justify-center gap-2 group transition-all ${status === 'success' ? 'bg-green-400' : 'bg-white hover:bg-primary'}`}
+                                    className={`mt-4 w-full py-4 text-black rounded-full font-bold flex items-center justify-center gap-2 group transition-all ${status === 'success' ? 'bg-green-400' : status === 'error' ? 'bg-red-400' : 'bg-white hover:bg-primary'}`}
                                     type="submit"
                                 >
-                                    {status === 'sending' ? 'Sending...' : status === 'success' ? 'Message Sent!' : 'Send Message'}
-                                    <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">{status === 'success' ? 'check' : 'send'}</span>
+                                    {status === 'sending' ? 'Sending...' : status === 'success' ? 'Message Sent!' : status === 'error' ? 'Try Again' : 'Send Message'}
+                                    <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">{status === 'success' ? 'check' : status === 'error' ? 'error' : 'send'}</span>
                                 </button>
+                                {status === 'error' && errorMessage && (
+                                    <p className="text-red-400 text-sm text-center" role="alert">{errorMessage}</p>
+                                )}
                             </form>
                         </div>
 

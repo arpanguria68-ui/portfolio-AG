@@ -145,8 +145,8 @@ const Admin = () => {
     // RAG State
     const [resumeText, setResumeText] = useState("");
     const [isIndexing, setIsIndexing] = useState(false);
-    const ingestContext = useAction(api.rag.ingestContext);
-    const syncProjects = useAction(api.rag.syncAllProjects);
+    const ingestContext = useAction(api.rag.ingestContextAdmin);
+    const syncProjects = useAction(api.rag.syncAllProjectsAdmin);
 
     const handleIngestResume = async () => {
         if (!resumeText.trim()) return;

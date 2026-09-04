@@ -47,7 +47,6 @@ const AIChatWidget = () => {
             // Store user message
             await storeMessage({
                 sessionId,
-                role: 'user',
                 content: userMessage,
             });
 

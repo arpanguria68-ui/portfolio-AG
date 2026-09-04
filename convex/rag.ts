@@ -1,20 +1,25 @@
-import { action, internalMutation, internalQuery } from "./_generated/server";
+import {
+    action,
+    internalAction,
+    internalMutation,
+    internalQuery,
+} from "./_generated/server";
 import { v } from "convex/values";
 import { internal, api } from "./_generated/api";
+import { requireAdmin } from "./authHelpers";
 
-// Use the latest stable embedding model
 const EMBEDDING_MODEL = "models/text-embedding-004";
 
-export const generateEmbedding = action({
+export const generateEmbedding = internalAction({
     args: { text: v.string() },
     handler: async (ctx, args): Promise<number[]> => {
-        // 1. Get API Key from settings (created in previous turn)
-        const apiKey = await ctx.runQuery(internal.settings.getSecret, { key: "gemini_api_key" });
+        const apiKey = await ctx.runQuery(internal.settings.getSecret, {
+            key: "gemini_api_key",
+        });
         if (!apiKey) {
             throw new Error("Gemini API Key not set in Admin Settings");
         }
 
-        // 2. Call Gemini Embedding API
         const response = await fetch(
             `https://generativelanguage.googleapis.com/v1beta/${EMBEDDING_MODEL}:embedContent?key=${apiKey}`,
             {
@@ -53,11 +58,10 @@ export const addDocument = internalMutation({
         embedding: v.array(v.number()),
     },
     handler: async (ctx, args) => {
-        // Check if document with this sourceId already exists to avoid duplicates (optional, for syncing)
         if (args.sourceId) {
             const existing = await ctx.db
                 .query("documents")
-                .filter(q => q.eq(q.field("sourceId"), args.sourceId))
+                .filter((q) => q.eq(q.field("sourceId"), args.sourceId))
                 .first();
             if (existing) {
                 await ctx.db.delete(existing._id);
@@ -65,19 +69,20 @@ export const addDocument = internalMutation({
         }
 
         await ctx.db.insert("documents", args);
-    }
+    },
 });
 
-// Main Action to Ingest Text
-export const ingestContext = action({
+export const ingestContext = internalAction({
     args: {
         title: v.string(),
         text: v.string(),
-        type: v.string(), // 'project', 'cv'
-        sourceId: v.optional(v.string())
+        type: v.string(),
+        sourceId: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
-        const embedding = await ctx.runAction(api.rag.generateEmbedding, { text: args.text });
+        const embedding = await ctx.runAction(internal.rag.generateEmbedding, {
+            text: args.text,
+        });
 
         await ctx.runMutation(internal.rag.addDocument, {
             title: args.title,
@@ -86,24 +91,22 @@ export const ingestContext = action({
             sourceId: args.sourceId,
             embedding,
         });
-    }
+    },
 });
 
-// Bulk Index Projects
-export const syncAllProjects = action({
+export const syncAllProjects = internalAction({
     args: {},
     handler: async (ctx) => {
-        // 1. Get all projects (internal query)
         const projects = await ctx.runQuery(api.projects.list);
 
         let count = 0;
         for (const project of projects) {
-            const sectionsText = project.sections
-                ?.filter((s: any) => s.isEnabled)
-                .map((s: any) => `${s.title}: ${s.content}`)
-                .join("\n") || "";
+            const sectionsText =
+                project.sections
+                    ?.filter((s) => s.isEnabled)
+                    .map((s) => `${s.title}: ${s.content}`)
+                    .join("\n") || "";
 
-            // Combine fields for rich context
             const textToEmbed = `
 Project Title: ${project.title}
 Year: ${project.year}
@@ -113,42 +116,36 @@ Details:
 ${sectionsText}
             `.trim();
 
-            await ctx.runAction(api.rag.ingestContext, {
+            await ctx.runAction(internal.rag.ingestContext, {
                 title: `Project: ${project.title}`,
                 text: textToEmbed,
-                type: 'project',
+                type: "project",
                 sourceId: project._id,
             });
             count++;
         }
         return `Successfully indexed ${count} projects.`;
-    }
+    },
 });
 
-// Search Action
-export const search = action({
+export const search = internalAction({
     args: { query: v.string(), limit: v.optional(v.number()) },
-    handler: async (ctx, args): Promise<any[]> => {
-        // 1. Embed query (Explicitly typed)
-        const embedding: number[] = await ctx.runAction(api.rag.generateEmbedding, { text: args.query });
+    handler: async (ctx, args) => {
+        const embedding: number[] = await ctx.runAction(
+            internal.rag.generateEmbedding,
+            { text: args.query }
+        );
 
-        // 2. Vector Search
-        // Note: vectorSearch is a method on the query builder in Convex
-        // We usually run this via a query, but vector search in Convex 
-        // 1.8+ (which the user seems to be using based on package.json ^1.31)
-        // is done via vectorSearch() on the table.
-
-        // Wait, vector search queries must be `query()`? No, vector search returns `_score`.
-        // Ideally we wrap the vector search in a `vectorSearchQuery` below.
         const results = await ctx.vectorSearch("documents", "by_embedding", {
             vector: embedding,
             limit: args.limit || 3,
         });
 
-        // 3. Fetch full documents
-        const docs = await ctx.runQuery(internal.rag.getDocuments, { ids: results.map(r => r._id) });
+        const docs = await ctx.runQuery(internal.rag.getDocuments, {
+            ids: results.map((r) => r._id),
+        });
         return docs;
-    }
+    },
 });
 
 export const getDocuments = internalQuery({
@@ -160,5 +157,26 @@ export const getDocuments = internalQuery({
             if (doc) docs.push(doc);
         }
         return docs;
-    }
+    },
+});
+
+export const ingestContextAdmin = action({
+    args: {
+        title: v.string(),
+        text: v.string(),
+        type: v.string(),
+        sourceId: v.optional(v.string()),
+    },
+    handler: async (ctx, args) => {
+        await requireAdmin(ctx);
+        await ctx.runAction(internal.rag.ingestContext, args);
+    },
+});
+
+export const syncAllProjectsAdmin = action({
+    args: {},
+    handler: async (ctx) => {
+        await requireAdmin(ctx);
+        return await ctx.runAction(internal.rag.syncAllProjects, {});
+    },
 });

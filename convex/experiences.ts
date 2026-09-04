@@ -1,12 +1,13 @@
 
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { requireAdmin } from "./authHelpers";
 
 export const list = query({
     args: {},
     handler: async (ctx) => {
         const experiences = await ctx.db.query("experiences").collect();
-        return experiences.sort((a, b) => (a.order ?? 0) - (b.order ?? 0)); // Sort by order
+        return experiences.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
     },
 });
 
@@ -21,6 +22,7 @@ export const create = mutation({
         visible: v.boolean(),
     },
     handler: async (ctx, args) => {
+        await requireAdmin(ctx);
         const experiences = await ctx.db.query("experiences").collect();
         const maxOrder = experiences.length > 0
             ? Math.max(...experiences.map(e => e.order ?? 0))
@@ -46,6 +48,7 @@ export const update = mutation({
         visible: v.optional(v.boolean()),
     },
     handler: async (ctx, args) => {
+        await requireAdmin(ctx);
         const { id, ...updates } = args;
         const filteredUpdates = Object.fromEntries(
             Object.entries(updates).filter(([, value]) => value !== undefined)
@@ -57,6 +60,7 @@ export const update = mutation({
 export const remove = mutation({
     args: { id: v.id("experiences") },
     handler: async (ctx, args) => {
+        await requireAdmin(ctx);
         await ctx.db.delete(args.id);
     },
 });
@@ -66,6 +70,7 @@ export const reorder = mutation({
         items: v.array(v.object({ id: v.id("experiences"), order: v.number() })),
     },
     handler: async (ctx, args) => {
+        await requireAdmin(ctx);
         for (const item of args.items) {
             await ctx.db.patch(item.id, { order: item.order });
         }
