@@ -157,9 +157,9 @@ const Home = () => {
         <div className="bg-background-dark text-white font-sans antialiased selection:bg-primary selection:text-black min-h-screen">
             <SiteHeader />
 
-            <main className="relative">
+            <main className="relative pb-20 sm:pb-0">
                 {/* Hero Section */}
-                <section className="relative min-h-screen flex flex-col justify-center px-6 md:px-12 bg-smoke-pattern bg-cover bg-center bg-no-repeat pt-20" id="hero">
+                <section className="relative min-h-screen flex flex-col justify-center px-4 sm:px-6 md:px-12 bg-smoke-pattern bg-cover bg-center bg-no-repeat pt-20" id="hero">
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] md:w-[600px] md:h-[600px] bg-primary/10 rounded-full blur-[120px] pointer-events-none"></div>
                     <div className="max-w-7xl mx-auto w-full grid md:grid-cols-2 gap-12 items-center relative z-10">
                         <div className="flex flex-col gap-6">
@@ -169,12 +169,12 @@ const Home = () => {
                             </div>
 
 
-                            <h1 className="text-7xl md:text-8xl lg:text-9xl font-display font-bold leading-[0.9] tracking-tighter flex flex-col items-start">
+                            <h1 className="text-5xl sm:text-6xl md:text-8xl lg:text-9xl font-display font-bold leading-[0.9] tracking-tighter flex flex-col items-start">
                                 <span>Product</span>
                                 <FlipFadeText
                                     words={["Manager", "Designer", "Strategist"]}
                                     className="justify-start min-h-0 py-2"
-                                    textClassName="text-primary text-7xl md:text-8xl lg:text-9xl font-display font-bold leading-[0.9] tracking-tighter text-left"
+                                    textClassName="text-primary text-5xl sm:text-6xl md:text-8xl lg:text-9xl font-display font-bold leading-[0.9] tracking-tighter text-left"
                                     interval={3000}
                                 />
                                 <span className="text-transparent stroke-white" style={{ WebkitTextStroke: '1px rgba(255,255,255,0.5)' }}>Portfolio</span>
@@ -183,7 +183,7 @@ const Home = () => {
                                 Leading Global Digital Transformation and Scalable Product Strategy
                             </p>
                             <div className="flex gap-4 mt-8">
-                                <a className="px-8 py-4 bg-primary text-black rounded-full font-bold flex items-center justify-center gap-2 group transition-all hover:scale-105" href="#contact-me">
+                                <a className="w-full sm:w-auto px-8 py-4 bg-primary text-black rounded-full font-bold flex items-center justify-center gap-2 group transition-all hover:scale-105" href="#contact-me">
                                     Start a Project
                                     <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
                                 </a>
@@ -225,7 +225,7 @@ const Home = () => {
                         </div>
                         <div>
                             <span className="text-primary font-display text-lg mb-2 block">My Story</span>
-                            <h2 className="text-4xl md:text-5xl lg:text-6xl font-display font-medium leading-tight mb-8">
+                            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-medium leading-tight mb-8">
                                 {headline.split(' ').map((word, i) => (
                                     <Fragment key={i}>
                                         {word}{' '}
@@ -316,7 +316,7 @@ const Home = () => {
                                 )}
                             </div>
                         </div>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                        <div className="mt-8 md:mt-0 grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                             {(convexTools && convexTools.length > 0 ? convexTools : [
                                 { icon: "Figma", name: "Figma", bgColor: "bg-blue-600", _id: "f1", category: "Design" },
                                 { icon: "React", name: "React", bgColor: "bg-cyan-500", _id: "f2", category: "Frameworks" },
@@ -357,18 +357,22 @@ const Home = () => {
                                 <p className="text-white/40 text-sm md:text-base max-w-xs mt-4">Explore recent product launches and case studies.</p>
                             </div>
 
-                            {/* Sort Control - Cleaned up */}
-                            <div className="flex items-center gap-2 bg-white/5 p-1.5 rounded-xl border border-white/5 backdrop-blur-sm">
-                                <span className="text-[10px] uppercase font-bold text-white/30 px-3 select-none">Sort</span>
-                                {['Newest', 'Newest (Date)', 'Oldest', 'A-Z'].map((option) => (
-                                    <button
-                                        key={option}
-                                        onClick={() => setProjectSort(option as any)}
-                                        className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${projectSort === option ? 'bg-primary text-black shadow-[0_0_10px_rgba(212,255,63,0.3)]' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
-                                    >
-                                        {option}
-                                    </button>
-                                ))}
+                            {/* Sort Control - scrollable on mobile */}
+                            <div className="overflow-x-auto -mx-2 px-2 no-scrollbar max-w-full self-start md:self-auto">
+                                <div className="flex items-center gap-2 bg-white/5 p-1.5 rounded-xl border border-white/5 backdrop-blur-sm flex-nowrap min-w-max">
+                                    <span className="text-[10px] uppercase font-bold text-white/30 px-2 sm:px-3 select-none shrink-0">Sort</span>
+                                    {['Newest', 'Newest (Date)', 'Oldest', 'A-Z'].map((option) => (
+                                        <button
+                                            key={option}
+                                            onClick={() => setProjectSort(option as any)}
+                                            className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap shrink-0 ${projectSort === option ? 'bg-primary text-black shadow-[0_0_10px_rgba(212,255,63,0.3)]' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+                                        >
+                                            {option === 'Newest (Date)' ? (
+                                                <><span className="sm:hidden">Date</span><span className="hidden sm:inline">Newest (Date)</span></>
+                                            ) : option}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                         </div>
 
@@ -424,15 +428,15 @@ const Home = () => {
 
                         {/* Timeline Container */}
                         <div className="relative">
-                            <div className="absolute left-[100px] md:left-1/2 md:-ml-[1px] top-2 bottom-0 w-[2px] bg-[#1A1A1A] rounded-full overflow-hidden">
+                            <div className="absolute left-4 md:left-1/2 md:-ml-[1px] top-2 bottom-0 w-[2px] bg-[#1A1A1A] rounded-full overflow-hidden">
                                 <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-primary via-primary/40 to-white/5 shadow-[0_0_15px_rgba(212,255,63,0.5)]"></div>
                             </div>
 
                             {/* Dynamic Timeline Items */}
                             {convexExperiences && convexExperiences.filter(e => e.visible).sort((a, b) => (a.order ?? 0) - (b.order ?? 0)).map((experience) => (
                                 <div key={experience._id} className="flex flex-col md:flex-row gap-0 md:gap-12 group mb-12 relative items-start md:items-center justify-between">
-                                    {/* Date (Left on Desktop) */}
-                                    <div className="w-[100px] md:w-1/2 pr-6 md:pr-0 md:text-right flex flex-col md:block items-end pt-1 flex-shrink-0">
+                                    {/* Date (Desktop only) */}
+                                    <div className="hidden md:flex w-1/2 pr-6 md:pr-0 md:text-right flex-col items-end pt-1 flex-shrink-0">
                                         <span className={`font-bold text-sm md:text-lg tracking-wide ${experience.present ? 'text-primary' : 'text-white'}`}>
                                             {experience.present ? 'Present' : experience.endDate}
                                         </span>
@@ -442,7 +446,7 @@ const Home = () => {
                                     </div>
 
                                     {/* Dot */}
-                                    <div className="absolute left-[100px] md:left-1/2 top-[0.6rem] md:top-1/2 md:-translate-y-1/2 -translate-x-1/2 z-10">
+                                    <div className="absolute left-4 md:left-1/2 top-[0.6rem] md:top-1/2 md:-translate-y-1/2 -translate-x-1/2 z-10">
                                         {experience.present ? (
                                             <div className="w-4 h-4 rounded-full bg-primary shadow-[0_0_15px_rgba(212,255,63,0.8)] flex items-center justify-center relative">
                                                 <div className="absolute inset-0 bg-primary rounded-full animate-ping opacity-60"></div>
@@ -453,9 +457,16 @@ const Home = () => {
                                         )}
                                     </div>
 
-                                    {/* Card (Right on Desktop) */}
-                                    <div className="flex-1 pl-6 md:pl-0 md:w-1/2 min-w-0">
+                                    {/* Card */}
+                                    <div className="flex-1 pl-10 md:pl-0 md:w-1/2 min-w-0">
                                         <div className={`glass p-5 rounded-2xl border ${experience.present ? 'border-white/10 glow-border' : 'border-white/5'} group-hover:bg-white/5 transition-all duration-300 relative`}>
+                                            {/* Date (Mobile only) */}
+                                            <div className="md:hidden mb-3 text-xs">
+                                                <span className={`font-bold ${experience.present ? 'text-primary' : 'text-white'}`}>
+                                                    {experience.present ? 'Present' : experience.endDate}
+                                                </span>
+                                                <span className="text-white/30"> · {experience.startDate}</span>
+                                            </div>
                                             {experience.present && (
                                                 <div className="absolute top-3 right-3 opacity-50">
                                                     <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[9px] font-bold uppercase tracking-wider border border-primary/20">Active</span>
@@ -521,22 +532,22 @@ const Home = () => {
                 </section>
 
                 {/* Contact Me Section */}
-                <section className="px-6 md:px-12 py-20 lg:py-32 bg-background-dark border-t border-white/5" id="contact-me">
+                <section className="px-4 sm:px-6 md:px-12 py-20 lg:py-32 pb-28 sm:pb-20 bg-background-dark border-t border-white/5" id="contact-me">
                     <div className="max-w-md md:max-w-2xl lg:max-w-4xl mx-auto">
                         <div className="grid md:grid-cols-2 gap-16 items-start">
                             <div className="text-center md:text-left">
                                 <h2 className="text-4xl md:text-5xl font-display font-bold mb-4">Let's work <br /><span className="text-primary">together</span></h2>
                                 <p className="text-white/50 text-base mb-8">Have an idea? Let's build something amazing. I'm currently available for freelance projects and consultation.</p>
 
-                                <div className="hidden md:flex flex-col gap-4 text-left">
-                                    <div className="flex items-center gap-3 text-white/70">
-                                        <span className="material-symbols-outlined text-primary">mail</span>
-                                        <span>arpanguria68@gmail.com</span>
-                                    </div>
-                                    <div className="flex items-center gap-3 text-white/70">
-                                        <span className="material-symbols-outlined text-primary">call</span>
+                                <div className="flex flex-col gap-3 text-left mb-8">
+                                    <a href="mailto:arpanguria68@gmail.com" className="flex items-center justify-center md:justify-start gap-3 text-white/70 hover:text-primary transition-colors text-sm">
+                                        <span className="material-symbols-outlined text-primary shrink-0">mail</span>
+                                        <span className="break-all">arpanguria68@gmail.com</span>
+                                    </a>
+                                    <a href="tel:+918092864293" className="flex items-center justify-center md:justify-start gap-3 text-white/70 hover:text-primary transition-colors text-sm">
+                                        <span className="material-symbols-outlined text-primary shrink-0">call</span>
                                         <span>+91 8092864293</span>
-                                    </div>
+                                    </a>
                                 </div>
                             </div>
 

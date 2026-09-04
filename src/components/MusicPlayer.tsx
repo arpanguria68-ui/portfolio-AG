@@ -60,7 +60,7 @@ const MusicPlayer = () => {
                 initial={{ opacity: 0, scale: 0.8, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.8, y: 20 }}
-                className="fixed bottom-10 right-10 z-[100] flex flex-col items-center justify-center"
+                className="fixed bottom-5 right-5 sm:bottom-8 sm:right-8 md:bottom-10 md:right-10 z-[100] flex flex-col items-center justify-center"
             >
                 {/* Rotating Text Ring */}
                 <div className="relative w-32 h-32 flex items-center justify-center group cursor-pointer" onClick={togglePlay}>
