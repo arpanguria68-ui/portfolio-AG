@@ -326,7 +326,7 @@ const Home = () => {
                                 <div key={tool._id || i} className="group relative">
                                     <div className="aspect-square glass rounded-2xl flex flex-col items-center justify-center gap-3 px-2 py-4 hover:bg-white/10 transition-all duration-300 hover:scale-105 cursor-pointer border border-white/5">
                                         <div className={`absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-300 rounded-2xl ${tool.bgColor || 'bg-white/5'}`}></div>
-                                        <div className="relative z-10 flex h-11 w-11 items-center justify-center text-white/80 group-hover:text-white transition-colors duration-300">
+                                        <div className="relative z-10 flex h-11 w-11 items-center justify-center rounded-xl bg-white/95 p-2 shadow-sm ring-1 ring-white/10 transition-transform duration-300 group-hover:scale-105">
                                             <ToolIcon icon={tool.icon} />
                                         </div>
                                         <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/55 group-hover:text-white/90 transition-opacity duration-300 text-center leading-tight px-1 line-clamp-2">
