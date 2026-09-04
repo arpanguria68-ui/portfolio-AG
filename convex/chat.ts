@@ -3,10 +3,16 @@ import {
     mutation,
     action,
     internalMutation,
-    MutationCtx,
 } from "./_generated/server";
+import type { MutationCtx } from "./_generated/server";
 import { v } from "convex/values";
 import { api, internal } from "./_generated/api";
+
+type RagSearchDocument = {
+    title: string;
+    text: string;
+    type: string;
+};
 
 export const getHistory = query({
     args: { sessionId: v.string() },
@@ -179,14 +185,17 @@ export const sendToGemini = action({
 
         let contextText = "";
         try {
-            const searchResults = await ctx.runAction(internal.rag.search, {
-                query: args.message,
-                limit: 3,
-            });
-            if (searchResults && searchResults.length > 0) {
+            const searchResults: RagSearchDocument[] = await ctx.runAction(
+                internal.rag.search,
+                {
+                    query: args.message,
+                    limit: 3,
+                }
+            );
+            if (searchResults.length > 0) {
                 contextText = searchResults
                     .map(
-                        (doc) =>
+                        (doc: RagSearchDocument) =>
                             `--- ${doc.type.toUpperCase()}: ${doc.title} ---\n${doc.text}`
                     )
                     .join("\n\n");

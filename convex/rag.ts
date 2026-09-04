@@ -7,8 +7,30 @@ import {
 import { v } from "convex/values";
 import { internal, api } from "./_generated/api";
 import { requireAdmin } from "./authHelpers";
+import type { Id } from "./_generated/dataModel";
 
 const EMBEDDING_MODEL = "models/text-embedding-004";
+
+type ProjectSection = {
+    id: number;
+    type: string;
+    title: string;
+    content: string;
+    collapsed: boolean;
+    icon: string;
+    isEnabled: boolean;
+    image?: string;
+};
+
+type StoredDocument = {
+    _id: Id<"documents">;
+    _creationTime: number;
+    title: string;
+    text: string;
+    type: string;
+    sourceId?: string;
+    embedding: number[];
+};
 
 export const generateEmbedding = internalAction({
     args: { text: v.string() },
@@ -103,8 +125,8 @@ export const syncAllProjects = internalAction({
         for (const project of projects) {
             const sectionsText =
                 project.sections
-                    ?.filter((s) => s.isEnabled)
-                    .map((s) => `${s.title}: ${s.content}`)
+                    ?.filter((s: ProjectSection) => s.isEnabled)
+                    .map((s: ProjectSection) => `${s.title}: ${s.content}`)
                     .join("\n") || "";
 
             const textToEmbed = `
@@ -130,7 +152,7 @@ ${sectionsText}
 
 export const search = internalAction({
     args: { query: v.string(), limit: v.optional(v.number()) },
-    handler: async (ctx, args) => {
+    handler: async (ctx, args): Promise<StoredDocument[]> => {
         const embedding: number[] = await ctx.runAction(
             internal.rag.generateEmbedding,
             { text: args.query }
@@ -141,7 +163,7 @@ export const search = internalAction({
             limit: args.limit || 3,
         });
 
-        const docs = await ctx.runQuery(internal.rag.getDocuments, {
+        const docs: StoredDocument[] = await ctx.runQuery(internal.rag.getDocuments, {
             ids: results.map((r) => r._id),
         });
         return docs;
@@ -150,8 +172,8 @@ export const search = internalAction({
 
 export const getDocuments = internalQuery({
     args: { ids: v.array(v.id("documents")) },
-    handler: async (ctx, args) => {
-        const docs = [];
+    handler: async (ctx, args): Promise<StoredDocument[]> => {
+        const docs: StoredDocument[] = [];
         for (const id of args.ids) {
             const doc = await ctx.db.get(id);
             if (doc) docs.push(doc);
@@ -175,7 +197,7 @@ export const ingestContextAdmin = action({
 
 export const syncAllProjectsAdmin = action({
     args: {},
-    handler: async (ctx) => {
+    handler: async (ctx): Promise<string> => {
         await requireAdmin(ctx);
         return await ctx.runAction(internal.rag.syncAllProjects, {});
     },
