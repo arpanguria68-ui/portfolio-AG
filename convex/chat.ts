@@ -1,12 +1,23 @@
 import {
     query,
-    mutation,
     action,
     internalMutation,
+    internalAction,
 } from "./_generated/server";
 import type { MutationCtx } from "./_generated/server";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { api, internal } from "./_generated/api";
+import {
+    CHAT_SECURITY,
+    buildSlidingWindowHistory,
+    buildSystemInstruction,
+    detectPromptInjection,
+    getInjectionRefusalMessage,
+    getRagQuery,
+    validateSessionId,
+    validateUserMessage,
+} from "./lib/chatHarness";
+import { checkChatRateLimit, getRemainingQuota } from "./lib/chatRateLimit";
 
 type RagSearchDocument = {
     title: string;
@@ -14,22 +25,86 @@ type RagSearchDocument = {
     type: string;
 };
 
+export const getLimits = query({
+    args: {},
+    handler: async () => ({
+        maxMessageLength: CHAT_SECURITY.MAX_MESSAGE_LENGTH,
+        maxMessagesPerHour: CHAT_SECURITY.MAX_MESSAGES_PER_HOUR,
+        maxMessagesPerDay: CHAT_SECURITY.MAX_MESSAGES_PER_DAY,
+        minMessageIntervalMs: CHAT_SECURITY.MIN_MESSAGE_INTERVAL_MS,
+    }),
+});
+
+export const getSessionStatus = query({
+    args: { sessionId: v.string() },
+    handler: async (ctx, args) => {
+        const sessionValidation = validateSessionId(args.sessionId);
+        if (!sessionValidation.ok) {
+            return null;
+        }
+
+        const now = Date.now();
+        const messages = await ctx.db
+            .query("chatMessages")
+            .withIndex("by_session", (q) =>
+                q.eq("sessionId", sessionValidation.content)
+            )
+            .collect();
+
+        const userMessages = messages
+            .filter((message) => message.role === "user")
+            .map((message) => ({ timestamp: message.timestamp }));
+
+        const session = await ctx.db
+            .query("chatSessions")
+            .withIndex("by_session", (q) =>
+                q.eq("sessionId", sessionValidation.content)
+            )
+            .first();
+
+        const rateLimit = checkChatRateLimit({
+            now,
+            lastUserMessageAt: session?.lastUserMessageAt,
+            blockedUntil: session?.blockedUntil,
+            userMessages,
+        });
+
+        return {
+            ...getRemainingQuota(userMessages, now),
+            allowed: rateLimit.allowed,
+            retryAfterMs: rateLimit.allowed ? 0 : rateLimit.retryAfterMs ?? 0,
+        };
+    },
+});
+
 export const getHistory = query({
     args: { sessionId: v.string() },
     handler: async (ctx, args) => {
+        const sessionValidation = validateSessionId(args.sessionId);
+        if (!sessionValidation.ok) {
+            return [];
+        }
+
         const messages = await ctx.db
             .query("chatMessages")
-            .withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
+            .withIndex("by_session", (q) =>
+                q.eq("sessionId", sessionValidation.content)
+            )
             .order("asc")
             .collect();
-        return messages;
+
+        return messages.slice(-CHAT_SECURITY.MAX_HISTORY_FOR_CLIENT);
     },
 });
 
 async function upsertSession(
     ctx: MutationCtx,
     sessionId: string,
-    timestamp: number
+    timestamp: number,
+    patch?: {
+        lastUserMessageAt?: number;
+        blockedUntil?: number;
+    }
 ) {
     const existingSession = await ctx.db
         .query("chatSessions")
@@ -41,33 +116,92 @@ async function upsertSession(
             sessionId,
             createdAt: timestamp,
             lastMessageAt: timestamp,
+            lastUserMessageAt: patch?.lastUserMessageAt,
+            blockedUntil: patch?.blockedUntil,
         });
-    } else {
-        await ctx.db.patch(existingSession._id, {
-            lastMessageAt: timestamp,
-        });
+        return;
     }
+
+    await ctx.db.patch(existingSession._id, {
+        lastMessageAt: timestamp,
+        ...(patch?.lastUserMessageAt !== undefined
+            ? { lastUserMessageAt: patch.lastUserMessageAt }
+            : {}),
+        ...(patch?.blockedUntil !== undefined
+            ? { blockedUntil: patch.blockedUntil }
+            : {}),
+    });
 }
 
-export const storeMessage = mutation({
+export const storeUserMessage = internalMutation({
     args: {
         sessionId: v.string(),
         content: v.string(),
     },
     handler: async (ctx, args) => {
-        const timestamp = Date.now();
-        const content = args.content.trim();
-        if (!content) {
-            throw new Error("Message cannot be empty");
+        const sessionValidation = validateSessionId(args.sessionId);
+        if (!sessionValidation.ok) {
+            throw new ConvexError(sessionValidation.reason);
         }
 
-        await upsertSession(ctx, args.sessionId, timestamp);
+        const messageValidation = validateUserMessage(args.content);
+        if (!messageValidation.ok) {
+            throw new ConvexError(messageValidation.reason);
+        }
+
+        const now = Date.now();
+        const sessionId = sessionValidation.content;
+        const session = await ctx.db
+            .query("chatSessions")
+            .withIndex("by_session", (q) => q.eq("sessionId", sessionId))
+            .first();
+
+        const sessionMessages = await ctx.db
+            .query("chatMessages")
+            .withIndex("by_session", (q) => q.eq("sessionId", sessionId))
+            .collect();
+
+        const userMessages = sessionMessages
+            .filter((message) => message.role === "user")
+            .map((message) => ({ timestamp: message.timestamp }));
+
+        const rateLimit = checkChatRateLimit({
+            now,
+            lastUserMessageAt: session?.lastUserMessageAt,
+            blockedUntil: session?.blockedUntil,
+            userMessages,
+        });
+
+        if (!rateLimit.allowed) {
+            if (rateLimit.shouldBlock && session) {
+                await ctx.db.patch(session._id, {
+                    blockedUntil: now + CHAT_SECURITY.BLOCK_DURATION_MS,
+                });
+            } else if (rateLimit.shouldBlock) {
+                await upsertSession(ctx, sessionId, now, {
+                    blockedUntil: now + CHAT_SECURITY.BLOCK_DURATION_MS,
+                });
+            }
+            throw new ConvexError(rateLimit.reason);
+        }
+
+        if (session) {
+            await ctx.db.patch(session._id, {
+                lastMessageAt: now,
+                lastUserMessageAt: now,
+                blockedUntil: undefined,
+            });
+        } else {
+            await upsertSession(ctx, sessionId, now, {
+                lastUserMessageAt: now,
+            });
+        }
 
         const messageId = await ctx.db.insert("chatMessages", {
-            sessionId: args.sessionId,
+            sessionId,
             role: "user",
-            content,
-            timestamp,
+            content: messageValidation.content,
+            timestamp: now,
         });
 
         return messageId;
@@ -80,14 +214,20 @@ export const storeAssistantMessage = internalMutation({
         content: v.string(),
     },
     handler: async (ctx, args) => {
-        const timestamp = Date.now();
+        const sessionValidation = validateSessionId(args.sessionId);
+        if (!sessionValidation.ok) {
+            throw new ConvexError(sessionValidation.reason);
+        }
 
-        await upsertSession(ctx, args.sessionId, timestamp);
+        const timestamp = Date.now();
+        const sessionId = sessionValidation.content;
+
+        await upsertSession(ctx, sessionId, timestamp);
 
         const messageId = await ctx.db.insert("chatMessages", {
-            sessionId: args.sessionId,
+            sessionId,
             role: "assistant",
-            content: args.content,
+            content: args.content.slice(0, CHAT_SECURITY.MAX_MESSAGE_LENGTH * 2),
             timestamp,
         });
 
@@ -103,30 +243,6 @@ interface GeminiResponse {
             }>;
         };
     }>;
-    error?: {
-        message?: string;
-        status?: string;
-    };
-}
-
-function buildConversationHistory(
-    history: Array<{ role: string; content: string }>
-) {
-    const mapped = history.slice(-10).map((msg) => ({
-        role: msg.role === "assistant" ? "model" : "user",
-        parts: [{ text: msg.content }],
-    }));
-
-    // Gemini requires alternating user/model turns.
-    while (
-        mapped.length >= 2 &&
-        mapped[mapped.length - 1].role === "user" &&
-        mapped[mapped.length - 2].role === "user"
-    ) {
-        mapped.splice(mapped.length - 2, 1);
-    }
-
-    return mapped;
 }
 
 async function parseGeminiError(response: Response): Promise<string> {
@@ -139,82 +255,88 @@ async function parseGeminiError(response: Response): Promise<string> {
     } catch {
         // Fall through to generic message.
     }
-    return `Gemini API error: ${response.status} - ${errorText}`;
+    return `Gemini API error: ${response.status}`;
 }
 
-export const sendToGemini = action({
+export const generateAssistantReply = internalAction({
     args: {
         sessionId: v.string(),
         message: v.string(),
+        skipRag: v.optional(v.boolean()),
     },
     handler: async (ctx, args): Promise<string> => {
-        const GEMINI_API_KEY = await ctx.runQuery(internal.settings.getSecret, {
+        const sessionValidation = validateSessionId(args.sessionId);
+        if (!sessionValidation.ok) {
+            throw new ConvexError(sessionValidation.reason);
+        }
+
+        const messageValidation = validateUserMessage(args.message);
+        if (!messageValidation.ok) {
+            throw new ConvexError(messageValidation.reason);
+        }
+
+        const sessionId = sessionValidation.content;
+        const content = messageValidation.content;
+
+        if (detectPromptInjection(content)) {
+            const refusal = getInjectionRefusalMessage();
+            await ctx.runMutation(internal.chat.storeAssistantMessage, {
+                sessionId,
+                content: refusal,
+            });
+            return refusal;
+        }
+
+        const geminiApiKey = await ctx.runQuery(internal.settings.getSecret, {
             key: "gemini_api_key",
         });
-        const GEMINI_MODEL = await ctx.runQuery(internal.settings.getSecret, {
+        const geminiModel = await ctx.runQuery(internal.settings.getSecret, {
             key: "gemini_model",
         });
 
-        const apiKey = GEMINI_API_KEY || process.env.GEMINI_API_KEY;
-        const model = GEMINI_MODEL || "gemini-2.5-flash-lite";
+        const apiKey = geminiApiKey || process.env.GEMINI_API_KEY;
+        const model = geminiModel || "gemini-2.5-flash-lite";
 
         if (!apiKey) {
             const fallbackResponse =
-                "Hi! I'm the AI assistant for this portfolio. The Gemini API key hasn't been configured yet in the new Admin Settings panel. Please log in and set it up to chat with me!";
+                "Hi! I'm the AI assistant for this portfolio. The Gemini API key hasn't been configured yet in Admin Settings.";
 
             await ctx.runMutation(internal.chat.storeAssistantMessage, {
-                sessionId: args.sessionId,
+                sessionId,
                 content: fallbackResponse,
             });
 
             return fallbackResponse;
         }
 
-        const history = await ctx.runQuery(api.chat.getHistory, {
-            sessionId: args.sessionId,
-        });
-
-        const conversationHistory = buildConversationHistory(history);
-
-        if (conversationHistory.length === 0) {
-            conversationHistory.push({
-                role: "user",
-                parts: [{ text: args.message }],
-            });
-        }
+        const history = await ctx.runQuery(api.chat.getHistory, { sessionId });
+        const conversationHistory = buildSlidingWindowHistory(history);
 
         let contextText = "";
-        try {
-            const searchResults: RagSearchDocument[] = await ctx.runAction(
-                internal.rag.search,
-                {
-                    query: args.message,
-                    limit: 3,
+        const ragQuery = args.skipRag ? null : getRagQuery(content);
+        if (ragQuery) {
+            try {
+                const searchResults: RagSearchDocument[] = await ctx.runAction(
+                    internal.rag.search,
+                    {
+                        query: ragQuery,
+                        limit: 3,
+                    }
+                );
+                if (searchResults.length > 0) {
+                    contextText = searchResults
+                        .map(
+                            (doc) =>
+                                `--- ${doc.type.toUpperCase()}: ${doc.title} ---\n${doc.text}`
+                        )
+                        .join("\n\n");
                 }
-            );
-            if (searchResults.length > 0) {
-                contextText = searchResults
-                    .map(
-                        (doc: RagSearchDocument) =>
-                            `--- ${doc.type.toUpperCase()}: ${doc.title} ---\n${doc.text}`
-                    )
-                    .join("\n\n");
+            } catch (error) {
+                console.error("RAG search failed:", error);
             }
-        } catch (e) {
-            console.error("RAG Search failed:", e);
         }
 
-        const systemInstruction = `You are a helpful AI assistant for Arpan Guria's portfolio website. 
-You help visitors learn about his work, skills, and projects.
-Be friendly, professional, and concise.
-
-Use the following CONTEXT from his CV and Projects to answer the user's question. 
-If the answer is not in the context, just rely on your general knowledge but mention you aren't sure about specific portfolio details.
-
-CONTEXT:
-${contextText || "No specific portfolio context found for this query."}
-
-Keep responses brief (2-3 sentences) unless more detail is requested.`;
+        const systemInstruction = buildSystemInstruction(contextText);
 
         const callGemini = async (modelToUse: string) => {
             return fetch(
@@ -229,8 +351,26 @@ Keep responses brief (2-3 sentences) unless more detail is requested.`;
                         },
                         generationConfig: {
                             temperature: 0.7,
-                            maxOutputTokens: 500,
+                            maxOutputTokens: CHAT_SECURITY.MAX_OUTPUT_TOKENS,
                         },
+                        safetySettings: [
+                            {
+                                category: "HARM_CATEGORY_HARASSMENT",
+                                threshold: "BLOCK_MEDIUM_AND_ABOVE",
+                            },
+                            {
+                                category: "HARM_CATEGORY_HATE_SPEECH",
+                                threshold: "BLOCK_MEDIUM_AND_ABOVE",
+                            },
+                            {
+                                category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                                threshold: "BLOCK_MEDIUM_AND_ABOVE",
+                            },
+                            {
+                                category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+                                threshold: "BLOCK_MEDIUM_AND_ABOVE",
+                            },
+                        ],
                     }),
                 }
             );
@@ -273,7 +413,7 @@ Keep responses brief (2-3 sentences) unless more detail is requested.`;
                 "I apologize, I couldn't process that request. Please try again.";
 
             await ctx.runMutation(internal.chat.storeAssistantMessage, {
-                sessionId: args.sessionId,
+                sessionId,
                 content: aiResponse,
             });
 
@@ -285,15 +425,53 @@ Keep responses brief (2-3 sentences) unless more detail is requested.`;
                 "I'm having trouble connecting right now. Please try again in a moment.";
             if (error instanceof Error && error.message === "Invalid API Key") {
                 errorResponse =
-                    "The configured Gemini API Key seems to be invalid. Please check the Admin Settings.";
+                    "The configured Gemini API Key seems to be invalid. Please check Admin Settings.";
             }
 
             await ctx.runMutation(internal.chat.storeAssistantMessage, {
-                sessionId: args.sessionId,
+                sessionId,
                 content: errorResponse,
             });
 
             return errorResponse;
         }
+    },
+});
+
+export const sendMessage = action({
+    args: {
+        sessionId: v.string(),
+        content: v.string(),
+        website: v.optional(v.string()),
+    },
+    handler: async (ctx, args): Promise<{ content: string }> => {
+        if (args.website && args.website.trim() !== "") {
+            return { content: "Thanks for your message!" };
+        }
+
+        const sessionValidation = validateSessionId(args.sessionId);
+        if (!sessionValidation.ok) {
+            throw new ConvexError(sessionValidation.reason);
+        }
+
+        const messageValidation = validateUserMessage(args.content);
+        if (!messageValidation.ok) {
+            throw new ConvexError(messageValidation.reason);
+        }
+
+        const sessionId = sessionValidation.content;
+        const content = messageValidation.content;
+
+        await ctx.runMutation(internal.chat.storeUserMessage, {
+            sessionId,
+            content,
+        });
+
+        const reply = await ctx.runAction(internal.chat.generateAssistantReply, {
+            sessionId,
+            message: content,
+        });
+
+        return { content: reply };
     },
 });

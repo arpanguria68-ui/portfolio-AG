@@ -107,6 +107,8 @@ export default defineSchema({
         sessionId: v.string(), // Browser fingerprint or UUID
         createdAt: v.number(),
         lastMessageAt: v.number(),
+        lastUserMessageAt: v.optional(v.number()),
+        blockedUntil: v.optional(v.number()),
     }).index("by_session", ["sessionId"]),
 
     chatMessages: defineTable({
@@ -114,7 +116,9 @@ export default defineSchema({
         role: v.string(), // 'user' | 'assistant'
         content: v.string(),
         timestamp: v.number(),
-    }).index("by_session", ["sessionId"]),
+    })
+        .index("by_session", ["sessionId"])
+        .index("by_session_timestamp", ["sessionId", "timestamp"]),
 
     documents: defineTable({
         title: v.string(),

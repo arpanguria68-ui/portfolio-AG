@@ -16,8 +16,20 @@ This document summarizes the security controls in the portfolio application.
 
 ## AI chat
 
-- **Role enforcement**: Clients can only store `user` messages. Assistant replies are written via internal mutations from the `sendToGemini` action.
+- **Single entry point**: Clients call `chat.sendMessage` only. User/assistant writes and Gemini calls are handled server-side.
+- **Role enforcement**: Clients cannot write assistant messages directly. Replies are stored via internal mutations.
+- **Harness** (`convex/lib/chatHarness.ts`): Sanitizes input, validates session IDs, detects prompt-injection patterns, builds the system prompt, and applies a sliding context window (message count + character budget).
+- **Sliding window**: Only the most recent messages within limits are sent to Gemini to control token cost and context size.
+- **Rate limiting** (`convex/lib/chatRateLimit.ts`):
+  - 10 messages per session per hour (sliding window)
+  - 40 messages per session per day
+  - 3 second cooldown between messages
+  - 15 minute block after hourly abuse
+- **Input limits**: Max 500 characters per message; RAG queries capped at 300 characters.
+- **Honeypot field** (`website`): Silent success for bots without calling Gemini.
+- **Prompt-injection guard**: Suspicious instructions are refused without a Gemini API call.
 - **API keys**: Gemini keys are stored in Convex settings and accessed only via `internal.settings.getSecret`.
+- **RAG protection**: Embedding search only runs for validated, non-injection messages.
 
 ## RAG (retrieval-augmented generation)
 
