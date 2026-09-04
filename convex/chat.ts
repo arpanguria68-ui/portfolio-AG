@@ -97,6 +97,43 @@ interface GeminiResponse {
             }>;
         };
     }>;
+    error?: {
+        message?: string;
+        status?: string;
+    };
+}
+
+function buildConversationHistory(
+    history: Array<{ role: string; content: string }>
+) {
+    const mapped = history.slice(-10).map((msg) => ({
+        role: msg.role === "assistant" ? "model" : "user",
+        parts: [{ text: msg.content }],
+    }));
+
+    // Gemini requires alternating user/model turns.
+    while (
+        mapped.length >= 2 &&
+        mapped[mapped.length - 1].role === "user" &&
+        mapped[mapped.length - 2].role === "user"
+    ) {
+        mapped.splice(mapped.length - 2, 1);
+    }
+
+    return mapped;
+}
+
+async function parseGeminiError(response: Response): Promise<string> {
+    const errorText = await response.text();
+    try {
+        const errorJson = JSON.parse(errorText);
+        if (errorJson.error?.message) {
+            return errorJson.error.message;
+        }
+    } catch {
+        // Fall through to generic message.
+    }
+    return `Gemini API error: ${response.status} - ${errorText}`;
 }
 
 export const sendToGemini = action({
@@ -113,7 +150,7 @@ export const sendToGemini = action({
         });
 
         const apiKey = GEMINI_API_KEY || process.env.GEMINI_API_KEY;
-        const model = GEMINI_MODEL || "gemini-1.5-flash";
+        const model = GEMINI_MODEL || "gemini-2.5-flash-lite";
 
         if (!apiKey) {
             const fallbackResponse =
@@ -131,15 +168,14 @@ export const sendToGemini = action({
             sessionId: args.sessionId,
         });
 
-        const conversationHistory = history.slice(-10).map((msg) => ({
-            role: msg.role === "assistant" ? "model" : "user",
-            parts: [{ text: msg.content }],
-        }));
+        const conversationHistory = buildConversationHistory(history);
 
-        conversationHistory.push({
-            role: "user",
-            parts: [{ text: args.message }],
-        });
+        if (conversationHistory.length === 0) {
+            conversationHistory.push({
+                role: "user",
+                parts: [{ text: args.message }],
+            });
+        }
 
         let contextText = "";
         try {
@@ -192,26 +228,34 @@ Keep responses brief (2-3 sentences) unless more detail is requested.`;
         };
 
         try {
-            let response = await callGemini(model);
+            const fallbackModels = [
+                model,
+                "gemini-2.5-flash-lite",
+                "gemini-2.0-flash",
+            ].filter((value, index, array) => array.indexOf(value) === index);
 
-            if (
-                !response.ok &&
-                (response.status === 429 || response.status === 404)
-            ) {
-                console.warn(
-                    `Primary model ${model} failed (${response.status}). Retrying with gemini-2.5-flash-lite...`
-                );
-                if (model !== "gemini-2.5-flash-lite") {
-                    response = await callGemini("gemini-2.5-flash-lite");
+            let response: Response | null = null;
+            let lastError = "Unknown Gemini API error";
+
+            for (const modelToUse of fallbackModels) {
+                response = await callGemini(modelToUse);
+
+                if (response.ok) {
+                    break;
+                }
+
+                lastError = await parseGeminiError(response);
+
+                if (response.status !== 429 && response.status !== 404) {
+                    break;
                 }
             }
 
-            if (!response.ok) {
-                const errorText = await response.text();
-                if (response.status === 400) throw new Error("Invalid API Key");
-                throw new Error(
-                    `Gemini API error: ${response.status} - ${errorText}`
-                );
+            if (!response || !response.ok) {
+                if (response?.status === 400) {
+                    throw new Error("Invalid API Key");
+                }
+                throw new Error(lastError);
             }
 
             const data: GeminiResponse = await response.json();

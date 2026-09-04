@@ -23,6 +23,7 @@ const AIChatWidget = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [sessionId] = useState(getSessionId);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -42,6 +43,7 @@ const AIChatWidget = () => {
         const userMessage = input.trim();
         setInput('');
         setIsLoading(true);
+        setErrorMessage(null);
 
         try {
             // Store user message
@@ -57,12 +59,17 @@ const AIChatWidget = () => {
             });
         } catch (error) {
             console.error('Chat error:', error);
+            setErrorMessage(
+                error instanceof Error
+                    ? error.message
+                    : 'Failed to send message. Please try again.'
+            );
         } finally {
             setIsLoading(false);
         }
     };
 
-    const handleKeyPress = (e: React.KeyboardEvent) => {
+    const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             handleSend();
@@ -162,12 +169,17 @@ const AIChatWidget = () => {
 
                 {/* Input */}
                 <div className="p-4 border-t border-white/10">
+                    {errorMessage && (
+                        <p className="mb-3 text-xs text-red-400" role="alert">
+                            {errorMessage}
+                        </p>
+                    )}
                     <div className="flex gap-2">
                         <input
                             type="text"
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
-                            onKeyPress={handleKeyPress}
+                            onKeyDown={handleKeyDown}
                             placeholder="Ask me anything..."
                             disabled={isLoading}
                             className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-primary/50 disabled:opacity-50"
