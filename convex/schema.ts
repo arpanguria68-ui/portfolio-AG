@@ -107,6 +107,7 @@ export default defineSchema({
         sessionId: v.string(), // Browser fingerprint or UUID
         createdAt: v.number(),
         lastMessageAt: v.number(),
+        lastUserMessageAt: v.optional(v.number()),
     }).index("by_session", ["sessionId"]),
 
     chatMessages: defineTable({
