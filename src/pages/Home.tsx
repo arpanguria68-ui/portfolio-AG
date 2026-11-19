@@ -54,6 +54,8 @@ const Home = () => {
     const convexSkills = useQuery(api.skills.list);
     const convexTools = useQuery(api.tools.list);
     const convexMedia = useQuery(api.media.list);
+
+    const convexResumes = useQuery(api.resumes.list);
     const convexSocials = useQuery(api.socials.list);
     const convexExperiences = useQuery(api.experiences.list);
 
