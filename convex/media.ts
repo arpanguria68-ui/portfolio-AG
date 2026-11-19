@@ -1,5 +1,6 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { requireAdmin } from "./authHelpers";
 
 export const list = query({
     args: {},
@@ -27,6 +28,7 @@ export const create = mutation({
         category: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
+        await requireAdmin(ctx);
         const id = await ctx.db.insert("media", {
             name: args.name,
             url: args.url,
@@ -55,15 +57,14 @@ export const update = mutation({
         category: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
+        await requireAdmin(ctx);
         const { id, ...updates } = args;
 
-        // Check if document exists
         const existing = await ctx.db.get(id);
         if (!existing) {
             throw new Error("Media item not found");
         }
 
-        // Build update object, only including fields that are explicitly provided
         const updateObj: Record<string, string | undefined> = {};
         if (updates.name !== undefined) updateObj.name = updates.name;
         if (updates.url !== undefined) updateObj.url = updates.url;
@@ -72,7 +73,6 @@ export const update = mutation({
         if (updates.subtitle !== undefined) updateObj.subtitle = updates.subtitle;
         if (updates.category !== undefined) updateObj.category = updates.category;
 
-        // Only patch if there are updates
         if (Object.keys(updateObj).length > 0) {
             await ctx.db.patch(id, updateObj);
         }
@@ -84,6 +84,7 @@ export const update = mutation({
 export const remove = mutation({
     args: { id: v.id("media") },
     handler: async (ctx, args) => {
+        await requireAdmin(ctx);
         await ctx.db.delete(args.id);
     },
 });

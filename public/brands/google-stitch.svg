@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" role="img" aria-label="Google Stitch">
+  <rect width="48" height="48" rx="12" fill="#1A1A1A"/>
+  <path fill="#4285F4" d="M14 16h8v8h-8v-8zm12 0h8v8h-8v-8zM14 28h8v8h-8v-8zm12 0h8v8h-8v-8z"/>
+  <path fill="#EA4335" d="M26 20h8v8h-8v-8z"/>
+  <path fill="#34A853" d="M20 28h8v8h-8v-8z"/>
+</svg>

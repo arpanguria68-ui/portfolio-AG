@@ -268,14 +268,14 @@ const CaseStudyEditor: React.FC<CaseStudyEditorProps> = ({ onBack, initialData }
     };
 
     return (
-        <div className="animate-in slide-in-from-right duration-300 w-full h-[calc(100vh-100px)] flex flex-col md:flex-row gap-6 pb-4">
+        <div className="animate-in slide-in-from-right duration-300 w-full min-h-0 min-h-[calc(100dvh-11rem)] md:min-h-[calc(100vh-6rem)] flex flex-col lg:flex-row gap-4 md:gap-6 pb-4">
 
             {/* Left Panel: Editor */}
-            <div className="flex-1 flex flex-col bg-card-dark/50 border border-white/10 rounded-2xl overflow-hidden h-full">
+            <div className="flex-1 min-h-0 flex flex-col bg-card-dark/50 border border-white/10 rounded-2xl overflow-hidden">
 
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b border-white/5 bg-background-dark">
-                    <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center justify-between gap-2 p-3 sm:p-4 border-b border-white/5 bg-background-dark">
+                    <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                         <button onClick={onBack} className="text-white flex size-8 shrink-0 items-center justify-center rounded-full hover:bg-white/10 transition-colors">
                             <span className="material-symbols-outlined text-xl">arrow_back_ios_new</span>
                         </button>

@@ -31,3 +31,8 @@ playwright/.cache/
 
 # Coverage
 coverage/
+
+# Local databases
+server/prisma/dev.db
+*.db
+

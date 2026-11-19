@@ -19,8 +19,8 @@ export const SkillItem = ({ skill, handleSkillChange, toggleSkillVisibility, rem
             dragControls={dragControls}
             className={`bg-black/20 rounded-2xl p-4 border transition-all ${skill.visible ? 'border-white/10' : 'border-white/5 opacity-60'}`}
         >
-            <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
+                <div className="flex items-center gap-3 min-w-0">
                     <span
                         className="material-symbols-outlined text-white/20 cursor-grab hover:text-white transition-colors touch-none"
                         onPointerDown={(e) => dragControls.start(e)}
@@ -30,7 +30,7 @@ export const SkillItem = ({ skill, handleSkillChange, toggleSkillVisibility, rem
                     </span>
                     <span className="font-bold">{skill.name}</span>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 sm:gap-3 shrink-0">
                     <span className="text-primary font-bold">{skill.value}%</span>
                     <button onClick={() => toggleSkillVisibility(skill._id, skill.visible)} className="text-white/40 hover:text-white transition-colors">
                         <span className="material-symbols-outlined">{skill.visible ? 'visibility' : 'visibility_off'}</span>

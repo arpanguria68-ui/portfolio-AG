@@ -1,6 +1,7 @@
 import { action } from "./_generated/server";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
+import { requireAdmin } from "./authHelpers";
 
 export const enhanceText = action({
     args: {
@@ -9,6 +10,7 @@ export const enhanceText = action({
         tone: v.optional(v.string()), // e.g. "Professional", "Casual", "Confident"
     },
     handler: async (ctx, args) => {
+        await requireAdmin(ctx);
         const apiKey = (await ctx.runQuery(internal.settings.getSecret, { key: "gemini_api_key" })) as string;
         const model = (await ctx.runQuery(internal.settings.getSecret, { key: "gemini_model" }) || "gemini-2.5-flash-lite") as string;
 

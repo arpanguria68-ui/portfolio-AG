@@ -1,5 +1,6 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { requireAdmin } from "./authHelpers";
 
 export const list = query({
     args: {},
@@ -21,6 +22,7 @@ export const create = mutation({
         logo: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
+        await requireAdmin(ctx);
         const socials = await ctx.db.query("socialLinks").collect();
         const maxOrder = socials.length > 0
             ? Math.max(...socials.map(s => s.order ?? 0))
@@ -47,6 +49,7 @@ export const update = mutation({
         logo: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
+        await requireAdmin(ctx);
         const { id, ...updates } = args;
         const filteredUpdates = Object.fromEntries(
             Object.entries(updates).filter(([, value]) => value !== undefined)
@@ -58,6 +61,7 @@ export const update = mutation({
 export const remove = mutation({
     args: { id: v.id("socialLinks") },
     handler: async (ctx, args) => {
+        await requireAdmin(ctx);
         await ctx.db.delete(args.id);
     },
 });
@@ -67,6 +71,7 @@ export const reorder = mutation({
         items: v.array(v.object({ id: v.id("socialLinks"), order: v.number() })),
     },
     handler: async (ctx, args) => {
+        await requireAdmin(ctx);
         for (const item of args.items) {
             await ctx.db.patch(item.id, { order: item.order });
         }
