@@ -18,6 +18,7 @@ declare global {
 
 interface CloudinaryUploadOptions {
     cloudName: string;
+    api_key?: string;
     uploadPreset: string;
     uploadSignature?: (
         callback: (signature: string) => void,
@@ -83,6 +84,11 @@ export interface UploadedImage {
 }
 
 const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'dgymjtqil';
+// Public API key (not a secret — it is sent with every upload request, like
+// the cloud name). Required by the widget for SIGNED uploads: without it the
+// upload POST carries no api_key and Cloudinary rejects it, which is why
+// signed uploads stalled at 0% even though the signature itself was valid.
+const API_KEY = import.meta.env.VITE_CLOUDINARY_API_KEY || '123165531539127';
 const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || 'portfolio_uploads';
 
 // Signs the widget's upload parameters server-side (Convex action
@@ -155,6 +161,7 @@ export function uploadImage(options?: {
         const widget = window.cloudinary.createUploadWidget(
             {
                 cloudName: CLOUD_NAME,
+                api_key: API_KEY,
                 uploadPreset: UPLOAD_PRESET,
                 uploadSignature: buildUploadSignature(),
                 sources: ['local', 'url', 'camera'],
@@ -216,6 +223,7 @@ export function uploadMultipleImages(options?: {
         const widget = window.cloudinary.createUploadWidget(
             {
                 cloudName: CLOUD_NAME,
+                api_key: API_KEY,
                 uploadPreset: UPLOAD_PRESET,
                 uploadSignature: buildUploadSignature(),
                 sources: ['local', 'url', 'camera'],
@@ -282,6 +290,7 @@ export function uploadMultipleFiles(options?: {
         const widget = window.cloudinary.createUploadWidget(
             {
                 cloudName: CLOUD_NAME,
+                api_key: API_KEY,
                 uploadPreset: UPLOAD_PRESET,
                 uploadSignature: buildUploadSignature(),
                 sources: ['local', 'url'],
@@ -456,6 +465,7 @@ export function uploadAudio(options?: {
         const widget = window.cloudinary.createUploadWidget(
             {
                 cloudName: CLOUD_NAME,
+                api_key: API_KEY,
                 uploadPreset: UPLOAD_PRESET,
                 uploadSignature: buildUploadSignature(),
                 sources: ['local', 'url'],
