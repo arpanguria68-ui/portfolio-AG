@@ -87,6 +87,22 @@ const CaseStudy = () => {
 
     // Try to get project from Convex
     const convexProjects = useQuery(api.projects.list);
+
+    // While Convex is loading, useQuery returns undefined. Do not render the
+    // hardcoded template fallbacks (NeoBank / DataViz / Vitality Health)
+    // during that window — that flashed the old site for 1–2s. Fallbacks
+    // below only apply once the query has resolved with an empty list.
+    if (convexProjects === undefined) {
+        return (
+            <div className="bg-background-dark text-white min-h-screen flex flex-col items-center justify-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-black font-bold font-display text-sm animate-pulse">
+                    AG
+                </div>
+                <p className="text-white/50 text-sm tracking-widest uppercase">Loading case study…</p>
+            </div>
+        );
+    }
+
     const projects = (convexProjects && convexProjects.length > 0) ? convexProjects : FALLBACK_PROJECTS;
 
     // Find the project by ID (or index for fallback)

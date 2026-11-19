@@ -153,6 +153,34 @@ const Home = () => {
         }
     };
 
+    // While Convex is still loading, every useQuery above returns undefined.
+    // Do NOT render the hardcoded template fallbacks during that window —
+    // that is what flashed the old site (NeoBank / DataViz / Vitality Health,
+    // San Francisco 2023 highlights) for 1–2s before the real data arrived.
+    // Show a loading screen instead; fallbacks above only apply once the
+    // queries have resolved (e.g. Convex returned an empty list).
+    // Placed here, after all hooks, so hook order never changes.
+    const isLoading =
+        convexProjects === undefined ||
+        convexProfile === undefined ||
+        convexSkills === undefined ||
+        convexTools === undefined ||
+        convexMedia === undefined ||
+        convexResumes === undefined ||
+        convexSocials === undefined ||
+        convexExperiences === undefined;
+
+    if (isLoading) {
+        return (
+            <div className="bg-background-dark text-white font-sans antialiased min-h-screen flex flex-col items-center justify-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-black font-bold font-display text-sm animate-pulse">
+                    AG
+                </div>
+                <p className="text-white/50 text-sm tracking-widest uppercase">Loading portfolio…</p>
+            </div>
+        );
+    }
+
     return (
         <div className="bg-background-dark text-white font-sans antialiased selection:bg-primary selection:text-black min-h-screen">
             <SiteHeader />
