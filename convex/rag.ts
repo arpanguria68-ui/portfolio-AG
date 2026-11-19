@@ -39,10 +39,12 @@ type StoredDocument = {
 
 export const generateEmbedding = internalAction({
     args: { text: v.string() },
-    handler: async (ctx, args) => {
-        const apiKey = process.env.GEMINI_API_KEY;
+    handler: async (ctx, args): Promise<number[]> => {
+        const apiKey = await ctx.runQuery(internal.settings.getSecret, {
+            key: "gemini_api_key",
+        });
         if (!apiKey) {
-            throw new Error("GEMINI_API_KEY is not configured");
+            throw new Error("Gemini API Key not set in Admin Settings");
         }
 
         const response = await fetch(
@@ -51,7 +53,6 @@ export const generateEmbedding = internalAction({
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    model: EMBEDDING_MODEL,
                     content: {
                         parts: [{ text: args.text }],
                     },
@@ -63,13 +64,13 @@ export const generateEmbedding = internalAction({
         );
 
         if (!response.ok) {
-            throw new Error(
-                `Gemini embedding API error: ${response.status} ${response.statusText}`
-            );
+            const error = await response.text();
+            throw new Error(`Gemini Embedding Failed: ${response.status} - ${error}`);
         }
 
         const json = await response.json();
         const embedding = json.embedding?.values;
+
         if (!embedding) {
             throw new Error("No embedding returned from Gemini");
         }
@@ -79,6 +80,7 @@ export const generateEmbedding = internalAction({
                 `Unexpected embedding dimension: ${embedding.length}, expected 768`
             );
         }
+
         // gemini-embedding-001 only pre-normalizes the full 3072-dim output.
         // Truncated (768-dim) vectors must be L2-normalized manually, per the
         // official docs, so cosine-similarity search ranks by direction.
@@ -94,40 +96,7 @@ export const generateEmbedding = internalAction({
     },
 });
 
-export const search = internalQuery({
-    args: {
-        queryEmbedding: v.array(v.number()),
-        limit: v.optional(v.number()),
-    },
-    handler: async (ctx, args) => {
-        const results = await ctx.db
-            .query("documents")
-            .withSearchIndex("by_embedding", (q) =>
-                q.search("embedding", args.queryEmbedding)
-            )
-            .take(args.limit ?? 5);
-
-        return results.map((doc) => ({
-            id: doc._id,
-            title: doc.title,
-            text: doc.text,
-            type: doc.type,
-        }));
-    },
-});
-
-export const generateQueryEmbedding = internalAction({
-    args: { query: v.string() },
-    handler: async (ctx, args): Promise<number[]> => {
-        const embedding: number[] = await ctx.runAction(
-            internal.rag.generateEmbedding,
-            { text: args.query }
-        );
-        return embedding;
-    },
-});
-
-export const indexDocument = internalMutation({
+export const addDocument = internalMutation({
     args: {
         title: v.string(),
         text: v.string(),
@@ -136,97 +105,125 @@ export const indexDocument = internalMutation({
         embedding: v.array(v.number()),
     },
     handler: async (ctx, args) => {
-        const existing = await ctx.db
-            .query("documents")
-            .withIndex("by_source", (q) => q.eq("sourceId", args.sourceId))
-            .unique();
-
-        if (existing) {
-            await ctx.db.patch(existing._id, {
-                title: args.title,
-                text: args.text,
-                type: args.type,
-                embedding: args.embedding,
-            });
-            return { id: existing._id, updated: true };
+        if (args.sourceId) {
+            const existing = await ctx.db
+                .query("documents")
+                .filter((q) => q.eq(q.field("sourceId"), args.sourceId))
+                .first();
+            if (existing) {
+                await ctx.db.delete(existing._id);
+            }
         }
 
-        const id = await ctx.db.insert("documents", {
+        await ctx.db.insert("documents", args);
+    },
+});
+
+export const ingestContext = internalAction({
+    args: {
+        title: v.string(),
+        text: v.string(),
+        type: v.string(),
+        sourceId: v.optional(v.string()),
+    },
+    handler: async (ctx, args) => {
+        const embedding = await ctx.runAction(internal.rag.generateEmbedding, {
+            text: args.text,
+        });
+
+        await ctx.runMutation(internal.rag.addDocument, {
             title: args.title,
             text: args.text,
             type: args.type,
             sourceId: args.sourceId,
-            embedding: args.embedding,
+            embedding,
         });
-        return { id, updated: false };
     },
 });
 
 export const syncAllProjects = internalAction({
     args: {},
     handler: async (ctx) => {
-        const projects = await ctx.runQuery(api.projects.getAllProjects);
+        const projects = await ctx.runQuery(api.projects.list);
 
-        let syncedCount = 0;
-        let errors: string[] = [];
-
+        let count = 0;
         for (const project of projects) {
-            const sections: ProjectSection[] = project.sections || [];
-            const allText = [
-                project.title,
-                project.description,
-                project.longDescription || "",
-                ...sections.flatMap((s) => [s.title, s.content]),
-            ]
-                .filter(Boolean)
-                .join("\n\n");
+            const sectionsText =
+                project.sections
+                    ?.filter((s: ProjectSection) => s.isEnabled)
+                    .map((s: ProjectSection) => `${s.title}: ${s.content}`)
+                    .join("\n") || "";
 
-            try {
-                const embedding: number[] = await ctx.runAction(
-                    internal.rag.generateEmbedding,
-                    { text: allText }
-                );
+            const textToEmbed = `
+Project Title: ${project.title}
+Year: ${project.year}
+Tags: ${project.tags?.join(", ")}
+Description: ${project.description}
+Details:
+${sectionsText}
+            `.trim();
 
-                await ctx.runMutation(internal.rag.indexDocument, {
-                    title: project.title,
-                    text: allText,
-                    type: "project",
-                    sourceId: project._id,
-                    embedding,
-                });
-                syncedCount++;
-            } catch (err) {
-                errors.push(
-                    `${project.title}: ${err instanceof Error ? err.message : String(err)}`
-                );
-            }
+            await ctx.runAction(internal.rag.ingestContext, {
+                title: `Project: ${project.title}`,
+                text: textToEmbed,
+                type: "project",
+                sourceId: project._id,
+            });
+            count++;
         }
+        return `Successfully indexed ${count} projects.`;
+    },
+});
 
-        return {
-            syncedCount,
-            errors,
-            total: projects.length,
-        };
+export const search = internalAction({
+    args: { query: v.string(), limit: v.optional(v.number()) },
+    handler: async (ctx, args): Promise<StoredDocument[]> => {
+        const embedding: number[] = await ctx.runAction(
+            internal.rag.generateEmbedding,
+            { text: args.query }
+        );
+
+        const results = await ctx.vectorSearch("documents", "by_embedding", {
+            vector: embedding,
+            limit: args.limit || 3,
+        });
+
+        const docs: StoredDocument[] = await ctx.runQuery(internal.rag.getDocuments, {
+            ids: results.map((r) => r._id),
+        });
+        return docs;
+    },
+});
+
+export const getDocuments = internalQuery({
+    args: { ids: v.array(v.id("documents")) },
+    handler: async (ctx, args): Promise<StoredDocument[]> => {
+        const docs: StoredDocument[] = [];
+        for (const id of args.ids) {
+            const doc = await ctx.db.get(id);
+            if (doc) docs.push(doc);
+        }
+        return docs;
+    },
+});
+
+export const ingestContextAdmin = action({
+    args: {
+        title: v.string(),
+        text: v.string(),
+        type: v.string(),
+        sourceId: v.optional(v.string()),
+    },
+    handler: async (ctx, args) => {
+        await requireAdmin(ctx);
+        await ctx.runAction(internal.rag.ingestContext, args);
     },
 });
 
 export const syncAllProjectsAdmin = action({
     args: {},
-    handler: async (ctx) => {
-        const user = await ctx.auth.getUserIdentity();
-        if (!user) {
-            throw new Error("Not authenticated");
-        }
+    handler: async (ctx): Promise<string> => {
+        await requireAdmin(ctx);
         return await ctx.runAction(internal.rag.syncAllProjects, {});
-    },
-});
-
-export const requireAdminForRag = action({
-    args: {},
-    handler: async (ctx) => {
-        if (!requireAdmin(ctx)) {
-            throw new Error("Not authorized");
-        }
-        return { ok: true };
     },
 });
