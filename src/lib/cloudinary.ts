@@ -109,6 +109,7 @@ function buildUploadSignature() {
         convexClient
             .action(api.cloudinary.getUploadSignature, {
                 params: canonicalParams(paramsToSign),
+                uploadPreset: UPLOAD_PRESET,
             })
             .then((signature) => callback(signature))
             .catch((error) => {
