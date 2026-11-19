@@ -9,6 +9,7 @@ import Login from './pages/Login';
 import CaseStudy from './pages/CaseStudy';
 import ErrorBoundary from './components/ErrorBoundary';
 import AIChatWidget from './components/AIChatWidget';
+import CookieConsent from './components/CookieConsent';
 import MusicPlayer from './components/MusicPlayer'; // Import MusicPlayer
 
 // Wrapper component to conditionally render chat widget
@@ -39,6 +40,9 @@ function App() {
       <BrowserRouter>
         {/* AI Chat Widget - hidden on admin/login pages */}
         <ChatWidgetWrapper />
+
+        {/* Cookie consent banner + settings */}
+        <CookieConsent />
 
         {/* Persistent Music Player - UI visibility handled internally */}
         <MusicPlayer />

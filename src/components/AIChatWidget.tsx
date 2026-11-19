@@ -1,17 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useAction } from 'convex/react';
 import { api } from '../../convex/_generated/api';
-
-const SESSION_STORAGE_KEY = 'chat_session_id';
-
-const getSessionId = () => {
-    let sessionId = localStorage.getItem(SESSION_STORAGE_KEY);
-    if (!sessionId) {
-        sessionId = `session_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
-        localStorage.setItem(SESSION_STORAGE_KEY, sessionId);
-    }
-    return sessionId;
-};
+import { getVisitorId } from '../lib/visitorIdentity';
 
 interface Message {
     role: 'user' | 'assistant';
@@ -25,7 +15,7 @@ const AIChatWidget = () => {
     const [honeypot, setHoneypot] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
-    const [sessionId] = useState(getSessionId);
+    const [sessionId] = useState(getVisitorId);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const chatLimits = useQuery(api.chat.getLimits);
@@ -138,6 +128,11 @@ const AIChatWidget = () => {
                                 Ask me anything about this portfolio!
                             </p>
                         </div>
+                    )}
+                    {messages.length > 0 && (
+                        <p className="text-center text-[11px] text-white/25">
+                            Welcome back — this is your previous conversation on this device.
+                        </p>
                     )}
 
                     {messages.map((msg, index) => (

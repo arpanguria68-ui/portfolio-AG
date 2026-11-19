@@ -1,6 +1,7 @@
 import {
     query,
     action,
+    mutation,
     internalMutation,
     internalAction,
 } from "./_generated/server";
@@ -435,6 +436,37 @@ export const generateAssistantReply = internalAction({
 
             return errorResponse;
         }
+    },
+});
+
+export const clearMyHistory = mutation({
+    args: {
+        sessionId: v.string(),
+    },
+    handler: async (ctx, args) => {
+        const sessionValidation = validateSessionId(args.sessionId);
+        if (!sessionValidation.ok) {
+            throw new ConvexError(sessionValidation.reason);
+        }
+
+        const sessionId = sessionValidation.content;
+        const messages = await ctx.db
+            .query("chatMessages")
+            .withIndex("by_session", (q) => q.eq("sessionId", sessionId))
+            .collect();
+        for (const message of messages) {
+            await ctx.db.delete(message._id);
+        }
+
+        const session = await ctx.db
+            .query("chatSessions")
+            .withIndex("by_session", (q) => q.eq("sessionId", sessionId))
+            .first();
+        if (session) {
+            await ctx.db.delete(session._id);
+        }
+
+        return { deletedMessages: messages.length };
     },
 });
 

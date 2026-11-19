@@ -10,7 +10,11 @@ export const CHAT_SECURITY = {
     MAX_OUTPUT_TOKENS: 500,
     MAX_HISTORY_FOR_CLIENT: 50,
     SESSION_ID_MAX_LENGTH: 128,
-    SESSION_ID_PATTERN: /^session_[a-zA-Z0-9_-]+$/,
+    // New visitor tokens (vst_ + 43 base64url chars, 256-bit random, stored
+    // in the pf_visitor cookie) or legacy session_ ids from localStorage.
+    // The token is the only thing tying a visitor to their own chat history,
+    // so it must be unguessable: the vst_ format carries 256 bits of entropy.
+    SESSION_ID_PATTERN: /^(vst_[A-Za-z0-9_-]{43}|session_[a-zA-Z0-9_-]+)$/,
 } as const;
 
 export type ChatHistoryMessage = {
