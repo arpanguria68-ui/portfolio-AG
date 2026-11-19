@@ -17,6 +17,11 @@ if (!clerkPublishableKey) {
 // Only create client if URL exists
 const convex = convexUrl ? new ConvexReactClient(convexUrl) : null;
 
+// Shared client instance, also used outside React (e.g. the Cloudinary
+// upload-signature helper). Auth is attached by ConvexProviderWithClerk,
+// so actions called through it run as the signed-in user.
+export const convexClient = convex;
+
 export function ConvexClientProvider({ children }: { children: ReactNode }) {
     if (!convex || !clerkPublishableKey) {
         return (

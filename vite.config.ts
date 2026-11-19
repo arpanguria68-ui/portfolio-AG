@@ -5,8 +5,9 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   build: {
-    // Generate sourcemaps for error tracking
-    sourcemap: true,
+    // No sourcemaps in production builds: .js.map files previously shipped
+    // 9 MB of original source to anyone who opened DevTools.
+    sourcemap: false,
     // Optimize chunk splitting
     rollupOptions: {
       output: {

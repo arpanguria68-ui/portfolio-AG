@@ -81,6 +81,16 @@ export const getSessionStatus = query({
 export const getHistory = query({
     args: { sessionId: v.string() },
     handler: async (ctx, args) => {
+        // History is keyed by the visitor's bearer token alone: anyone who
+        // holds the token can read that visitor's history. Since the
+        // cookie-based identity change (Nov 2026) the token is a 256-bit
+        // random value (vst_...) that cannot be guessed or enumerated, and
+        // it is never put in a URL or logged. Anonymous visitors have no
+        // login, so there is no stronger check available server-side without
+        // forcing accounts; stealing a token requires script execution in
+        // the victim's browser (XSS), which the Content-Security-Policy and
+        // the removal of third-party scripts are meant to prevent. This is
+        // the accepted residual risk for an anonymous chat widget.
         const sessionValidation = validateSessionId(args.sessionId);
         if (!sessionValidation.ok) {
             return [];

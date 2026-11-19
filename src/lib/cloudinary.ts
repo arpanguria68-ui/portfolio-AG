@@ -1,5 +1,9 @@
+import { api } from "../../convex/_generated/api";
+import { convexClient } from "./ConvexClientProvider";
+
 // Cloudinary Upload Widget Integration
-// Uses unsigned uploads with upload preset for security
+// Uses signed uploads: the widget obtains a server-side signature
+// (Convex cloudinary:getUploadSignature, admin-only) for each upload.
 
 declare global {
     interface Window {
@@ -15,6 +19,10 @@ declare global {
 interface CloudinaryUploadOptions {
     cloudName: string;
     uploadPreset: string;
+    uploadSignature?: (
+        callback: (signature: string) => void,
+        paramsToSign: Record<string, unknown>
+    ) => void;
     sources?: string[];
     multiple?: boolean;
     maxFiles?: number;
@@ -77,6 +85,39 @@ export interface UploadedImage {
 const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'dgymjtqil';
 const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || 'portfolio_uploads';
 
+// Signs the widget's upload parameters server-side (Convex action
+// cloudinary:getUploadSignature, admin-only). The signature covers exactly
+// the parameters the widget is about to send, so uploads require a signed-in
+// admin instead of just knowing the cloud name and preset.
+function canonicalParams(params: Record<string, unknown>): string {
+    return Object.keys(params)
+        .filter((k) => params[k] !== undefined && params[k] !== null && params[k] !== "")
+        .sort()
+        .map((k) => `${k}=${params[k]}`)
+        .join("&");
+}
+
+function buildUploadSignature() {
+    return (
+        callback: (signature: string) => void,
+        paramsToSign: Record<string, unknown>
+    ) => {
+        if (!convexClient) {
+            callback("");
+            return;
+        }
+        convexClient
+            .action(api.cloudinary.getUploadSignature, {
+                params: canonicalParams(paramsToSign),
+            })
+            .then((signature) => callback(signature))
+            .catch((error) => {
+                console.error("Cloudinary signature failed:", error);
+                callback("");
+            });
+    };
+}
+
 // Dark theme matching the admin panel
 const widgetStyles = {
     palette: {
@@ -114,6 +155,7 @@ export function uploadImage(options?: {
             {
                 cloudName: CLOUD_NAME,
                 uploadPreset: UPLOAD_PRESET,
+                uploadSignature: buildUploadSignature(),
                 sources: ['local', 'url', 'camera'],
                 multiple: false,
                 maxFiles: 1,
@@ -174,6 +216,7 @@ export function uploadMultipleImages(options?: {
             {
                 cloudName: CLOUD_NAME,
                 uploadPreset: UPLOAD_PRESET,
+                uploadSignature: buildUploadSignature(),
                 sources: ['local', 'url', 'camera'],
                 multiple: true,
                 maxFiles: options?.maxFiles || 10,
@@ -239,6 +282,7 @@ export function uploadMultipleFiles(options?: {
             {
                 cloudName: CLOUD_NAME,
                 uploadPreset: UPLOAD_PRESET,
+                uploadSignature: buildUploadSignature(),
                 sources: ['local', 'url'],
                 multiple: true,
                 maxFiles: options?.maxFiles || 10,
@@ -412,6 +456,7 @@ export function uploadAudio(options?: {
             {
                 cloudName: CLOUD_NAME,
                 uploadPreset: UPLOAD_PRESET,
+                uploadSignature: buildUploadSignature(),
                 sources: ['local', 'url'],
                 multiple: false,
                 maxFiles: 1,

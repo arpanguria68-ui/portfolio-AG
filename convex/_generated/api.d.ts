@@ -11,6 +11,7 @@
 import type * as ai from "../ai.js";
 import type * as analytics from "../analytics.js";
 import type * as chat from "../chat.js";
+import type * as cloudinary from "../cloudinary.js";
 import type * as experiences from "../experiences.js";
 import type * as media from "../media.js";
 import type * as messages from "../messages.js";
@@ -33,6 +34,7 @@ declare const fullApi: ApiFromModules<{
   ai: typeof ai;
   analytics: typeof analytics;
   chat: typeof chat;
+  cloudinary: typeof cloudinary;
   experiences: typeof experiences;
   media: typeof media;
   messages: typeof messages;
