@@ -1,5 +1,3 @@
-
-
 import { getOptimizedImageUrl } from '../../lib/cloudinary';
 import ReactMarkdown from 'react-markdown';
 
@@ -23,11 +21,29 @@ const LivePreview: React.FC<LivePreviewProps> = ({ data, template }) => {
         if (!url) return '';
 
         if (type === 'video') {
-            if (url.includes('youtube.com/watch?v=')) {
-                return url.replace('watch?v=', 'embed/');
+            if (url.includes('linkedin.com/embed/feed/')) {
+                return url;
+            }
+            if (url.includes('youtube.com/embed/')) {
+                return url;
+            }
+            if (url.includes('linkedin.com')) {
+                const urnMatch = url.match(/(urn:li:(?:activity|ugcPost):\d+)/);
+                if (urnMatch) {
+                    return `https://www.linkedin.com/embed/feed/update/${urnMatch[1]}`;
+                }
+                const activityMatch = url.match(/activity-(\d+)/);
+                if (activityMatch) {
+                    return `https://www.linkedin.com/embed/feed/update/urn:li:activity:${activityMatch[1]}`;
+                }
+            }
+            const ytWatchMatch = url.match(/[?&]v=([^&]+)/);
+            if (url.includes('youtube.com/watch') && ytWatchMatch) {
+                return `https://www.youtube.com/embed/${ytWatchMatch[1]}`;
             }
             if (url.includes('youtu.be/')) {
-                return url.replace('youtu.be/', 'youtube.com/embed/');
+                const id = url.split('youtu.be/')[1].split(/[?&#]/)[0];
+                return `https://www.youtube.com/embed/${id}`;
             }
         }
 
@@ -133,7 +149,7 @@ const LivePreview: React.FC<LivePreviewProps> = ({ data, template }) => {
                                     })()}
                                 </div>
                             ) : (
-                                section.type === 'text' && (section.content.trim().match(/^(https?:\/\/(?:www\.)?(?:figma\.com|youtube\.com|youtu\.be|miro\.com)\/.*)$/i)) ? (
+                                section.type === 'text' && (section.content.trim().match(/^(https?:\/\/(?:www\.)?(?:figma\.com|youtube\.com|youtu\.be|miro\.com|linkedin\.com)\/.*)$/i)) ? (
                                     <div className="w-full aspect-video rounded-xl overflow-hidden border border-white/10 bg-black/50">
                                         <iframe
                                             src={getEmbedUrl(section.content.trim(), section.content.includes('figma') ? 'figma' : section.content.includes('miro') ? 'miro' : 'video')}
